@@ -1,0 +1,15 @@
+# robots.txt - Base2025
+# https://www.robotstxt.org/
+
+# Permitir todos os crawlers
+User-agent: *
+Allow: /
+
+# Bloquear páginas privadas/autenticadas
+Disallow: /dashboard
+Disallow: /api/
+Disallow: /sign-in
+Disallow: /sign-up
+
+# Sitemap
+Sitemap: https://base2025.com/sitemap.xml

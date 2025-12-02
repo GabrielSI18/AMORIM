@@ -1,0 +1,358 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// User Model - Sincronizado com Clerk via Webhook
+model User {
+  id                 String            @id @default(cuid())
+  clerk_id           String            @unique @map("clerk_id") // ID do usuário no Clerk
+  email              String            @unique
+  name               String?
+  image_url          String?           @map("image_url") // Avatar do usuário
+  first_name         String?           @map("first_name")
+  last_name          String?           @map("last_name")
+  stripe_customer_id String?           @unique @map("stripe_customer_id") // ID do Customer no Stripe
+  created_at         DateTime          @default(now()) @map("created_at")
+  updated_at         DateTime          @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  subscriptions      Subscription[]
+  addon_purchases    AddonPurchase[]   @relation("UserAddonPurchases")
+  
+  @@map("users")
+}
+
+// Plan Model - Planos de assinatura (enum IDs para facilitar)
+model Plan {
+  id          String   @id // Enum: "PLAN_FREE", "PLAN_BASIC", "PLAN_PRO", "PLAN_ENTERPRISE"
+  name        String   // "Gratuito", "Básico", "Pro", "Enterprise"
+  description String?
+  level       Int      @unique // 1=free, 2=basic, 3=pro, 4=enterprise (para comparação upgrade/downgrade)
+  is_active   Boolean  @default(true) @map("is_active") // Permitir desativar planos antigos
+  is_private  Boolean  @default(false) @map("is_private") // Para promoções privadas (links exclusivos)
+  created_at  DateTime @default(now()) @map("created_at")
+  updated_at  DateTime @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  prices      Price[]
+  
+  @@map("plans")
+}
+
+// Price Model - Preços de cada plano (mensal, anual, etc.)
+model Price {
+  id              String         @id @default(cuid())
+  plan_id         String         @map("plan_id")
+  plan            Plan           @relation(fields: [plan_id], references: [id], onDelete: Cascade)
+  stripe_price_id String         @unique @map("stripe_price_id") // ID do Price no Stripe (price_xxx)
+  stripe_product_id String       @map("stripe_product_id") // ID do Product no Stripe (prod_xxx)
+  interval        String         // "month", "year", "quarter"
+  interval_count  Int            @default(1) @map("interval_count") // 1 mês, 3 meses, 12 meses
+  amount          Int            // Valor em centavos (ex: 7900 = R$79,00)
+  currency        String         @default("brl")
+  is_active       Boolean        @default(true) @map("is_active")
+  created_at      DateTime       @default(now()) @map("created_at")
+  updated_at      DateTime       @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  subscriptions   Subscription[]
+  
+  @@map("prices")
+}
+
+// Subscription Model - Assinaturas ativas/canceladas dos usuários
+model Subscription {
+  id                     String   @id @default(cuid())
+  user_id                String   @map("user_id")
+  user                   User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  price_id               String   @map("price_id")
+  price                  Price    @relation(fields: [price_id], references: [id])
+  
+  // Downgrade agendado (aplicado no final do período)
+  scheduled_price_id     String?  @map("scheduled_price_id")
+  
+  stripe_subscription_id String   @unique @map("stripe_subscription_id") // sub_xxx
+  stripe_customer_id     String   @map("stripe_customer_id") // cus_xxx
+  
+  status                 String   // "trialing", "active", "incomplete", "past_due", "canceled", "unpaid", "paused"
+  
+  // Períodos
+  current_period_start   DateTime @map("current_period_start")
+  current_period_end     DateTime @map("current_period_end")
+  trial_start            DateTime? @map("trial_start")
+  trial_end              DateTime? @map("trial_end")
+  
+  // Cancelamento
+  cancel_at_period_end   Boolean  @default(false) @map("cancel_at_period_end") // Se true, cancela ao fim do período
+  cancel_at              DateTime? @map("cancel_at") // Data agendada do cancelamento
+  canceled_at            DateTime? @map("canceled_at") // Quando foi cancelado
+  
+  created_at             DateTime @default(now()) @map("created_at")
+  updated_at             DateTime @updatedAt @map("updated_at")
+  
+  @@index([user_id])
+  @@index([stripe_customer_id])
+  @@map("subscriptions")
+}
+
+// Addon Model - Add-ons disponíveis (features extras pagas)
+model Addon {
+  id              String          @id // Enum: "ADDON_EXTRA_STORAGE", "ADDON_PRIORITY_SUPPORT", etc.
+  name            String          // "Armazenamento Extra (50GB)", "Suporte Prioritário"
+  description     String?
+  stripe_price_id String          @unique @map("stripe_price_id") // price_xxx (pagamento único)
+  amount          Int             // Valor em centavos
+  currency        String          @default("brl")
+  level_required  Int             @default(1) @map("level_required") // Nível mínimo do plano para comprar (1=todos, 2=basic+, etc.)
+  is_active       Boolean         @default(true) @map("is_active")
+  created_at      DateTime        @default(now()) @map("created_at")
+  updated_at      DateTime        @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  purchases       AddonPurchase[]
+  
+  @@map("addons")
+}
+
+// AddonPurchase Model - Compras de add-ons pelos usuários
+model AddonPurchase {
+  id                      String   @id @default(cuid())
+  user_id                 String   @map("user_id")
+  user                    User     @relation("UserAddonPurchases", fields: [user_id], references: [id], onDelete: Cascade)
+  addon_id                String   @map("addon_id")
+  addon                   Addon    @relation(fields: [addon_id], references: [id])
+  
+  stripe_payment_intent_id String  @unique @map("stripe_payment_intent_id") // pi_xxx
+  stripe_customer_id       String  @map("stripe_customer_id") // cus_xxx
+  
+  status                   String  // "succeeded", "processing", "requires_action", "failed"
+  amount                   Int     // Valor pago em centavos
+  currency                 String  @default("brl")
+  
+  provisioned_at           DateTime? @map("provisioned_at") // Quando o add-on foi ativado
+  expires_at               DateTime? @map("expires_at") // Se tiver validade (opcional)
+  
+  created_at               DateTime @default(now()) @map("created_at")
+  updated_at               DateTime @updatedAt @map("updated_at")
+  
+  @@index([user_id])
+  @@index([addon_id])
+  @@map("addon_purchases")
+}
+
+// Category Model - Categorias de destinos turísticos
+model Category {
+  id          String        @id @default(cuid())
+  name        String        @unique // "Praias", "Montanhas", "Cidades Históricas", etc.
+  slug        String        @unique // "praias", "montanhas", etc.
+  description String?
+  icon        String?       // Nome do ícone (lucide-react)
+  color       String?       // Cor hex para UI
+  is_active   Boolean       @default(true) @map("is_active")
+  created_at  DateTime      @default(now()) @map("created_at")
+  updated_at  DateTime      @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  packages    Package[]
+  
+  @@map("categories")
+}
+
+// Destination Model - Destinos turísticos (cidades/locais)
+model Destination {
+  id          String    @id @default(cuid())
+  name        String    // "Búzios, RJ", "Ouro Preto, MG", etc.
+  slug        String    @unique
+  city        String    // "Búzios"
+  state       String    // "RJ"
+  country     String    @default("Brasil")
+  description String?   @db.Text
+  image_url   String?   @map("image_url")
+  latitude    Float?    // Para mapas
+  longitude   Float?
+  is_active   Boolean   @default(true) @map("is_active")
+  created_at  DateTime  @default(now()) @map("created_at")
+  updated_at  DateTime  @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  packages    Package[]
+  
+  @@map("destinations")
+}
+
+// Package Model - Pacotes turísticos
+model Package {
+  id                  String      @id @default(cuid())
+  title               String      // "Fim de Semana em Búzios"
+  slug                String      @unique
+  description         String      @db.Text
+  short_description   String?     @map("short_description") // Para cards
+  category_id         String      @map("category_id")
+  category            Category    @relation(fields: [category_id], references: [id])
+  destination_id      String      @map("destination_id")
+  destination         Destination @relation(fields: [destination_id], references: [id])
+  
+  // Detalhes do pacote
+  price               Int         // Preço em centavos (por pessoa)
+  original_price      Int?        @map("original_price") // Preço original (para desconto)
+  duration_days       Int         @map("duration_days") // Duração em dias
+  departure_location  String      @map("departure_location") // "Belo Horizonte, MG"
+  departure_time      String?     @map("departure_time") // "06:00"
+  departure_date      DateTime?   @map("departure_date") // Data de saída
+  return_date         DateTime?   @map("return_date") // Data de retorno
+  
+  // Disponibilidade
+  available_seats     Int         @map("available_seats") // Vagas disponíveis
+  total_seats         Int         @map("total_seats") // Total de vagas
+  min_participants    Int         @default(10) @map("min_participants") // Mínimo para confirmar
+  
+  // Features do pacote
+  includes            String[]    // ["Transporte", "Hospedagem", "Café da manhã"]
+  not_includes        String[]    @default([]) @map("not_includes") // ["Almoço", "Jantar"]
+  itinerary           Json?       // JSON com roteiro dia a dia
+  
+  // Imagens
+  cover_image         String      @map("cover_image") // Imagem principal
+  gallery_images      String[]    @default([]) @map("gallery_images") // Galeria
+  
+  // Status
+  status              String      @default("draft") // "draft", "published", "sold_out", "canceled"
+  is_featured         Boolean     @default(false) @map("is_featured") // Pacote em destaque
+  is_active           Boolean     @default(true) @map("is_active")
+  
+  // Metadata
+  views_count         Int         @default(0) @map("views_count")
+  bookings_count      Int         @default(0) @map("bookings_count")
+  created_at          DateTime    @default(now()) @map("created_at")
+  updated_at          DateTime    @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  bookings            Booking[]
+  
+  @@index([category_id])
+  @@index([destination_id])
+  @@index([status])
+  @@index([is_featured])
+  @@map("packages")
+}
+
+// Booking Model - Reservas/Interesse de clientes
+model Booking {
+  id                String   @id @default(cuid())
+  package_id        String   @map("package_id")
+  package           Package  @relation(fields: [package_id], references: [id], onDelete: Cascade)
+  user_id           String?  @map("user_id") // Opcional se permitir reserva sem login
+  
+  // Dados do cliente
+  customer_name     String   @map("customer_name")
+  customer_email    String   @map("customer_email")
+  customer_phone    String   @map("customer_phone")
+  customer_cpf      String?  @map("customer_cpf")
+  
+  // Detalhes da reserva
+  num_passengers    Int      @map("num_passengers") // Número de passageiros
+  total_amount      Int      @map("total_amount") // Valor total em centavos
+  
+  // Status
+  status            String   @default("pending") // "pending", "confirmed", "paid", "canceled"
+  payment_status    String   @default("pending") @map("payment_status") // "pending", "paid", "failed"
+  payment_method    String?  @map("payment_method") // "pix", "credit_card", "bank_slip"
+  
+  // Pagamento
+  stripe_payment_id String?  @unique @map("stripe_payment_id") // ID do pagamento no Stripe
+  paid_at           DateTime? @map("paid_at")
+  
+  // Notas internas
+  notes             String?  @db.Text // Observações da equipe
+  customer_notes    String?  @map("customer_notes") @db.Text // Observações do cliente
+  
+  // Timestamps
+  created_at        DateTime @default(now()) @map("created_at")
+  updated_at        DateTime @updatedAt @map("updated_at")
+  
+  @@index([package_id])
+  @@index([user_id])
+  @@index([status])
+  @@index([payment_status])
+  @@map("bookings")
+}
+
+// Affiliate Model - Sistema de afiliados
+model Affiliate {
+  id              String   @id @default(cuid())
+  user_id         String?  @unique @map("user_id") // Opcional: vincula ao usuário logado
+  
+  // Dados do afiliado
+  name            String   // Nome completo
+  email           String   @unique
+  phone           String?
+  cpf             String?  @unique
+  
+  // Código e comissões
+  code            String   @unique // Código único: "AMORIM2025", "MARIA123", etc.
+  commission_rate Int      @default(10) @map("commission_rate") // Percentual de comissão (10 = 10%)
+  
+  // Estatísticas
+  total_sales     Int      @default(0) @map("total_sales") // Total de vendas geradas (centavos)
+  total_earned    Int      @default(0) @map("total_earned") // Total de comissões (centavos)
+  total_bookings  Int      @default(0) @map("total_bookings") // Número de reservas
+  
+  // Pagamentos
+  pix_key         String?  @map("pix_key") // Chave PIX para receber comissões
+  bank_account    Json?    @map("bank_account") // Dados bancários
+  
+  // Status
+  status          String   @default("pending") // "pending", "active", "suspended", "blocked"
+  approved_at     DateTime? @map("approved_at")
+  
+  // Timestamps
+  created_at      DateTime @default(now()) @map("created_at")
+  updated_at      DateTime @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  referrals       AffiliateReferral[]
+  
+  @@index([code])
+  @@index([status])
+  @@map("affiliates")
+}
+
+// AffiliateReferral Model - Rastreamento de vendas por afiliado
+model AffiliateReferral {
+  id               String    @id @default(cuid())
+  affiliate_id     String    @map("affiliate_id")
+  affiliate        Affiliate @relation(fields: [affiliate_id], references: [id], onDelete: Cascade)
+  booking_id       String?   @unique @map("booking_id") // Vincula à reserva (quando finalizada)
+  
+  // Dados da venda
+  package_title    String    @map("package_title") // Nome do pacote
+  customer_email   String    @map("customer_email")
+  sale_amount      Int       @map("sale_amount") // Valor da venda (centavos)
+  commission_amount Int      @map("commission_amount") // Comissão do afiliado (centavos)
+  
+  // Status do pagamento da comissão
+  commission_status String   @default("pending") @map("commission_status") // "pending", "approved", "paid"
+  commission_paid_at DateTime? @map("commission_paid_at")
+  
+  // Timestamps
+  created_at       DateTime  @default(now()) @map("created_at")
+  updated_at       DateTime  @updatedAt @map("updated_at")
+  
+  @@index([affiliate_id])
+  @@index([booking_id])
+  @@index([commission_status])
+  @@map("affiliate_referrals")
+}
+

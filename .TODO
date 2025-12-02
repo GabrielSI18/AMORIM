@@ -1,0 +1,74 @@
+# 🚀 Base2025 - TODO
+
+## ✅ MVP COMPLETO
+
+| # | Feature | Status |
+|---|---------|--------|
+| 1 | Pricing Page | ✅ `/pricing` |
+| 2 | Billing Dashboard | ✅ `/dashboard/billing` |
+| 3 | Checkout API | ✅ `/api/checkout` |
+| 4 | Error Handling | ✅ `error.tsx`, `not-found.tsx`, sonner |
+| 5 | Loading States | ✅ Skeleton, Spinner |
+| 6 | SEO | ✅ Sitemap, robots.txt, JSON-LD |
+| 7 | Segurança | ✅ Zod, Rate Limiting |
+| 8 | Email | ✅ AWS SES + React Email |
+| 9 | Storage | ✅ Supabase Storage |
+
+---
+
+## 🧪 CHECKLIST DE TESTES
+
+### Clerk (Autenticação)
+- [ ] Sign up/in com email
+- [ ] Sign in com OAuth (Google/GitHub)
+- [ ] Webhook `user.created` → User no banco
+- [ ] Email de boas-vindas (ACTIVE_EMAIL=true)
+- [ ] Rotas protegidas funcionando
+
+### Stripe (Pagamentos)
+- [ ] Checkout (cartão 4242 4242 4242 4242)
+- [ ] Webhook local (`stripe listen --forward-to localhost:3000/api/webhooks/stripe`)
+- [ ] Subscription criada no banco
+- [ ] Customer Portal funciona
+- [ ] Upgrade/Downgrade funciona
+- [ ] Email de pagamento enviado
+
+### Email (AWS SES)
+- [x] Envio de teste funciona
+- [x] Templates renderizam (`npx react-email dev`)
+
+### Storage (Supabase)
+- [x] Bucket `artifacts` criado no Supabase Dashboard
+- [x] Upload funciona
+- [x] URL assinada funciona
+- [x] Listagem/Deleção funciona
+
+### IA (já testado ✅)
+- [x] Chat, Completion, Image, Audio (Groq/DeepInfra)
+- [ ] Vision (precisa OPENAI_API_KEY)
+
+---
+
+## 📄 PÁGINAS DE EXEMPLO
+
+| Página | Status | Testa |
+|--------|--------|-------|
+| `/examples/ai` | ✅ | Chat, Completion, Image, Audio, Vision |
+| `/examples/email` | ✅ | Envio de emails |
+| `/examples/storage` | ✅ | Upload, Download, List |
+| `/examples/stripe` | ✅ | Checkout, Portal |
+
+---
+
+## 🔮 FUTURO (Pós-MVP)
+
+- [ ] Testes E2E (Playwright)
+- [ ] CI/CD (GitHub Actions)
+- [ ] Monitoring (Sentry)
+- [ ] Analytics (PostHog/Vercel)
+- [ ] i18n
+- [ ] PWA
+
+---
+
+**Última atualização:** 28 de novembro de 2025
