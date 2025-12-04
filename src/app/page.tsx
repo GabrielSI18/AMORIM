@@ -55,8 +55,8 @@ export default function Home() {
               </div>
 
               <h1 className="text-5xl lg:text-6xl font-bold leading-tight text-white" style={{ textShadow: '2px 4px 8px rgba(0,0,0,0.8)' }}>
-                Viaje com <span className="text-[oklch(0.60_0.18_245)]">Conforto</span><br />
-                e <span className="text-[oklch(0.65_0.20_25)]">Segurança</span>
+                Viaje com <span className="text-[#4a90e2]">Conforto</span><br />
+                e <span className="text-[#dc143c]">Segurança</span>
               </h1>
 
               <p className="text-xl text-white leading-relaxed font-medium" style={{ textShadow: '1px 2px 6px rgba(0,0,0,0.8)' }}>
@@ -66,13 +66,13 @@ export default function Home() {
 
               <div className="flex flex-wrap gap-4">
                 <Link href="/pacotes">
-                  <button className="bg-accent text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-accent/90 transition-smooth flex items-center gap-2 shadow-2xl">
+                  <button className="bg-primary text-primary-foreground h-14 px-8 rounded-lg font-bold text-base hover:bg-primary/90 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl">
                     Ver Todos os Pacotes
                     <MapPin className="h-5 w-5" />
                   </button>
                 </Link>
                 <Link href="#contato">
-                  <button className="border-2 border-white bg-white/10 backdrop-blur-md text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white/20 transition-smooth shadow-xl">
+                  <button className="border-2 border-white bg-white/10 backdrop-blur-md text-white h-14 px-8 rounded-lg font-bold text-base hover:bg-white/20 transition-all duration-200 shadow-lg">
                     Fale Conosco
                   </button>
                 </Link>

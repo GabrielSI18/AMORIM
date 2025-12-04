@@ -10,28 +10,28 @@ export function Header() {
   const pathname = usePathname()
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 glass border-b">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       <div className="container-custom">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-20 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center hover:opacity-80 transition-smooth">
+          <Link href="/" className="flex items-center hover:opacity-90 transition-all duration-200">
             <Image 
               src="/amorim-logo.png" 
               alt="Amorim Turismo" 
-              width={180} 
-              height={50}
-              className="h-10 w-auto"
+              width={160} 
+              height={40}
+              className="h-12 w-auto"
               priority
             />
           </Link>
 
           {/* Navigation */}
-          <nav className="hidden md:flex items-center spacing-lg">
+          <nav className="hidden md:flex items-center gap-8">
             <Link
               href="/"
               className={cn(
-                "text-sm font-medium transition-smooth hover:text-primary",
-                pathname === '/' ? 'text-primary' : 'text-muted-foreground'
+                "text-sm font-medium transition-colors hover:text-primary",
+                pathname === '/' ? 'text-primary font-bold' : 'text-muted-foreground'
               )}
             >
               Início
@@ -39,8 +39,8 @@ export function Header() {
             <Link
               href="/pacotes"
               className={cn(
-                "text-sm font-medium transition-smooth hover:text-primary",
-                pathname === '/pacotes' ? 'text-primary' : 'text-muted-foreground'
+                "text-sm font-medium transition-colors hover:text-primary",
+                pathname === '/pacotes' ? 'text-primary font-bold' : 'text-muted-foreground'
               )}
             >
               Pacotes
@@ -48,30 +48,30 @@ export function Header() {
             <Link
               href="/afiliados"
               className={cn(
-                "text-sm font-medium transition-smooth hover:text-primary",
-                pathname === '/afiliados' ? 'text-primary' : 'text-muted-foreground'
+                "text-sm font-medium transition-colors hover:text-primary",
+                pathname === '/afiliados' ? 'text-primary font-bold' : 'text-muted-foreground'
               )}
             >
               Seja um Afiliado
             </Link>
             <Link
               href="#contato"
-              className="text-sm font-medium transition-smooth hover:text-primary text-muted-foreground"
+              className="text-sm font-medium transition-colors hover:text-primary text-muted-foreground"
             >
               Contato
             </Link>
           </nav>
 
-          {/* CTA Button */}
-          <div className="flex items-center spacing-md">
+          {/* CTA Buttons */}
+          <div className="flex items-center gap-4">
             <Link href="/sign-in">
-              <button className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-smooth">
+              <button className="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors">
                 <LogIn className="w-4 h-4" />
                 Entrar
               </button>
             </Link>
             <Link href="/pacotes">
-              <button className="bg-accent text-accent-foreground px-6 py-2 rounded-lg font-semibold hover:bg-accent/90 transition-smooth">
+              <button className="bg-primary text-primary-foreground h-12 px-6 rounded-lg font-bold hover:bg-primary/90 transition-all duration-200 shadow-sm hover:shadow-md">
                 Ver Pacotes
               </button>
             </Link>
