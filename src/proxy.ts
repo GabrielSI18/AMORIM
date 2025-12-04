@@ -3,6 +3,7 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 // Rotas públicas (não requerem autenticação)
 const isPublicRoute = createRouteMatcher([
   '/',                    // Landing page
+  '/pacotes(.*)',         // Página de pacotes
   '/sign-in(.*)',         // Páginas de login
   '/sign-up(.*)',         // Páginas de cadastro
   '/api/webhooks(.*)',    // Webhooks (Clerk, etc)

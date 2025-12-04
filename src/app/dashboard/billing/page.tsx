@@ -8,8 +8,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Header } from '@/components/ui/header';
 import { Button } from '@/components/ui/button';
+import { DashboardShell } from '@/components/dashboard';
 
 // Types
 interface SubscriptionData {
@@ -96,10 +96,10 @@ function StatusBadge({ status }: { status: string }) {
 function CurrentPlanCard({ data, loading }: { data: SubscriptionData | null; loading: boolean }) {
   if (loading) {
     return (
-      <div className="glass p-6 rounded-xl animate-pulse">
-        <div className="h-4 bg-muted rounded w-24 mb-4" />
-        <div className="h-8 bg-muted rounded w-32 mb-2" />
-        <div className="h-4 bg-muted rounded w-48" />
+      <div className="bg-[#1E1E1E] border border-[#333] p-6 rounded-xl animate-pulse">
+        <div className="h-4 bg-[#2A2A2A] rounded w-24 mb-4" />
+        <div className="h-8 bg-[#2A2A2A] rounded w-32 mb-2" />
+        <div className="h-4 bg-[#2A2A2A] rounded w-48" />
       </div>
     );
   }
@@ -107,23 +107,23 @@ function CurrentPlanCard({ data, loading }: { data: SubscriptionData | null; loa
   if (!data) return null;
 
   return (
-    <div className="glass p-6 rounded-xl">
+    <div className="bg-[#1E1E1E] border border-[#333] p-6 rounded-xl">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-muted-foreground">Plano Atual</h3>
+        <h3 className="text-sm font-medium text-[#A0A0A0]">Plano Atual</h3>
         <StatusBadge status={data.status} />
       </div>
       
       <div className="mb-4">
-        <h2 className="text-2xl font-bold">{data.plan.name}</h2>
+        <h2 className="text-2xl font-bold text-[#E0E0E0]">{data.plan.name}</h2>
         {data.plan.description && (
-          <p className="text-sm text-muted-foreground mt-1">{data.plan.description}</p>
+          <p className="text-sm text-[#A0A0A0] mt-1">{data.plan.description}</p>
         )}
       </div>
 
       {data.price && (
-        <div className="text-lg">
+        <div className="text-lg text-[#E0E0E0]">
           <span className="font-semibold">{formatCurrency(data.price.amount, data.price.currency)}</span>
-          <span className="text-muted-foreground text-sm">
+          <span className="text-[#A0A0A0] text-sm">
             /{data.price.interval === 'month' ? 'mês' : data.price.interval === 'year' ? 'ano' : data.price.interval}
           </span>
         </div>
@@ -144,20 +144,20 @@ function CurrentPlanCard({ data, loading }: { data: SubscriptionData | null; loa
 function NextBillingCard({ data, loading }: { data: SubscriptionData | null; loading: boolean }) {
   if (loading) {
     return (
-      <div className="glass p-6 rounded-xl animate-pulse">
-        <div className="h-4 bg-muted rounded w-32 mb-4" />
-        <div className="h-8 bg-muted rounded w-40 mb-2" />
-        <div className="h-4 bg-muted rounded w-24" />
+      <div className="bg-[#1E1E1E] border border-[#333] p-6 rounded-xl animate-pulse">
+        <div className="h-4 bg-[#2A2A2A] rounded w-32 mb-4" />
+        <div className="h-8 bg-[#2A2A2A] rounded w-40 mb-2" />
+        <div className="h-4 bg-[#2A2A2A] rounded w-24" />
       </div>
     );
   }
 
   if (!data || !data.subscription || data.status === 'free') {
     return (
-      <div className="glass p-6 rounded-xl">
-        <h3 className="text-sm font-medium text-muted-foreground mb-4">Próxima Cobrança</h3>
-        <p className="text-muted-foreground">Nenhuma cobrança programada</p>
-        <p className="text-sm text-muted-foreground mt-2">
+      <div className="bg-[#1E1E1E] border border-[#333] p-6 rounded-xl">
+        <h3 className="text-sm font-medium text-[#A0A0A0] mb-4">Próxima Cobrança</h3>
+        <p className="text-[#A0A0A0]">Nenhuma cobrança programada</p>
+        <p className="text-sm text-[#A0A0A0] mt-2">
           Faça upgrade para um plano pago para desbloquear mais recursos.
         </p>
       </div>
@@ -165,17 +165,17 @@ function NextBillingCard({ data, loading }: { data: SubscriptionData | null; loa
   }
 
   return (
-    <div className="glass p-6 rounded-xl">
-      <h3 className="text-sm font-medium text-muted-foreground mb-4">Próxima Cobrança</h3>
+    <div className="bg-[#1E1E1E] border border-[#333] p-6 rounded-xl">
+      <h3 className="text-sm font-medium text-[#A0A0A0] mb-4">Próxima Cobrança</h3>
       
       <div className="mb-2">
-        <span className="text-2xl font-bold">
+        <span className="text-2xl font-bold text-[#E0E0E0]">
           {formatDate(data.subscription.currentPeriodEnd)}
         </span>
       </div>
 
       {data.price && !data.subscription.cancelAtPeriodEnd && (
-        <p className="text-muted-foreground">
+        <p className="text-[#A0A0A0]">
           Valor: {formatCurrency(data.price.amount, data.price.currency)}
         </p>
       )}
@@ -216,11 +216,11 @@ function BillingActions({ data, loading }: { data: SubscriptionData | null; load
 
   if (loading) {
     return (
-      <div className="glass p-6 rounded-xl animate-pulse">
-        <div className="h-4 bg-muted rounded w-20 mb-4" />
+      <div className="bg-[#1E1E1E] border border-[#333] p-6 rounded-xl animate-pulse">
+        <div className="h-4 bg-[#2A2A2A] rounded w-20 mb-4" />
         <div className="flex gap-4">
-          <div className="h-10 bg-muted rounded w-32" />
-          <div className="h-10 bg-muted rounded w-40" />
+          <div className="h-10 bg-[#2A2A2A] rounded w-32" />
+          <div className="h-10 bg-[#2A2A2A] rounded w-40" />
         </div>
       </div>
     );
@@ -230,8 +230,8 @@ function BillingActions({ data, loading }: { data: SubscriptionData | null; load
   const hasStripeCustomer = !!data?.stripeCustomerId;
 
   return (
-    <div className="glass p-6 rounded-xl">
-      <h3 className="text-sm font-medium text-muted-foreground mb-4">Ações</h3>
+    <div className="bg-[#1E1E1E] border border-[#333] p-6 rounded-xl">
+      <h3 className="text-sm font-medium text-[#A0A0A0] mb-4">Ações</h3>
       
       <div className="flex flex-wrap gap-4">
         <Link href="/#pricing">
@@ -252,7 +252,7 @@ function BillingActions({ data, loading }: { data: SubscriptionData | null; load
       </div>
 
       {!isPaidPlan && (
-        <p className="text-sm text-muted-foreground mt-4">
+        <p className="text-sm text-[#A0A0A0] mt-4">
           Faça upgrade para desbloquear recursos premium como mais armazenamento, 
           suporte prioritário e funcionalidades avançadas.
         </p>
@@ -265,11 +265,11 @@ function BillingActions({ data, loading }: { data: SubscriptionData | null; load
 function InvoiceHistory({ invoices, loading }: { invoices: Invoice[]; loading: boolean }) {
   if (loading) {
     return (
-      <div className="glass p-6 rounded-xl animate-pulse">
-        <div className="h-4 bg-muted rounded w-40 mb-6" />
+      <div className="bg-[#1E1E1E] border border-[#333] p-6 rounded-xl animate-pulse">
+        <div className="h-4 bg-[#2A2A2A] rounded w-40 mb-6" />
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 bg-muted rounded" />
+            <div key={i} className="h-16 bg-[#2A2A2A] rounded" />
           ))}
         </div>
       </div>
@@ -277,31 +277,31 @@ function InvoiceHistory({ invoices, loading }: { invoices: Invoice[]; loading: b
   }
 
   return (
-    <div className="glass p-6 rounded-xl">
-      <h3 className="text-lg font-semibold mb-6">Histórico de Faturas</h3>
+    <div className="bg-[#1E1E1E] border border-[#333] p-6 rounded-xl">
+      <h3 className="text-lg font-semibold text-[#E0E0E0] mb-6">Histórico de Faturas</h3>
       
       {invoices.length === 0 ? (
-        <p className="text-muted-foreground text-center py-8">
+        <p className="text-[#A0A0A0] text-center py-8">
           Nenhuma fatura encontrada
         </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Data</th>
-                <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Número</th>
-                <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Valor</th>
-                <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Status</th>
-                <th className="text-right py-3 px-2 text-sm font-medium text-muted-foreground">Ações</th>
+              <tr className="border-b border-[#333]">
+                <th className="text-left py-3 px-2 text-sm font-medium text-[#A0A0A0]">Data</th>
+                <th className="text-left py-3 px-2 text-sm font-medium text-[#A0A0A0]">Número</th>
+                <th className="text-left py-3 px-2 text-sm font-medium text-[#A0A0A0]">Valor</th>
+                <th className="text-left py-3 px-2 text-sm font-medium text-[#A0A0A0]">Status</th>
+                <th className="text-right py-3 px-2 text-sm font-medium text-[#A0A0A0]">Ações</th>
               </tr>
             </thead>
             <tbody>
               {invoices.map((invoice) => (
-                <tr key={invoice.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                  <td className="py-4 px-2 text-sm">{formatDate(invoice.created)}</td>
-                  <td className="py-4 px-2 text-sm font-mono">{invoice.number || '-'}</td>
-                  <td className="py-4 px-2 text-sm">{formatCurrency(invoice.amount, invoice.currency)}</td>
+                <tr key={invoice.id} className="border-b border-[#333]/50 hover:bg-[#2A2A2A] transition-colors">
+                  <td className="py-4 px-2 text-sm text-[#E0E0E0]">{formatDate(invoice.created)}</td>
+                  <td className="py-4 px-2 text-sm font-mono text-[#E0E0E0]">{invoice.number || '-'}</td>
+                  <td className="py-4 px-2 text-sm text-[#E0E0E0]">{formatCurrency(invoice.amount, invoice.currency)}</td>
                   <td className="py-4 px-2">
                     <InvoiceStatusBadge status={invoice.status} />
                   </td>
@@ -312,7 +312,7 @@ function InvoiceHistory({ invoices, loading }: { invoices: Invoice[]; loading: b
                           href={invoice.hostedInvoiceUrl} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="text-primary hover:underline text-sm"
+                          className="text-[#D93636] hover:underline text-sm"
                         >
                           Ver
                         </a>
@@ -322,7 +322,7 @@ function InvoiceHistory({ invoices, loading }: { invoices: Invoice[]; loading: b
                           href={invoice.invoicePdf} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="text-primary hover:underline text-sm"
+                          className="text-[#D93636] hover:underline text-sm"
                         >
                           PDF
                         </a>
@@ -342,15 +342,15 @@ function InvoiceHistory({ invoices, loading }: { invoices: Invoice[]; loading: b
 // Helper: badge de status de invoice
 function InvoiceStatusBadge({ status }: { status: string | null }) {
   const statusConfig: Record<string, { label: string; className: string }> = {
-    paid: { label: 'Pago', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-    open: { label: 'Aberto', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
-    draft: { label: 'Rascunho', className: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
-    uncollectible: { label: 'Não Cobrável', className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
-    void: { label: 'Cancelado', className: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
+    paid: { label: 'Pago', className: 'bg-green-500/10 text-green-400' },
+    open: { label: 'Aberto', className: 'bg-yellow-500/10 text-yellow-400' },
+    draft: { label: 'Rascunho', className: 'bg-gray-500/10 text-gray-400' },
+    uncollectible: { label: 'Não Cobrável', className: 'bg-red-500/10 text-red-400' },
+    void: { label: 'Cancelado', className: 'bg-gray-500/10 text-gray-400' },
   };
 
   const config = status ? statusConfig[status] : null;
-  if (!config) return <span className="text-sm text-muted-foreground">-</span>;
+  if (!config) return <span className="text-sm text-[#A0A0A0]">-</span>;
 
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${config.className}`}>
@@ -391,37 +391,18 @@ export default function BillingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      
-      <main className="pt-24 pb-20">
-        <div className="container-custom">
-          {/* Page Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-              <Link href="/dashboard" className="hover:text-foreground transition-colors">
-                Dashboard
-              </Link>
-              <span>/</span>
-              <span>Billing</span>
-            </div>
-            <h1 className="text-3xl font-bold">Faturamento</h1>
-            <p className="text-muted-foreground mt-1">
-              Gerencie sua assinatura e histórico de pagamentos
-            </p>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <CurrentPlanCard data={subscriptionData} loading={loadingSubscription} />
-            <NextBillingCard data={subscriptionData} loading={loadingSubscription} />
-            <BillingActions data={subscriptionData} loading={loadingSubscription} />
-          </div>
-
-          {/* Invoice History */}
-          <InvoiceHistory invoices={invoices} loading={loadingInvoices} />
+    <DashboardShell title="Faturamento">
+      <div className="space-y-6">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <CurrentPlanCard data={subscriptionData} loading={loadingSubscription} />
+          <NextBillingCard data={subscriptionData} loading={loadingSubscription} />
+          <BillingActions data={subscriptionData} loading={loadingSubscription} />
         </div>
-      </main>
-    </div>
+
+        {/* Invoice History */}
+        <InvoiceHistory invoices={invoices} loading={loadingInvoices} />
+      </div>
+    </DashboardShell>
   );
 }

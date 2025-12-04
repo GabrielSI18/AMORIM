@@ -2,15 +2,25 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Header } from '@/components/ui/header';
 import { PackageGrid } from '@/components/packages';
 import type { Package } from '@/types';
-import { Bus, Shield, Clock, Star, MapPin, Phone, Mail } from 'lucide-react';
+import { Bus, Shield, Clock, Star, MapPin, Phone, Mail, Search, Home as HomeIcon, Briefcase, Ticket, User, Moon, Sun } from 'lucide-react';
 
 export default function Home() {
   const [featuredPackages, setFeaturedPackages] = useState<Package[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    // Verificar tema salvo
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      setIsDarkMode(true);
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
 
   useEffect(() => {
     fetch('/api/packages?featured=true&status=published')
@@ -25,20 +35,56 @@ export default function Home() {
       });
   }, []);
 
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+    if (!isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <div className="relative min-h-screen bg-[#f8f9fa] dark:bg-[#121212]">
+      {/* Header Flutuante */}
+      <header className="absolute top-0 left-0 right-0 z-50 p-4">
+        <div className="flex items-center justify-between">
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/amorim-logo.png"
+              alt="Amorim Turismo"
+              width={100}
+              height={40}
+              className="h-10 w-auto object-contain"
+              priority
+            />
+          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center rounded-full h-10 w-10 text-white hover:bg-white/20 transition-colors"
+            >
+              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+            <button className="flex items-center justify-center rounded-full h-10 w-10 text-white hover:bg-white/20 transition-colors">
+              <Search className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </header>
       
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 overflow-hidden min-h-[700px]">
+      <section className="relative pt-20 pb-20 overflow-hidden min-h-[80vh]">
         {/* Imagem de fundo */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: 'url(/hero-bus.jpg)' }}
         />
         
-        {/* Overlay escuro forte para contraste */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/70 to-black/60" />
+        {/* Overlay escuro */}
+        <div className="absolute inset-0 bg-black/50" />
         
         <div className="container-custom relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -54,25 +100,25 @@ export default function Home() {
                 Mais de 20 anos de experiência
               </div>
 
-              <h1 className="text-5xl lg:text-6xl font-bold leading-tight text-white" style={{ textShadow: '2px 4px 8px rgba(0,0,0,0.8)' }}>
-                Viaje com <span className="text-[#4a90e2]">Conforto</span><br />
-                e <span className="text-[#dc143c]">Segurança</span>
+              <h1 className="text-5xl lg:text-6xl font-extrabold leading-tight text-white">
+                Viaje com <span className="text-white">Conforto</span><br />
+                e <span className="text-[#d32f2f]">Segurança</span>
               </h1>
 
-              <p className="text-xl text-white leading-relaxed font-medium" style={{ textShadow: '1px 2px 6px rgba(0,0,0,0.8)' }}>
+              <p className="text-base text-gray-200 leading-relaxed">
                 Descubra destinos incríveis com nossos pacotes de viagem personalizados.
                 Ônibus modernos, roteiros especiais e preços acessíveis.
               </p>
 
               <div className="flex flex-wrap gap-4">
                 <Link href="/pacotes">
-                  <button className="bg-primary text-primary-foreground h-14 px-8 rounded-lg font-bold text-base hover:bg-primary/90 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl">
+                  <button className="bg-[#004a80] text-white h-14 px-8 rounded-xl font-semibold text-base hover:bg-[#003a66] transition-colors flex items-center gap-2 shadow-lg">
                     Ver Todos os Pacotes
                     <MapPin className="h-5 w-5" />
                   </button>
                 </Link>
                 <Link href="#contato">
-                  <button className="border-2 border-white bg-white/10 backdrop-blur-md text-white h-14 px-8 rounded-lg font-bold text-base hover:bg-white/20 transition-all duration-200 shadow-lg">
+                  <button className="border-2 border-white bg-transparent text-white h-14 px-8 rounded-xl font-semibold text-base hover:bg-white/10 transition-colors">
                     Fale Conosco
                   </button>
                 </Link>
@@ -86,65 +132,7 @@ export default function Home() {
       </section>
 
       {/* Features */}
-      <section className="py-20 bg-muted/30">
-        <div className="container-custom">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl font-bold mb-4">Por que escolher a Amorim Turismo?</h2>
-            <p className="text-xl text-muted-foreground">Conforto, segurança e experiências inesquecíveis</p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              {
-                icon: Shield,
-                title: 'Segurança Total',
-                description: 'Ônibus modernos com seguro completo e motoristas experientes',
-                color: 'text-primary'
-              },
-              {
-                icon: Clock,
-                title: 'Pontualidade',
-                description: 'Horários rigorosamente cumpridos para sua tranquilidade',
-                color: 'text-accent'
-              },
-              {
-                icon: Star,
-                title: 'Grupos e Eventos',
-                description: 'Pacotes especiais para grupos, empresas e eventos',
-                color: 'text-primary'
-              },
-              {
-                icon: Bus,
-                title: 'Programa de Afiliados',
-                description: 'Indique amigos e ganhe comissões em cada viagem',
-                color: 'text-accent'
-              },
-            ].map((feature, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition-smooth"
-              >
-                <feature.icon className={`h-12 w-12 ${feature.color} mb-4`} />
-                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pacotes em Destaque */}
-      <section className="py-20">
+      <section className="py-16 bg-[#f8f9fa] dark:bg-[#121212]">
         <div className="container-custom">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -153,8 +141,66 @@ export default function Home() {
             transition={{ duration: 0.5 }}
             className="text-center mb-12"
           >
-            <h2 className="text-4xl font-bold mb-4">Pacotes em Destaque</h2>
-            <p className="text-xl text-muted-foreground mb-8">
+            <h2 className="text-3xl font-bold mb-2 text-[#212529] dark:text-[#f8f9fa]">Por que escolher a Amorim Turismo?</h2>
+            <p className="text-base text-[#6c757d] dark:text-[#adb5bd]">Conforto, segurança e experiências inesquecíveis</p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                icon: Shield,
+                title: 'Segurança Total',
+                description: 'Ônibus modernos com seguro completo e motoristas experientes',
+                color: 'text-[#004a80]'
+              },
+              {
+                icon: Clock,
+                title: 'Pontualidade',
+                description: 'Horários rigorosamente cumpridos para sua tranquilidade',
+                color: 'text-[#d32f2f]'
+              },
+              {
+                icon: Star,
+                title: 'Grupos e Eventos',
+                description: 'Pacotes especiais para grupos, empresas e eventos',
+                color: 'text-[#004a80]'
+              },
+              {
+                icon: Bus,
+                title: 'Programa de Afiliados',
+                description: 'Indique amigos e ganhe comissões em cada viagem',
+                color: 'text-[#d32f2f]'
+              },
+            ].map((feature, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="bg-white dark:bg-[#1e1e1e] rounded-xl p-6 shadow-md hover:shadow-lg transition-all"
+              >
+                <feature.icon className={`h-10 w-10 ${feature.color} mb-4`} />
+                <h3 className="text-xl font-bold mb-2 text-[#212529] dark:text-[#f8f9fa]">{feature.title}</h3>
+                <p className="text-[#6c757d] dark:text-[#adb5bd]">{feature.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pacotes em Destaque */}
+      <section className="py-16 bg-[#f8f9fa] dark:bg-[#121212]">
+        <div className="container-custom">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl font-bold mb-2 text-[#212529] dark:text-[#f8f9fa]">Pacotes em Destaque</h2>
+            <p className="text-base text-[#6c757d] dark:text-[#adb5bd]">
               Confira nossas viagens mais procuradas e reserve seu lugar
             </p>
           </motion.div>
@@ -162,20 +208,20 @@ export default function Home() {
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-[500px] bg-muted rounded-xl animate-pulse" />
+                <div key={i} className="h-48 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
               ))}
             </div>
           ) : featuredPackages.length > 0 ? (
             <PackageGrid packages={featuredPackages.slice(0, 6)} variant="featured" />
           ) : (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">Nenhum pacote em destaque no momento.</p>
+              <p className="text-[#6c757d] dark:text-[#adb5bd]">Nenhum pacote em destaque no momento.</p>
             </div>
           )}
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-8">
             <Link href="/pacotes">
-              <button className="bg-primary text-primary-foreground px-8 py-4 rounded-lg font-semibold text-lg hover:bg-primary/90 transition-smooth">
+              <button className="bg-[#004a80] text-white px-8 py-3 rounded-xl font-semibold hover:bg-[#003a66] transition-colors shadow-lg">
                 Ver Todos os Destinos
               </button>
             </Link>
@@ -184,7 +230,7 @@ export default function Home() {
       </section>
 
       {/* Newsletter/Contato */}
-      <section id="contato" className="py-20 bg-gradient-primary text-white">
+      <section id="contato" className="py-16 bg-[#004a80] text-white">
         <div className="container-custom">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -193,8 +239,8 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <h2 className="text-4xl font-bold mb-4">Pronto para sua próxima aventura?</h2>
-              <p className="text-lg opacity-90 mb-6">
+              <h2 className="text-3xl font-bold mb-4">Pronto para sua próxima aventura?</h2>
+              <p className="text-base opacity-90 mb-6">
                 Cadastre-se agora e receba ofertas exclusivas direto no seu e-mail
               </p>
 
@@ -202,9 +248,9 @@ export default function Home() {
                 <input
                   type="email"
                   placeholder="Seu melhor e-mail"
-                  className="flex-1 px-6 py-4 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+                  className="flex-1 px-4 py-3 rounded-xl text-[#212529] bg-white focus:outline-none focus:ring-2 focus:ring-[#d32f2f]"
                 />
-                <button className="bg-accent text-accent-foreground px-8 py-4 rounded-lg font-semibold hover:bg-accent/90 transition-smooth whitespace-nowrap">
+                <button className="bg-[#d32f2f] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#b71c1c] transition-colors whitespace-nowrap">
                   Cadastrar
                 </button>
               </form>
@@ -244,45 +290,65 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 bg-card border-t">
+      <footer className="py-12 pb-24 bg-white dark:bg-[#1e1e1e] border-t border-gray-200 dark:border-gray-800">
         <div className="container-custom">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <h3 className="font-bold text-lg mb-4">Amorim Turismo</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="font-bold text-lg mb-4 text-[#212529] dark:text-[#f8f9fa]">Amorim Turismo</h3>
+              <p className="text-sm text-[#6c757d] dark:text-[#adb5bd]">
                 Viaje com conforto e segurança. Descubra destinos incríveis com nossos pacotes exclusivos.
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Links Rápidos</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/pacotes" className="hover:text-primary transition">Pacotes de Viagem</Link></li>
-                <li><Link href="/afiliados" className="hover:text-primary transition">Seja um Afiliado</Link></li>
-                <li><Link href="/sobre" className="hover:text-primary transition">Sobre Nós</Link></li>
+              <h4 className="font-semibold mb-4 text-[#212529] dark:text-[#f8f9fa]">Links Rápidos</h4>
+              <ul className="space-y-2 text-sm text-[#6c757d] dark:text-[#adb5bd]">
+                <li><Link href="/pacotes" className="hover:text-[#004a80] transition">Pacotes de Viagem</Link></li>
+                <li><Link href="/afiliados" className="hover:text-[#004a80] transition">Seja um Afiliado</Link></li>
+                <li><Link href="/sobre" className="hover:text-[#004a80] transition">Sobre Nós</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Suporte</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/faq" className="hover:text-primary transition">Perguntas Frequentes</Link></li>
-                <li><Link href="/politicas" className="hover:text-primary transition">Políticas de Cancelamento</Link></li>
-                <li><Link href="/termos" className="hover:text-primary transition">Termos de Uso</Link></li>
+              <h4 className="font-semibold mb-4 text-[#212529] dark:text-[#f8f9fa]">Suporte</h4>
+              <ul className="space-y-2 text-sm text-[#6c757d] dark:text-[#adb5bd]">
+                <li><Link href="/faq" className="hover:text-[#004a80] transition">Perguntas Frequentes</Link></li>
+                <li><Link href="/politicas" className="hover:text-[#004a80] transition">Políticas de Cancelamento</Link></li>
+                <li><Link href="/termos" className="hover:text-[#004a80] transition">Termos de Uso</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Contato</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
+              <h4 className="font-semibold mb-4 text-[#212529] dark:text-[#f8f9fa]">Contato</h4>
+              <ul className="space-y-2 text-sm text-[#6c757d] dark:text-[#adb5bd]">
                 <li>(31) 99999-9999</li>
                 <li>contato@amorimturismo.com.br</li>
                 <li>Belo Horizonte, MG</li>
               </ul>
             </div>
           </div>
-          <div className="mt-12 pt-8 border-t text-center text-sm text-muted-foreground">
+          <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700 text-center text-sm text-[#6c757d] dark:text-[#adb5bd]">
             <p>© 2025 Amorim Turismo. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>
+
+      {/* Bottom Navigation - sempre visível */}
+      <nav className="fixed bottom-0 left-0 right-0 z-[100] flex h-20 items-center justify-around border-t border-[#e0e0e0]/50 dark:border-white/10 bg-[#F5F5F7] dark:bg-[#101622] shadow-[0_-2px_10px_rgba(0,0,0,0.1)]">
+        <Link href="/" className="flex flex-col items-center gap-1 text-[#D92E2E]">
+          <HomeIcon className="w-6 h-6" />
+          <p className="text-xs font-bold">Início</p>
+        </Link>
+        <Link href="/pacotes" className="flex flex-col items-center gap-1 text-[#4F4F4F] dark:text-[#E0E0E0] hover:text-[#1A2E40] dark:hover:text-white transition-colors">
+          <Briefcase className="w-6 h-6" />
+          <p className="text-xs font-medium">Pacotes</p>
+        </Link>
+        <Link href="/minhas-viagens" className="flex flex-col items-center gap-1 text-[#4F4F4F] dark:text-[#E0E0E0] hover:text-[#1A2E40] dark:hover:text-white transition-colors">
+          <Ticket className="w-6 h-6" />
+          <p className="text-xs font-medium">Minhas Viagens</p>
+        </Link>
+        <Link href="/perfil" className="flex flex-col items-center gap-1 text-[#4F4F4F] dark:text-[#E0E0E0] hover:text-[#1A2E40] dark:hover:text-white transition-colors">
+          <User className="w-6 h-6" />
+          <p className="text-xs font-medium">Perfil</p>
+        </Link>
+      </nav>
     </div>
   );
 }

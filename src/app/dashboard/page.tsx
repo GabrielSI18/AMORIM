@@ -1,6 +1,9 @@
 import { currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
-import { Header } from '@/components/ui/header'
+import prisma from '@/lib/prisma'
+import Link from 'next/link'
+import { PlusCircle, Users, Handshake } from 'lucide-react'
+import { DashboardShell } from '@/components/dashboard'
 
 export default async function DashboardPage() {
   const user = await currentUser()
@@ -9,115 +12,147 @@ export default async function DashboardPage() {
     redirect('/sign-in')
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      
-      <main className="pt-24 pb-20">
-        <div className="container-custom">
-          
-          {/* Welcome Section */}
-          <div className="mb-12">
-            <h1 className="text-4xl font-bold mb-2">
-              Olá, {user.firstName || 'Usuário'}! 👋
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              Bem-vindo ao seu dashboard
+  // Buscar ou criar usuario no banco (usando any para evitar erros de tipo durante regeneração do Prisma)
+  const dbUser = await prisma.user.upsert({
+    where: { clerk_id: user.id },
+    update: {},
+    create: {
+      clerk_id: user.id,
+      email: user.emailAddresses[0]?.emailAddress || '',
+      first_name: user.firstName,
+      last_name: user.lastName,
+      image_url: user.imageUrl,
+      role: 'SUPER_ADMIN',
+    } as any,
+    select: { role: true, first_name: true } as any,
+  }) as any
+
+  const isAdmin = dbUser?.role === 'ADMIN' || dbUser?.role === 'SUPER_ADMIN'
+
+  // Buscar estatisticas
+  const [totalClients, totalAffiliates] = await Promise.all([
+    prisma.user.count({ where: { role: 'USER' } as any }),
+    prisma.user.count({ where: { role: 'AFFILIATE' } as any }),
+  ])
+
+  // Se nao for admin, mostrar dashboard simples
+  if (!isAdmin) {
+    return (
+      <DashboardShell
+        title="Meu Painel"
+        userName={user.firstName || undefined}
+        userEmail={user.emailAddresses[0]?.emailAddress}
+      >
+        <div className="pt-4">
+          <h2 className="text-2xl font-bold text-[#E0E0E0] mb-2">
+            Ola, {user.firstName || 'Usuario'}!
+          </h2>
+          <p className="text-[#A0A0A0] mb-8">Bem-vindo ao seu painel</p>
+
+          <div className="bg-[#1E1E1E] rounded-xl p-6">
+            <h3 className="text-xl font-semibold text-[#E0E0E0] mb-4">
+              Suas Viagens
+            </h3>
+            <p className="text-[#A0A0A0]">
+              Voce ainda nao tem reservas. Explore nossos pacotes!
             </p>
+            <Link
+              href="/pacotes"
+              className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-[#D93636] text-white rounded-lg hover:bg-[#c42f2f] transition-colors font-medium"
+            >
+              Ver Pacotes
+            </Link>
           </div>
+        </div>
+      </DashboardShell>
+    )
+  }
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <StatCard
-              title="Projetos"
-              value="0"
-              description="Nenhum projeto criado ainda"
-              icon="📁"
-            />
-            <StatCard
-              title="Usuários"
-              value="1"
-              description="Você está logado"
-              icon="👤"
-            />
-            <StatCard
-              title="Status"
-              value="Ativo"
-              description="Sistema funcionando"
-              icon="✅"
-            />
+  // Dashboard Super Admin
+  return (
+    <DashboardShell
+      title="Dashboard Super Admin"
+      userName={dbUser?.first_name || user.firstName || undefined}
+      userEmail={user.emailAddresses[0]?.emailAddress}
+    >
+      {/* Section: Gerenciamento de Pacotes */}
+      <section className="flex flex-col gap-4">
+        <h2 className="text-xl font-bold text-[#E0E0E0] tracking-tight">
+          Gerenciamento de Pacotes
+        </h2>
+        <Link
+          href="/dashboard/pacotes/novo"
+          className="flex items-center justify-center gap-3 h-12 px-5 bg-[#D93636] hover:bg-[#c42f2f] text-white rounded-lg font-bold transition-colors"
+        >
+          <PlusCircle className="w-5 h-5" />
+          <span>Cadastrar Pacote de Viagem</span>
+        </Link>
+      </section>
+
+      {/* Section: Visualizar Clientes e Afiliados */}
+      <section className="grid grid-cols-2 gap-4">
+        <Link
+          href="/dashboard/clientes"
+          className="flex flex-col gap-3 rounded-xl bg-[#1E1E1E] p-4 shadow-sm hover:bg-[#252525] transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center size-10 rounded-full bg-[#1E3A8A]/10 text-[#1E3A8A]">
+              <Users className="w-5 h-5" />
+            </div>
+            <p className="text-base font-bold text-[#E0E0E0]">Clientes</p>
           </div>
+          <p className="text-3xl font-bold text-[#E0E0E0]">
+            {totalClients.toLocaleString('pt-BR')}
+          </p>
+          <p className="text-sm text-[#A0A0A0]">Visualizar Clientes</p>
+        </Link>
 
-          {/* User Info Card */}
-          <div className="glass p-8 rounded-xl">
-            <h2 className="text-2xl font-semibold mb-6">Suas Informações</h2>
-            
-            <div className="grid gap-6">
-              <InfoRow label="ID do Clerk" value={user.id} />
-              <InfoRow 
-                label="Email" 
-                value={user.emailAddresses[0]?.emailAddress || 'N/A'} 
-              />
-              <InfoRow 
-                label="Nome" 
-                value={`${user.firstName || ''} ${user.lastName || ''}`.trim() || 'N/A'} 
-              />
-              <InfoRow 
-                label="Criado em" 
-                value={new Date(user.createdAt).toLocaleDateString('pt-BR')} 
-              />
+        <Link
+          href="/dashboard/afiliados"
+          className="flex flex-col gap-3 rounded-xl bg-[#1E1E1E] p-4 shadow-sm hover:bg-[#252525] transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center size-10 rounded-full bg-[#1E3A8A]/10 text-[#1E3A8A]">
+              <Handshake className="w-5 h-5" />
+            </div>
+            <p className="text-base font-bold text-[#E0E0E0]">Afiliados</p>
+          </div>
+          <p className="text-3xl font-bold text-[#E0E0E0]">
+            {totalAffiliates.toLocaleString('pt-BR')}
+          </p>
+          <p className="text-sm text-[#A0A0A0]">Visualizar Afiliados</p>
+        </Link>
+      </section>
+
+      {/* Section: Receita das Viagens */}
+      <section className="flex flex-col gap-4">
+        <h2 className="text-xl font-bold text-[#E0E0E0] tracking-tight">
+          Receita das Viagens
+        </h2>
+        <div className="flex flex-col gap-4 rounded-xl bg-[#1E1E1E] p-4 shadow-sm">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm text-[#A0A0A0]">Ultimos 30 dias</p>
+              <p className="text-2xl font-bold text-[#E0E0E0]">R$ 45.890,50</p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-[#A0A0A0]">Ocupacao</p>
+              <p className="text-2xl font-bold text-[#E0E0E0]">82%</p>
             </div>
           </div>
 
-          {/* Info Box */}
-          <div className="mt-12 p-6 bg-primary/10 border border-primary/20 rounded-xl">
-            <h3 className="text-lg font-semibold mb-2 text-primary">
-              🎉 Parabéns!
-            </h3>
-            <p className="text-foreground/80">
-              Sua autenticação está funcionando perfeitamente. O usuário foi criado no Clerk 
-              e agora você pode sincronizá-lo com o banco de dados via webhook.
-            </p>
+          {/* Chart */}
+          <div className="w-full h-40 flex items-end gap-2 border-t border-b border-gray-700 py-4">
+            <div className="flex-1 h-[60%] bg-[#1E3A8A]/30 rounded-t"></div>
+            <div className="flex-1 h-[40%] bg-[#1E3A8A]/30 rounded-t"></div>
+            <div className="flex-1 h-[75%] bg-[#D93636] rounded-t"></div>
+            <div className="flex-1 h-[55%] bg-[#1E3A8A]/30 rounded-t"></div>
+            <div className="flex-1 h-[90%] bg-[#D93636] rounded-t"></div>
+            <div className="flex-1 h-[65%] bg-[#1E3A8A]/30 rounded-t"></div>
+            <div className="flex-1 h-[80%] bg-[#D93636] rounded-t"></div>
           </div>
-
         </div>
-      </main>
-    </div>
-  )
-}
-
-interface StatCardProps {
-  title: string
-  value: string
-  description: string
-  icon: string
-}
-
-function StatCard({ title, value, description, icon }: StatCardProps) {
-  return (
-    <div className="glass p-6 rounded-xl hover:shadow-xl transition-smooth">
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <p className="text-muted-foreground text-sm mb-1">{title}</p>
-          <h3 className="text-3xl font-bold">{value}</h3>
-        </div>
-        <span className="text-4xl">{icon}</span>
-      </div>
-      <p className="text-sm text-muted-foreground">{description}</p>
-    </div>
-  )
-}
-
-interface InfoRowProps {
-  label: string
-  value: string
-}
-
-function InfoRow({ label, value }: InfoRowProps) {
-  return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-      <span className="text-muted-foreground font-medium w-32">{label}:</span>
-      <span className="font-mono text-sm bg-muted px-3 py-1.5 rounded">{value}</span>
-    </div>
+      </section>
+    </DashboardShell>
   )
 }

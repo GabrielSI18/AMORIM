@@ -14,6 +14,14 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// Enum para roles de usuário
+enum UserRole {
+  USER
+  AFFILIATE
+  ADMIN
+  SUPER_ADMIN
+}
+
 // User Model - Sincronizado com Clerk via Webhook
 model User {
   id                 String            @id @default(cuid())
@@ -23,6 +31,7 @@ model User {
   image_url          String?           @map("image_url") // Avatar do usuário
   first_name         String?           @map("first_name")
   last_name          String?           @map("last_name")
+  role               UserRole          @default(USER) // Role do usuário
   stripe_customer_id String?           @unique @map("stripe_customer_id") // ID do Customer no Stripe
   created_at         DateTime          @default(now()) @map("created_at")
   updated_at         DateTime          @updatedAt @map("updated_at")
@@ -30,6 +39,7 @@ model User {
   // Relacionamentos
   subscriptions      Subscription[]
   addon_purchases    AddonPurchase[]   @relation("UserAddonPurchases")
+  bookings           Booking[]
   
   @@map("users")
 }
@@ -254,6 +264,7 @@ model Booking {
   package_id        String   @map("package_id")
   package           Package  @relation(fields: [package_id], references: [id], onDelete: Cascade)
   user_id           String?  @map("user_id") // Opcional se permitir reserva sem login
+  user              User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
   
   // Dados do cliente
   customer_name     String   @map("customer_name")

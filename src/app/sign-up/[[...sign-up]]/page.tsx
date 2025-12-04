@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useSignUp } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
+import { Eye, EyeOff, ArrowLeft, Moon, Sun } from 'lucide-react'
 
 export default function SignUpPage() {
   const { signUp, setActive } = useSignUp()
@@ -23,6 +23,51 @@ export default function SignUpPage() {
   const [error, setError] = useState('')
   const [pendingVerification, setPendingVerification] = useState(false)
   const [code, setCode] = useState('')
+  const [isDarkMode, setIsDarkMode] = useState(false)
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme')
+    if (savedTheme === 'dark') {
+      setIsDarkMode(true)
+      document.documentElement.classList.add('dark')
+    }
+  }, [])
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode)
+    if (!isDarkMode) {
+      document.documentElement.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    }
+  }
+
+  // Formata CPF: 000.000.000-00
+  const formatCPF = (value: string) => {
+    const numbers = value.replace(/\D/g, '').slice(0, 11)
+    return numbers
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+  }
+
+  // Formata Telefone: (00) 00000-0000
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, '').slice(0, 11)
+    return numbers
+      .replace(/(\d{2})(\d)/, '($1) $2')
+      .replace(/(\d{5})(\d{1,4})$/, '$1-$2')
+  }
+
+  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCpf(formatCPF(e.target.value))
+  }
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhone(formatPhone(e.target.value))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -105,11 +150,11 @@ export default function SignUpPage() {
 
   if (pendingVerification) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#f7f7f7]">
-        <header className="flex items-center justify-center p-4 border-b border-[#e0e0e0] bg-white">
+      <div className="min-h-screen flex flex-col bg-[#F5F5F7] dark:bg-[#101622]">
+        <header className="relative flex items-center justify-center p-4 border-b border-[#e0e0e0]/50 dark:border-[#324467] bg-white dark:bg-[#101622]">
           <button
             onClick={() => setPendingVerification(false)}
-            className="absolute left-4 text-[#333333] flex size-10 items-center justify-center"
+            className="absolute left-4 text-[#1A2E40] dark:text-white flex size-10 items-center justify-center"
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
@@ -121,19 +166,25 @@ export default function SignUpPage() {
             className="object-contain"
             priority
           />
+          <button
+            onClick={toggleTheme}
+            className="absolute right-4 text-[#1A2E40] dark:text-white flex size-10 items-center justify-center hover:bg-[#1A2E40]/10 dark:hover:bg-white/10 rounded-full transition-colors"
+          >
+            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
         </header>
 
         <main className="flex-grow px-4 pt-8">
-          <h1 className="text-[#333333] text-[32px] font-bold text-center pb-6">
+          <h1 className="text-[#1A2E40] dark:text-white text-[32px] font-bold text-center pb-6">
             Verifique seu email
           </h1>
-          <p className="text-[#888888] text-base text-center pb-6">
+          <p className="text-[#4F4F4F] dark:text-[#92a4c9] text-base text-center pb-6">
             Enviamos um código para {emailAddress}
           </p>
 
           <form onSubmit={handleVerify} className="space-y-4">
             <label className="flex flex-col w-full">
-              <p className="text-[#333333] text-base font-medium pb-2">
+              <p className="text-[#333333] dark:text-white text-base font-medium pb-2">
                 Código de verificação
               </p>
               <input
@@ -141,7 +192,7 @@ export default function SignUpPage() {
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="Digite o código de 6 dígitos"
-                className="w-full h-14 px-4 rounded-lg border border-[#e0e0e0] bg-white text-[#333333] placeholder:text-[#888888] focus:outline-none focus:ring-2 focus:ring-[#D92E2E]/50"
+                className="w-full h-14 px-4 rounded-lg border border-[#e0e0e0] dark:border-[#324467] bg-white dark:bg-[#192233] text-[#333333] dark:text-white placeholder:text-[#888888] dark:placeholder:text-[#92a4c9] focus:outline-none focus:ring-2 focus:ring-[#D92E2E]/50"
                 required
               />
             </label>
@@ -164,11 +215,11 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f7f7f7]">
-      <header className="relative flex items-center justify-center p-4 border-b border-[#e0e0e0] bg-white">
+    <div className="min-h-screen flex flex-col bg-[#F5F5F7] dark:bg-[#101622]">
+      <header className="relative flex items-center justify-center p-4 border-b border-[#e0e0e0]/50 dark:border-[#324467] bg-white dark:bg-[#101622]">
         <button
           onClick={() => router.push('/sign-in')}
-          className="absolute left-4 text-[#333333] flex size-10 items-center justify-center"
+          className="absolute left-4 text-[#1A2E40] dark:text-white flex size-10 items-center justify-center"
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
@@ -180,10 +231,16 @@ export default function SignUpPage() {
           className="object-contain"
           priority
         />
+        <button
+          onClick={toggleTheme}
+          className="absolute right-4 text-[#1A2E40] dark:text-white flex size-10 items-center justify-center hover:bg-[#1A2E40]/10 dark:hover:bg-white/10 rounded-full transition-colors"
+        >
+          {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        </button>
       </header>
 
       <main className="flex-grow px-4 pt-8">
-        <h1 className="text-[#333333] text-[32px] font-bold text-center pb-6">
+        <h1 className="text-[#1A2E40] dark:text-white text-[32px] font-bold text-center pb-6">
           Crie sua conta
         </h1>
 
@@ -192,18 +249,18 @@ export default function SignUpPage() {
           <button
             type="button"
             onClick={handleAppleSignUp}
-            className="flex items-center justify-center gap-2 h-14 rounded-lg border border-[#e0e0e0] bg-white hover:bg-[#f0f0f0] transition-colors"
+            className="flex items-center justify-center gap-2 h-14 rounded-lg border border-[#e0e0e0] dark:border-[#324467] bg-white dark:bg-[#192233] hover:bg-[#f0f0f0] dark:hover:bg-[#243044] transition-colors"
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-5 h-5 text-[#333333] dark:text-white" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
             </svg>
-            <span className="text-[#333333] font-medium text-base">Apple</span>
+            <span className="text-[#333333] dark:text-white font-medium text-base">Apple</span>
           </button>
 
           <button
             type="button"
             onClick={handleGoogleSignUp}
-            className="flex items-center justify-center gap-2 h-14 rounded-lg border border-[#e0e0e0] bg-white hover:bg-[#f0f0f0] transition-colors"
+            className="flex items-center justify-center gap-2 h-14 rounded-lg border border-[#e0e0e0] dark:border-[#324467] bg-white dark:bg-[#192233] hover:bg-[#f0f0f0] dark:hover:bg-[#243044] transition-colors"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -211,108 +268,110 @@ export default function SignUpPage() {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            <span className="text-[#333333] font-medium text-base">Google</span>
+            <span className="text-[#333333] dark:text-white font-medium text-base">Google</span>
           </button>
         </div>
 
         {/* Divisor */}
         <div className="flex items-center gap-4 mb-6">
-          <div className="flex-1 h-px bg-[#e0e0e0]"></div>
-          <span className="text-[#888888] text-sm">ou</span>
-          <div className="flex-1 h-px bg-[#e0e0e0]"></div>
+          <div className="flex-1 h-px bg-[#e0e0e0] dark:bg-[#324467]"></div>
+          <span className="text-[#888888] dark:text-[#92a4c9] text-sm">ou</span>
+          <div className="flex-1 h-px bg-[#e0e0e0] dark:bg-[#324467]"></div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <label className="flex flex-col w-full">
-            <p className="text-[#333333] text-base font-medium pb-2">Nome Completo</p>
+            <p className="text-[#333333] dark:text-white text-base font-medium pb-2">Nome Completo</p>
             <input
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Digite seu nome completo"
-              className="w-full h-14 px-4 rounded-lg border border-[#e0e0e0] bg-white text-[#333333] placeholder:text-[#888888] focus:outline-none focus:ring-2 focus:ring-[#D92E2E]/50"
+              className="w-full h-14 px-4 rounded-lg border border-[#e0e0e0] dark:border-[#324467] bg-white dark:bg-[#192233] text-[#333333] dark:text-white placeholder:text-[#888888] dark:placeholder:text-[#92a4c9] focus:outline-none focus:ring-2 focus:ring-[#D92E2E]/50"
               required
             />
           </label>
 
           <label className="flex flex-col w-full">
-            <p className="text-[#333333] text-base font-medium pb-2">E-mail</p>
+            <p className="text-[#333333] dark:text-white text-base font-medium pb-2">E-mail</p>
             <input
               type="email"
               value={emailAddress}
               onChange={(e) => setEmailAddress(e.target.value)}
               placeholder="seuemail@dominio.com"
-              className="w-full h-14 px-4 rounded-lg border border-[#e0e0e0] bg-white text-[#333333] placeholder:text-[#888888] focus:outline-none focus:ring-2 focus:ring-[#D92E2E]/50"
+              className="w-full h-14 px-4 rounded-lg border border-[#e0e0e0] dark:border-[#324467] bg-white dark:bg-[#192233] text-[#333333] dark:text-white placeholder:text-[#888888] dark:placeholder:text-[#92a4c9] focus:outline-none focus:ring-2 focus:ring-[#D92E2E]/50"
               required
             />
           </label>
 
           <div className="grid grid-cols-2 gap-4">
             <label className="flex flex-col w-full">
-              <p className="text-[#333333] text-base font-medium pb-2">CPF</p>
+              <p className="text-[#333333] dark:text-white text-base font-medium pb-2">CPF</p>
               <input
                 type="text"
                 value={cpf}
-                onChange={(e) => setCpf(e.target.value)}
+                onChange={handleCPFChange}
                 placeholder="000.000.000-00"
-                className="w-full h-14 px-3 rounded-lg border border-[#e0e0e0] bg-white text-[#333333] text-sm placeholder:text-[#888888] placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-[#D92E2E]/50"
+                maxLength={14}
+                className="w-full h-14 px-3 rounded-lg border border-[#e0e0e0] dark:border-[#324467] bg-white dark:bg-[#192233] text-[#333333] dark:text-white text-sm placeholder:text-[#888888] dark:placeholder:text-[#92a4c9] placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-[#D92E2E]/50"
               />
             </label>
             <label className="flex flex-col w-full">
-              <p className="text-[#333333] text-base font-medium pb-2">Telefone</p>
+              <p className="text-[#333333] dark:text-white text-base font-medium pb-2">Telefone</p>
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={handlePhoneChange}
                 placeholder="(00) 00000-0000"
-                className="w-full h-14 px-3 rounded-lg border border-[#e0e0e0] bg-white text-[#333333] text-sm placeholder:text-[#888888] placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-[#D92E2E]/50"
+                maxLength={15}
+                className="w-full h-14 px-3 rounded-lg border border-[#e0e0e0] dark:border-[#324467] bg-white dark:bg-[#192233] text-[#333333] dark:text-white text-sm placeholder:text-[#888888] dark:placeholder:text-[#92a4c9] placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-[#D92E2E]/50"
               />
             </label>
           </div>
 
           <label className="flex flex-col w-full">
-            <p className="text-[#333333] text-base font-medium pb-2">Data de Nascimento</p>
+            <p className="text-[#333333] dark:text-white text-base font-medium pb-2">Data de Nascimento</p>
             <input
               type="date"
               value={birthDate}
               onChange={(e) => setBirthDate(e.target.value)}
-              className="w-full h-14 px-4 rounded-lg border border-[#e0e0e0] bg-white text-[#333333] placeholder:text-[#888888] focus:outline-none focus:ring-2 focus:ring-[#D92E2E]/50"
+              className="w-full h-14 px-4 rounded-lg border border-[#e0e0e0] dark:border-[#324467] bg-white dark:bg-[#192233] text-[#333333] dark:text-white placeholder:text-[#888888] dark:placeholder:text-[#92a4c9] focus:outline-none focus:ring-2 focus:ring-[#D92E2E]/50"
             />
           </label>
 
           <label className="flex flex-col w-full relative">
-            <p className="text-[#333333] text-base font-medium pb-2">Senha</p>
+            <p className="text-[#333333] dark:text-white text-base font-medium pb-2">Senha</p>
             <input
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Crie uma senha"
-              className="w-full h-14 px-4 pr-12 rounded-lg border border-[#e0e0e0] bg-white text-[#333333] placeholder:text-[#888888] focus:outline-none focus:ring-2 focus:ring-[#D92E2E]/50"
+              className="w-full h-14 px-4 pr-12 rounded-lg border border-[#e0e0e0] dark:border-[#324467] bg-white dark:bg-[#192233] text-[#333333] dark:text-white placeholder:text-[#888888] dark:placeholder:text-[#92a4c9] focus:outline-none focus:ring-2 focus:ring-[#D92E2E]/50"
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-[52px] text-[#888888]"
+              className="absolute right-4 top-[52px] text-[#888888] dark:text-[#92a4c9]"
             >
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </label>
 
           <label className="flex flex-col w-full relative">
-            <p className="text-[#333333] text-base font-medium pb-2">Confirmar Senha</p>
+            <p className="text-[#333333] dark:text-white text-base font-medium pb-2">Confirmar Senha</p>
             <input
               type={showConfirmPassword ? 'text' : 'password'}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirme sua senha"
-              className="w-full h-14 px-4 pr-12 rounded-lg border border-[#e0e0e0] bg-white text-[#333333] placeholder:text-[#888888] focus:outline-none focus:ring-2 focus:ring-[#D92E2E]/50"
+              className="w-full h-14 px-4 pr-12 rounded-lg border border-[#e0e0e0] dark:border-[#324467] bg-white dark:bg-[#192233] text-[#333333] dark:text-white placeholder:text-[#888888] dark:placeholder:text-[#92a4c9] focus:outline-none focus:ring-2 focus:ring-[#D92E2E]/50"
               required
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-4 top-[52px] text-[#888888]"
+              className="absolute right-4 top-[52px] text-[#888888] dark:text-[#92a4c9]"
             >
               {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
@@ -332,7 +391,7 @@ export default function SignUpPage() {
         </form>
 
         <div className="text-center pb-8">
-          <p className="text-sm text-[#333333]">
+          <p className="text-sm text-[#333333] dark:text-white">
             Já tem uma conta?{' '}
             <a href="/sign-in" className="font-bold text-[#0A3A66]">
               Faça login
