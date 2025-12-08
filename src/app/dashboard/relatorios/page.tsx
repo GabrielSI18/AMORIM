@@ -1,7 +1,7 @@
 import { currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
-import { BarChart3, TrendingUp, DollarSign, Users, Calendar, Download } from 'lucide-react'
+import { BarChart3, TrendingUp, DollarSign, Users, Calendar, Package } from 'lucide-react'
 import { DashboardShell } from '@/components/dashboard'
 
 export default async function RelatoriosPage() {
@@ -20,22 +20,73 @@ export default async function RelatoriosPage() {
     redirect('/dashboard')
   }
 
-  // Dados simulados para relatórios
-  const stats = {
-    totalRevenue: 45890.50,
-    monthlyGrowth: 12.5,
-    totalBookings: 234,
-    averageTicket: 1560.00,
+  // Buscar dados reais do banco
+  const now = new Date()
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+  const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
+
+  const [
+    totalBookings,
+    paidBookings,
+    recentPaidBookings,
+    previousPaidBookings,
+    recentBookingsList,
+  ] = await Promise.all([
+    // Total de reservas
+    prisma.booking.count(),
+    // Reservas pagas
+    prisma.booking.count({ where: { payment_status: 'paid' } }),
+    // Reservas pagas dos últimos 30 dias
+    prisma.booking.findMany({
+      where: {
+        payment_status: 'paid',
+        created_at: { gte: thirtyDaysAgo },
+      },
+      select: { total_amount: true },
+    }),
+    // Reservas pagas dos 30 dias anteriores (para calcular crescimento)
+    prisma.booking.findMany({
+      where: {
+        payment_status: 'paid',
+        created_at: { gte: sixtyDaysAgo, lt: thirtyDaysAgo },
+      },
+      select: { total_amount: true },
+    }),
+    // Últimas reservas com detalhes
+    prisma.booking.findMany({
+      orderBy: { created_at: 'desc' },
+      take: 5,
+      include: {
+        package: { select: { title: true } },
+      },
+    }),
+  ])
+
+  // Calcular métricas
+  const recentRevenue = recentPaidBookings.reduce((sum, b) => sum + b.total_amount, 0)
+  const previousRevenue = previousPaidBookings.reduce((sum, b) => sum + b.total_amount, 0)
+  
+  // Calcular crescimento (evitar divisão por zero)
+  let growthRate = 0
+  if (previousRevenue > 0) {
+    growthRate = Math.round(((recentRevenue - previousRevenue) / previousRevenue) * 100)
+  } else if (recentRevenue > 0) {
+    growthRate = 100 // Se não tinha receita anterior mas tem agora, é 100% de crescimento
   }
 
-  const monthlyData = [
-    { month: 'Jul', revenue: 32000, bookings: 45 },
-    { month: 'Ago', revenue: 38000, bookings: 52 },
-    { month: 'Set', revenue: 35000, bookings: 48 },
-    { month: 'Out', revenue: 42000, bookings: 58 },
-    { month: 'Nov', revenue: 45890, bookings: 62 },
-    { month: 'Dez', revenue: 48000, bookings: 65 },
-  ]
+  // Ticket médio
+  const averageTicket = paidBookings > 0 
+    ? Math.round(recentRevenue / recentPaidBookings.length) 
+    : 0
+
+  // Formatar tempo relativo
+  function getRelativeTime(date: Date): string {
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+    if (seconds < 60) return 'Agora mesmo'
+    if (seconds < 3600) return `Há ${Math.floor(seconds / 60)} min`
+    if (seconds < 86400) return `Há ${Math.floor(seconds / 3600)} horas`
+    return `Há ${Math.floor(seconds / 86400)} dias`
+  }
 
   return (
     <DashboardShell title="Relatórios">
@@ -48,9 +99,9 @@ export default async function RelatoriosPage() {
                 <DollarSign className="w-5 h-5 text-green-400" />
               </div>
             </div>
-            <p className="text-sm text-[#A0A0A0]">Receita Total</p>
+            <p className="text-sm text-[#A0A0A0]">Receita (30 dias)</p>
             <p className="text-xl font-bold text-[#E0E0E0]">
-              {stats.totalRevenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              {(recentRevenue / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </p>
           </div>
 
@@ -61,17 +112,19 @@ export default async function RelatoriosPage() {
               </div>
             </div>
             <p className="text-sm text-[#A0A0A0]">Crescimento</p>
-            <p className="text-xl font-bold text-green-400">+{stats.monthlyGrowth}%</p>
+            <p className={`text-xl font-bold ${growthRate >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {growthRate >= 0 ? '+' : ''}{growthRate}%
+            </p>
           </div>
 
           <div className="p-4 bg-[#1E1E1E] border border-[#333] rounded-xl">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                <Users className="w-5 h-5 text-purple-400" />
+                <Calendar className="w-5 h-5 text-purple-400" />
               </div>
             </div>
             <p className="text-sm text-[#A0A0A0]">Total Reservas</p>
-            <p className="text-xl font-bold text-[#E0E0E0]">{stats.totalBookings}</p>
+            <p className="text-xl font-bold text-[#E0E0E0]">{totalBookings}</p>
           </div>
 
           <div className="p-4 bg-[#1E1E1E] border border-[#333] rounded-xl">
@@ -82,59 +135,57 @@ export default async function RelatoriosPage() {
             </div>
             <p className="text-sm text-[#A0A0A0]">Ticket Médio</p>
             <p className="text-xl font-bold text-[#E0E0E0]">
-              {stats.averageTicket.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              {(averageTicket / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </p>
           </div>
         </div>
 
-        {/* Chart Section */}
+        {/* Resumo */}
         <div className="bg-[#1E1E1E] border border-[#333] rounded-xl p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-[#E0E0E0]">Receita Mensal</h3>
-            <button className="flex items-center gap-2 px-3 py-1.5 text-sm bg-[#2A2A2A] text-[#A0A0A0] rounded-lg hover:text-[#E0E0E0] transition-colors">
-              <Download className="w-4 h-4" />
-              Exportar
-            </button>
-          </div>
-          
-          {/* Simple Bar Chart */}
-          <div className="flex items-end gap-2 h-40 pt-4">
-            {monthlyData.map((data, index) => (
-              <div key={data.month} className="flex-1 flex flex-col items-center gap-2">
-                <div 
-                  className={`w-full rounded-t transition-all ${
-                    index === monthlyData.length - 2 ? 'bg-[#D93636]' : 'bg-[#1E3A8A]'
-                  }`}
-                  style={{ height: `${(data.revenue / 50000) * 100}%` }}
-                />
-                <span className="text-xs text-[#A0A0A0]">{data.month}</span>
-              </div>
-            ))}
+          <h3 className="text-lg font-semibold text-[#E0E0E0] mb-4">Resumo</h3>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="flex justify-between p-3 bg-[#2A2A2A] rounded-lg">
+              <span className="text-[#A0A0A0]">Reservas pagas</span>
+              <span className="text-[#E0E0E0] font-medium">{paidBookings}</span>
+            </div>
+            <div className="flex justify-between p-3 bg-[#2A2A2A] rounded-lg">
+              <span className="text-[#A0A0A0]">Pendentes</span>
+              <span className="text-[#E0E0E0] font-medium">{totalBookings - paidBookings}</span>
+            </div>
           </div>
         </div>
 
-        {/* Recent Activity */}
+        {/* Atividade Recente */}
         <div className="bg-[#1E1E1E] border border-[#333] rounded-xl p-4">
           <h3 className="text-lg font-semibold text-[#E0E0E0] mb-4">Atividade Recente</h3>
           
-          <div className="space-y-4">
-            {[
-              { action: 'Nova reserva', package: 'Gramado - Serra Gaúcha', time: 'Há 2 horas', value: 'R$ 1.890,00' },
-              { action: 'Pagamento confirmado', package: 'Florianópolis', time: 'Há 4 horas', value: 'R$ 2.450,00' },
-              { action: 'Nova reserva', package: 'Bonito - MS', time: 'Há 6 horas', value: 'R$ 3.200,00' },
-            ].map((activity, index) => (
-              <div key={index} className="flex items-center justify-between py-2 border-b border-[#333] last:border-0">
-                <div>
-                  <p className="text-[#E0E0E0] font-medium">{activity.action}</p>
-                  <p className="text-sm text-[#A0A0A0]">{activity.package}</p>
+          {recentBookingsList.length === 0 ? (
+            <div className="text-center py-8">
+              <Package className="w-12 h-12 text-[#333] mx-auto mb-2" />
+              <p className="text-[#A0A0A0]">Nenhuma reserva ainda</p>
+              <p className="text-sm text-[#666]">As reservas aparecerão aqui</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {recentBookingsList.map((booking) => (
+                <div key={booking.id} className="flex items-center justify-between py-2 border-b border-[#333] last:border-0">
+                  <div>
+                    <p className="text-[#E0E0E0] font-medium">
+                      {booking.status === 'confirmed' ? 'Reserva confirmada' : 
+                       booking.payment_status === 'paid' ? 'Pagamento confirmado' : 'Nova reserva'}
+                    </p>
+                    <p className="text-sm text-[#A0A0A0]">{booking.package.title}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[#E0E0E0] font-medium">
+                      {(booking.total_amount / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </p>
+                    <p className="text-xs text-[#A0A0A0]">{getRelativeTime(booking.created_at)}</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-[#E0E0E0] font-medium">{activity.value}</p>
-                  <p className="text-xs text-[#A0A0A0]">{activity.time}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </DashboardShell>

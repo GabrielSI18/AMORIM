@@ -1,13 +1,13 @@
 'use client'
 
 import { useUser, useClerk } from '@clerk/nextjs'
-import { User, Mail, Phone, MapPin, Calendar, Edit2, LogOut, Shield } from 'lucide-react'
+import { User, Mail, Phone, Calendar, Edit2, LogOut, Shield } from 'lucide-react'
 import Image from 'next/image'
 import { DashboardShell } from '@/components/dashboard'
 
 export default function PerfilPage() {
   const { user, isLoaded } = useUser()
-  const { signOut } = useClerk()
+  const { signOut, openUserProfile } = useClerk()
 
   if (!isLoaded) {
     return (
@@ -108,7 +108,10 @@ export default function PerfilPage() {
           <h3 className="text-lg font-semibold text-[#E0E0E0] px-1">Conta</h3>
           
           <div className="bg-[#1E1E1E] border border-[#333] rounded-xl divide-y divide-[#333]">
-            <button className="flex items-center gap-4 p-4 w-full text-left hover:bg-[#2A2A2A] transition-colors">
+            <button 
+              onClick={() => openUserProfile()}
+              className="flex items-center gap-4 p-4 w-full text-left hover:bg-[#2A2A2A] transition-colors"
+            >
               <div className="w-10 h-10 rounded-full bg-[#2A2A2A] flex items-center justify-center">
                 <User className="w-5 h-5 text-[#A0A0A0]" />
               </div>
@@ -118,7 +121,10 @@ export default function PerfilPage() {
               </div>
             </button>
 
-            <button className="flex items-center gap-4 p-4 w-full text-left hover:bg-[#2A2A2A] transition-colors">
+            <button 
+              onClick={() => openUserProfile()}
+              className="flex items-center gap-4 p-4 w-full text-left hover:bg-[#2A2A2A] transition-colors"
+            >
               <div className="w-10 h-10 rounded-full bg-[#2A2A2A] flex items-center justify-center">
                 <Shield className="w-5 h-5 text-[#A0A0A0]" />
               </div>
