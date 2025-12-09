@@ -29,8 +29,12 @@ export async function GET(req: NextRequest) {
     // Construir where clause
     const where: any = {
       is_active: true,
-      status: filters.status,
     };
+
+    // Só adicionar filtro de status se não for "all"
+    if (filters.status && filters.status !== 'all') {
+      where.status = filters.status;
+    }
 
     if (filters.category) where.category_id = filters.category;
     if (filters.destination) where.destination_id = filters.destination;
@@ -59,7 +63,7 @@ export async function GET(req: NextRequest) {
       where,
       include: {
         category: true,
-        destination: true,
+        destination_rel: true,
       },
       orderBy: [
         { is_featured: 'desc' },
@@ -97,10 +101,10 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    // Validação básica
-    if (!body.title || !body.category_id || !body.destination_id || !body.price) {
+    // Validação básica - apenas título e preço são obrigatórios
+    if (!body.title || !body.price) {
       return NextResponse.json(
-        { error: 'Campos obrigatórios faltando' },
+        { error: 'Campos obrigatórios faltando (título e preço)' },
         { status: 400 }
       );
     }
@@ -113,35 +117,39 @@ export async function POST(req: NextRequest) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
 
+    // Verificar se slug já existe e adicionar sufixo se necessário
+    let finalSlug = slug;
+    let counter = 1;
+    while (await prisma.package.findUnique({ where: { slug: finalSlug } })) {
+      finalSlug = `${slug}-${counter}`;
+      counter++;
+    }
+
     const package_ = await prisma.package.create({
       data: {
         title: body.title,
-        slug,
-        description: body.description,
-        short_description: body.short_description,
-        category_id: body.category_id,
-        destination_id: body.destination_id,
+        slug: finalSlug,
+        description: body.description || null,
+        short_description: body.short_description || null,
+        category_id: body.category_id || null,
+        destination_id: body.destination_id || null,
+        destination: body.destination || null,
         price: body.price,
-        original_price: body.original_price,
-        duration_days: body.duration_days,
-        departure_location: body.departure_location,
-        departure_time: body.departure_time,
+        original_price: body.original_price || null,
+        duration_days: body.duration_days || null,
+        departure_location: body.departure_location || null,
+        departure_time: body.departure_time || null,
         departure_date: body.departure_date ? new Date(body.departure_date) : null,
         return_date: body.return_date ? new Date(body.return_date) : null,
-        available_seats: body.available_seats,
-        total_seats: body.total_seats,
-        min_participants: body.min_participants || 10,
+        available_seats: body.available_seats || null,
+        total_seats: body.total_seats || null,
         includes: body.includes || [],
         not_includes: body.not_includes || [],
         itinerary: body.itinerary || null,
-        cover_image: body.cover_image,
-        gallery_images: body.gallery_images || [],
+        cover_image: body.cover_image || null,
+        gallery_images: body.images || body.gallery_images || [],
         status: body.status || 'draft',
         is_featured: body.is_featured || false,
-      },
-      include: {
-        category: true,
-        destination: true,
       },
     });
 
@@ -193,7 +201,7 @@ export async function PUT(req: NextRequest) {
       data,
       include: {
         category: true,
-        destination: true,
+        destination_rel: true,
       },
     });
 

@@ -5,10 +5,13 @@ import Image from 'next/image'
 import { useSignUp } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, ArrowLeft, Moon, Sun } from 'lucide-react'
+import { useTheme } from 'next-themes'
 
 export default function SignUpPage() {
   const { signUp, setActive } = useSignUp()
   const router = useRouter()
+  const { theme, setTheme, resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
   
   const [emailAddress, setEmailAddress] = useState('')
   const [password, setPassword] = useState('')
@@ -23,26 +26,16 @@ export default function SignUpPage() {
   const [error, setError] = useState('')
   const [pendingVerification, setPendingVerification] = useState(false)
   const [code, setCode] = useState('')
-  const [isDarkMode, setIsDarkMode] = useState(false)
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme')
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true)
-      document.documentElement.classList.add('dark')
-    }
+    setMounted(true)
   }, [])
 
   const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode)
-    if (!isDarkMode) {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
-    }
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
   }
+
+  const isDarkMode = resolvedTheme === 'dark'
 
   // Formata CPF: 000.000.000-00
   const formatCPF = (value: string) => {
@@ -170,7 +163,7 @@ export default function SignUpPage() {
             onClick={toggleTheme}
             className="absolute right-4 text-[#1A2E40] dark:text-white flex size-10 items-center justify-center hover:bg-[#1A2E40]/10 dark:hover:bg-white/10 rounded-full transition-colors"
           >
-            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            {mounted && (isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />)}
           </button>
         </header>
 
@@ -235,7 +228,7 @@ export default function SignUpPage() {
           onClick={toggleTheme}
           className="absolute right-4 text-[#1A2E40] dark:text-white flex size-10 items-center justify-center hover:bg-[#1A2E40]/10 dark:hover:bg-white/10 rounded-full transition-colors"
         >
-          {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          {mounted && (isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />)}
         </button>
       </header>
 

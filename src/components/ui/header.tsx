@@ -55,8 +55,11 @@ export function Header() {
               Seja um Afiliado
             </Link>
             <Link
-              href="#contato"
-              className="text-sm font-medium transition-colors hover:text-primary text-muted-foreground"
+              href="/contato"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary",
+                pathname === '/contato' ? 'text-primary font-bold' : 'text-muted-foreground'
+              )}
             >
               Contato
             </Link>

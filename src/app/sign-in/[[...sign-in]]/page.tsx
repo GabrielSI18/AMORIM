@@ -6,10 +6,13 @@ import Link from 'next/link'
 import { useSignIn } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, ArrowLeft, Moon, Sun, Mail } from 'lucide-react'
+import { useTheme } from 'next-themes'
 
 export default function SignInPage() {
   const { signIn, setActive } = useSignIn()
   const router = useRouter()
+  const { theme, setTheme, resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
   
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
@@ -17,7 +20,6 @@ export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [usePhoneLogin, setUsePhoneLogin] = useState(false)
-  const [isDarkMode, setIsDarkMode] = useState(false)
   
   // Estado para verificação de email (segundo fator)
   const [needsEmailVerification, setNeedsEmailVerification] = useState(false)
@@ -25,23 +27,14 @@ export default function SignInPage() {
   const [verificationEmail, setVerificationEmail] = useState('')
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme')
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true)
-      document.documentElement.classList.add('dark')
-    }
+    setMounted(true)
   }, [])
 
   const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode)
-    if (!isDarkMode) {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
-    }
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
   }
+
+  const isDarkMode = resolvedTheme === 'dark'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -176,7 +169,7 @@ export default function SignInPage() {
           onClick={toggleTheme}
           className="absolute right-4 text-[#1A2E40] dark:text-white flex size-10 items-center justify-center hover:bg-[#1A2E40]/10 dark:hover:bg-white/10 rounded-full transition-colors"
         >
-          {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          {mounted && (isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />)}
         </button>
       </header>
 

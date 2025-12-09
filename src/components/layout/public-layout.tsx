@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Search, Home as HomeIcon, Briefcase, Ticket, User, Moon, Sun } from 'lucide-react'
+import { useTheme } from 'next-themes'
 
 interface PublicLayoutProps {
   children: React.ReactNode
@@ -11,26 +12,19 @@ interface PublicLayoutProps {
 }
 
 export function PublicLayout({ children, currentPage }: PublicLayoutProps) {
-  const [isDarkMode, setIsDarkMode] = useState(false)
+  const { theme, setTheme, resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
 
+  // Evitar flash de tema incorreto
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme')
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true)
-      document.documentElement.classList.add('dark')
-    }
+    setMounted(true)
   }, [])
 
   const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode)
-    if (!isDarkMode) {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
-    }
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
   }
+
+  const isDarkMode = resolvedTheme === 'dark'
 
   return (
     <div className="relative min-h-screen bg-[#f8f9fa] dark:bg-[#121212]">
@@ -70,7 +64,7 @@ export function PublicLayout({ children, currentPage }: PublicLayoutProps) {
                 onClick={toggleTheme}
                 className="flex items-center justify-center rounded-full h-10 w-10 text-[#6c757d] dark:text-[#adb5bd] hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
               >
-                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                {mounted && (isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />)}
               </button>
               <button className="flex items-center justify-center rounded-full h-10 w-10 text-[#6c757d] dark:text-[#adb5bd] hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
                 <Search className="w-5 h-5" />
@@ -115,6 +109,7 @@ export function PublicLayout({ children, currentPage }: PublicLayoutProps) {
                 <li><Link href="/faq" className="hover:text-[#004a80] transition">Perguntas Frequentes</Link></li>
                 <li><Link href="/politicas" className="hover:text-[#004a80] transition">Políticas de Cancelamento</Link></li>
                 <li><Link href="/termos" className="hover:text-[#004a80] transition">Termos de Uso</Link></li>
+                <li><Link href="/contato" className="hover:text-[#004a80] transition">Fale Conosco</Link></li>
               </ul>
             </div>
             <div>
@@ -149,7 +144,7 @@ export function PublicLayout({ children, currentPage }: PublicLayoutProps) {
           <p className={`text-xs ${currentPage === 'pacotes' ? 'font-bold' : 'font-medium'}`}>Pacotes</p>
         </Link>
         <Link 
-          href="/minhas-viagens" 
+          href="/dashboard" 
           className={`flex flex-col items-center gap-1 ${currentPage === 'viagens' ? 'text-[#D92E2E]' : 'text-[#4F4F4F] dark:text-[#E0E0E0] hover:text-[#1A2E40] dark:hover:text-white'} transition-colors`}
         >
           <Ticket className="w-6 h-6" />

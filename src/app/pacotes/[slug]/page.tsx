@@ -4,6 +4,7 @@ import { toCamelCase } from '@/lib/case-transform';
 import Image from 'next/image';
 import { MapPin, Calendar, Users, Clock } from 'lucide-react';
 import Link from 'next/link';
+import { PackageSeatsDisplay } from '@/components/packages/package-seats-display';
 
 interface PackagePageProps {
   params: Promise<{
@@ -20,7 +21,7 @@ async function getPackage(slug: string) {
     },
     include: {
       category: true,
-      destination: true,
+      destination_rel: true,
     },
   });
 
@@ -203,6 +204,17 @@ export default async function PackagePage({ params }: PackagePageProps) {
                 </div>
               </div>
             </section>
+
+            {/* Mapa de Assentos do Ônibus */}
+            {pkg.totalSeats && pkg.totalSeats > 0 && (
+              <section className="bg-card rounded-xl p-6 shadow-card">
+                <PackageSeatsDisplay 
+                  packageId={pkg.id} 
+                  totalSeats={pkg.totalSeats}
+                  variant="full"
+                />
+              </section>
+            )}
 
             {/* O que está incluso */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

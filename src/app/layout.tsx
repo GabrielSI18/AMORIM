@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs';
 import { ptBR } from '@clerk/localizations';
 import { QueryProvider } from '@/lib/query-provider';
+import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from 'sonner';
 import { baseMetadata, getOrganizationSchema, getWebsiteSchema, JsonLd } from '@/lib/seo';
 import "./globals.css";
@@ -28,7 +29,7 @@ export default function RootLayout({
   if (!hasClerk) {
     // Renderizar sem Clerk se não configurado
     return (
-      <html lang="pt-BR">
+      <html lang="pt-BR" suppressHydrationWarning>
         <head>
           <JsonLd data={getOrganizationSchema()} />
           <JsonLd data={getWebsiteSchema()} />
@@ -36,17 +37,24 @@ export default function RootLayout({
         <body
           className={`${plusJakartaSans.variable} font-sans antialiased`}
         >
-          <QueryProvider>
-            {children}
-          </QueryProvider>
-          <Toaster 
-            position="top-right"
-            richColors
-            closeButton
-            toastOptions={{
-              duration: 4000,
-            }}
-          />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <QueryProvider>
+              {children}
+            </QueryProvider>
+            <Toaster 
+              position="top-right"
+              richColors
+              closeButton
+              toastOptions={{
+                duration: 4000,
+              }}
+            />
+          </ThemeProvider>
         </body>
       </html>
     );
@@ -54,7 +62,7 @@ export default function RootLayout({
 
   return (
     <ClerkProvider localization={ptBR}>
-      <html lang="pt-BR">
+      <html lang="pt-BR" suppressHydrationWarning>
         <head>
           <JsonLd data={getOrganizationSchema()} />
           <JsonLd data={getWebsiteSchema()} />
@@ -62,17 +70,24 @@ export default function RootLayout({
         <body
           className={`${plusJakartaSans.variable} font-sans antialiased`}
         >
-          <QueryProvider>
-            {children}
-          </QueryProvider>
-          <Toaster 
-            position="top-right"
-            richColors
-            closeButton
-            toastOptions={{
-              duration: 4000,
-            }}
-          />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <QueryProvider>
+              {children}
+            </QueryProvider>
+            <Toaster 
+              position="top-right"
+              richColors
+              closeButton
+              toastOptions={{
+                duration: 4000,
+              }}
+            />
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
       include: {
         package: {
           include: {
-            destination: true,
+            destination_rel: true,
             category: true,
           },
         },
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       return rateLimitExceededResponse(rateLimitResult);
     }
 
-    const body: CreateBookingDto = await req.json();
+    const body: CreateBookingDto & { selected_seats?: number[] } = await req.json();
 
     // Validação
     if (!body.package_id || !body.customer_name || !body.customer_email || !body.customer_phone || !body.num_passengers) {
@@ -82,11 +82,58 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Pacote não encontrado' }, { status: 404 });
     }
 
-    if (package_.available_seats < body.num_passengers) {
+    if (package_.available_seats && package_.available_seats < body.num_passengers) {
       return NextResponse.json(
         { error: `Apenas ${package_.available_seats} vagas disponíveis` },
         { status: 400 }
       );
+    }
+
+    // Validar assentos selecionados (se fornecidos)
+    if (body.selected_seats && body.selected_seats.length > 0) {
+      // Verificar se a quantidade de assentos bate com num_passengers
+      if (body.selected_seats.length !== body.num_passengers) {
+        return NextResponse.json(
+          { error: `Número de assentos (${body.selected_seats.length}) deve ser igual ao número de passageiros (${body.num_passengers})` },
+          { status: 400 }
+        );
+      }
+
+      // Buscar assentos já ocupados
+      const existingBookings = await prisma.booking.findMany({
+        where: {
+          package_id: body.package_id,
+          status: { in: ['pending', 'confirmed'] },
+          selected_seats: { not: null },
+        },
+        select: { selected_seats: true },
+      });
+
+      const occupiedSeats = new Set<number>();
+      for (const booking of existingBookings) {
+        if (booking.selected_seats && Array.isArray(booking.selected_seats)) {
+          (booking.selected_seats as number[]).forEach(seat => occupiedSeats.add(seat));
+        }
+      }
+
+      // Verificar se algum assento selecionado já está ocupado
+      const conflictingSeats = body.selected_seats.filter(seat => occupiedSeats.has(seat));
+      if (conflictingSeats.length > 0) {
+        return NextResponse.json(
+          { error: `Assento(s) ${conflictingSeats.join(', ')} já está(ão) ocupado(s). Por favor, escolha outro(s).` },
+          { status: 409 }
+        );
+      }
+
+      // Verificar se assentos estão dentro do range válido
+      const totalSeats = package_.total_seats || 0;
+      const invalidSeats = body.selected_seats.filter(seat => seat < 1 || seat > totalSeats);
+      if (invalidSeats.length > 0) {
+        return NextResponse.json(
+          { error: `Assento(s) inválido(s): ${invalidSeats.join(', ')}` },
+          { status: 400 }
+        );
+      }
     }
 
     // Calcular valor total
@@ -104,11 +151,12 @@ export async function POST(req: NextRequest) {
         num_passengers: body.num_passengers,
         total_amount: totalAmount,
         customer_notes: body.customer_notes,
+        selected_seats: body.selected_seats || null,
       },
       include: {
         package: {
           include: {
-            destination: true,
+            destination_rel: true,
           },
         },
       },

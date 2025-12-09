@@ -204,49 +204,52 @@ model Destination {
 
 // Package Model - Pacotes turísticos
 model Package {
-  id                  String      @id @default(cuid())
-  title               String      // "Fim de Semana em Búzios"
-  slug                String      @unique
-  description         String      @db.Text
-  short_description   String?     @map("short_description") // Para cards
-  category_id         String      @map("category_id")
-  category            Category    @relation(fields: [category_id], references: [id])
-  destination_id      String      @map("destination_id")
-  destination         Destination @relation(fields: [destination_id], references: [id])
+  id                  String       @id @default(cuid())
+  title               String       // "Fim de Semana em Búzios"
+  slug                String       @unique
+  description         String?      @db.Text
+  short_description   String?      @map("short_description") // Para cards
+  
+  // Categoria e Destino (opcionais - podem usar texto livre)
+  category_id         String?      @map("category_id")
+  category            Category?    @relation(fields: [category_id], references: [id])
+  destination_id      String?      @map("destination_id")
+  destination_rel     Destination? @relation(fields: [destination_id], references: [id])
+  destination         String?      // Texto livre: "Rio de Janeiro, RJ"
   
   // Detalhes do pacote
-  price               Int         // Preço em centavos (por pessoa)
-  original_price      Int?        @map("original_price") // Preço original (para desconto)
-  duration_days       Int         @map("duration_days") // Duração em dias
-  departure_location  String      @map("departure_location") // "Belo Horizonte, MG"
-  departure_time      String?     @map("departure_time") // "06:00"
-  departure_date      DateTime?   @map("departure_date") // Data de saída
-  return_date         DateTime?   @map("return_date") // Data de retorno
+  price               Int          // Preço em centavos (por pessoa)
+  original_price      Int?         @map("original_price") // Preço original (para desconto)
+  duration_days       Int?         @map("duration_days") // Duração em dias
+  departure_location  String?      @map("departure_location") // "Belo Horizonte, MG"
+  departure_time      String?      @map("departure_time") // "06:00"
+  departure_date      DateTime?    @map("departure_date") // Data de saída
+  return_date         DateTime?    @map("return_date") // Data de retorno
   
   // Disponibilidade
-  available_seats     Int         @map("available_seats") // Vagas disponíveis
-  total_seats         Int         @map("total_seats") // Total de vagas
-  min_participants    Int         @default(10) @map("min_participants") // Mínimo para confirmar
+  available_seats     Int?         @map("available_seats") // Vagas disponíveis
+  total_seats         Int?         @map("total_seats") // Total de vagas
+  min_participants    Int          @default(10) @map("min_participants") // Mínimo para confirmar
   
   // Features do pacote
-  includes            String[]    // ["Transporte", "Hospedagem", "Café da manhã"]
-  not_includes        String[]    @default([]) @map("not_includes") // ["Almoço", "Jantar"]
-  itinerary           Json?       // JSON com roteiro dia a dia
+  includes            String[]     // ["Transporte", "Hospedagem", "Café da manhã"]
+  not_includes        String[]     @default([]) @map("not_includes") // ["Almoço", "Jantar"]
+  itinerary           Json?        // JSON com roteiro dia a dia
   
   // Imagens
-  cover_image         String      @map("cover_image") // Imagem principal
-  gallery_images      String[]    @default([]) @map("gallery_images") // Galeria
+  cover_image         String?      @map("cover_image") // Imagem principal
+  gallery_images      String[]     @default([]) @map("gallery_images") // Galeria
   
   // Status
-  status              String      @default("draft") // "draft", "published", "sold_out", "canceled"
-  is_featured         Boolean     @default(false) @map("is_featured") // Pacote em destaque
-  is_active           Boolean     @default(true) @map("is_active")
+  status              String       @default("draft") // "draft", "published", "sold_out", "canceled"
+  is_featured         Boolean      @default(false) @map("is_featured") // Pacote em destaque
+  is_active           Boolean      @default(true) @map("is_active")
   
   // Metadata
-  views_count         Int         @default(0) @map("views_count")
-  bookings_count      Int         @default(0) @map("bookings_count")
-  created_at          DateTime    @default(now()) @map("created_at")
-  updated_at          DateTime    @updatedAt @map("updated_at")
+  views_count         Int          @default(0) @map("views_count")
+  bookings_count      Int          @default(0) @map("bookings_count")
+  created_at          DateTime     @default(now()) @map("created_at")
+  updated_at          DateTime     @updatedAt @map("updated_at")
   
   // Relacionamentos
   bookings            Booking[]
@@ -275,6 +278,7 @@ model Booking {
   // Detalhes da reserva
   num_passengers    Int      @map("num_passengers") // Número de passageiros
   total_amount      Int      @map("total_amount") // Valor total em centavos
+  selected_seats    Json?    @map("selected_seats") // Array de números dos assentos reservados ex: [1, 2, 15, 16]
   
   // Status
   status            String   @default("pending") // "pending", "confirmed", "paid", "canceled"
@@ -367,3 +371,31 @@ model AffiliateReferral {
   @@map("affiliate_referrals")
 }
 
+// Contact Model - Mensagens de contato do formulário
+model Contact {
+  id           String    @id @default(cuid())
+  
+  // Dados do contato
+  name         String    // Nome completo
+  email        String    // E-mail
+  phone        String?   // Telefone (opcional)
+  subject      String?   // Assunto selecionado
+  message      String    // Mensagem
+  
+  // Gerenciamento pelo admin
+  status       String    @default("pending") // "pending", "in_progress", "resolved", "archived"
+  priority     String    @default("normal") // "low", "normal", "high", "urgent"
+  assigned_to  String?   @map("assigned_to") // ID do admin responsável (opcional)
+  notes        String?   // Notas internas do admin
+  
+  // Timestamps
+  read_at      DateTime? @map("read_at") // Quando foi lido pelo admin
+  resolved_at  DateTime? @map("resolved_at") // Quando foi resolvido
+  created_at   DateTime  @default(now()) @map("created_at")
+  updated_at   DateTime  @updatedAt @map("updated_at")
+  
+  @@index([status])
+  @@index([priority])
+  @@index([created_at])
+  @@map("contacts")
+}

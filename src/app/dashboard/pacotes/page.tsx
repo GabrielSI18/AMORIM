@@ -2,19 +2,19 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Plus, Edit, Trash2, Eye, Package } from 'lucide-react'
 import { DashboardShell } from '@/components/dashboard'
 import type { Package as PackageType, Category, Destination } from '@/types'
 
 export default function DashboardPackagesPage() {
+  const router = useRouter()
   const { userId } = useAuth()
   const [packages, setPackages] = useState<PackageType[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [destinations, setDestinations] = useState<Destination[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
-  const [editingPackage, setEditingPackage] = useState<PackageType | null>(null)
 
   useEffect(() => {
     loadData()
@@ -109,10 +109,7 @@ export default function DashboardPackagesPage() {
           </p>
         </div>
         <button
-          onClick={() => {
-            setEditingPackage(null)
-            setShowForm(true)
-          }}
+          onClick={() => router.push('/dashboard/pacotes/novo')}
           className="bg-[#D93636] text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-[#c42f2f] transition-colors flex items-center gap-2"
         >
           <Plus className="h-5 w-5" />
@@ -180,10 +177,7 @@ export default function DashboardPackagesPage() {
                   <Eye className="h-5 w-5" />
                 </button>
                 <button
-                  onClick={() => {
-                    setEditingPackage(pkg)
-                    setShowForm(true)
-                  }}
+                  onClick={() => router.push(`/dashboard/pacotes/${pkg.id}/editar`)}
                   className="p-2 hover:bg-[#2a2a2a] text-[#A0A0A0] hover:text-[#E0E0E0] rounded-lg transition"
                   title="Editar"
                 >
@@ -201,28 +195,6 @@ export default function DashboardPackagesPage() {
           ))
         )}
       </div>
-
-      {/* Modal de formulario */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[60]">
-          <div className="bg-[#1E1E1E] border border-gray-700 rounded-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-[#E0E0E0]">
-                {editingPackage ? 'Editar Pacote' : 'Novo Pacote'}
-              </h2>
-              <button
-                onClick={() => setShowForm(false)}
-                className="text-[#A0A0A0] hover:text-[#E0E0E0] transition-colors text-xl"
-              >
-                ✕
-              </button>
-            </div>
-            <p className="text-[#A0A0A0]">
-              Formulario de criacao/edicao sera implementado aqui.
-            </p>
-          </div>
-        </div>
-      )}
     </DashboardShell>
   )
 }

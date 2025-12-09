@@ -6,12 +6,14 @@ import Image from 'next/image';
 import { Bus, Search, Home, Briefcase, Ticket, User, Moon, Sun } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import type { Package } from '@/types';
+import { useTheme } from 'next-themes';
 
 export default function PackagesPage() {
   const [packages, setPackages] = useState<Package[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('destaques');
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   const categories = [
     { id: 'destaques', name: 'Destaques' },
@@ -22,12 +24,7 @@ export default function PackagesPage() {
   ];
 
   useEffect(() => {
-    // Verificar tema salvo no localStorage
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
-    }
+    setMounted(true);
   }, []);
 
   useEffect(() => {
@@ -53,15 +50,10 @@ export default function PackagesPage() {
   };
 
   const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    if (!isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
   };
+
+  const isDarkMode = resolvedTheme === 'dark';
 
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-[#F5F5F7] dark:bg-[#101622]">
@@ -84,7 +76,7 @@ export default function PackagesPage() {
             onClick={toggleTheme}
             className="flex items-center justify-center rounded-full h-10 w-10 text-[#1A2E40] dark:text-white hover:bg-[#1A2E40]/10 transition-colors"
           >
-            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            {mounted && (isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />)}
           </button>
           <button className="flex items-center justify-center rounded-full h-10 w-10 text-[#1A2E40] dark:text-white hover:bg-[#1A2E40]/10 transition-colors">
             <Search className="w-5 h-5" />
@@ -187,11 +179,11 @@ export default function PackagesPage() {
           <Briefcase className="w-6 h-6" />
           <p className="text-xs font-bold">Pacotes</p>
         </Link>
-        <Link href="/minhas-viagens" className="flex flex-col items-center gap-1 text-[#4F4F4F] dark:text-[#E0E0E0] hover:text-[#1A2E40] dark:hover:text-white transition-colors">
+        <Link href="/dashboard" className="flex flex-col items-center gap-1 text-[#4F4F4F] dark:text-[#E0E0E0] hover:text-[#1A2E40] dark:hover:text-white transition-colors">
           <Ticket className="w-6 h-6" />
           <p className="text-xs font-medium">Minhas Viagens</p>
         </Link>
-        <Link href="/perfil" className="flex flex-col items-center gap-1 text-[#4F4F4F] dark:text-[#E0E0E0] hover:text-[#1A2E40] dark:hover:text-white transition-colors">
+        <Link href="/dashboard/perfil" className="flex flex-col items-center gap-1 text-[#4F4F4F] dark:text-[#E0E0E0] hover:text-[#1A2E40] dark:hover:text-white transition-colors">
           <User className="w-6 h-6" />
           <p className="text-xs font-medium">Perfil</p>
         </Link>

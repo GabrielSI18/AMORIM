@@ -7,19 +7,16 @@ import { motion } from 'framer-motion';
 import { PackageGrid } from '@/components/packages';
 import type { Package } from '@/types';
 import { Bus, Shield, Clock, Star, MapPin, Phone, Mail, Search, Home as HomeIcon, Briefcase, Ticket, User, Moon, Sun } from 'lucide-react';
+import { useTheme } from 'next-themes';
 
 export default function Home() {
   const [featuredPackages, setFeaturedPackages] = useState<Package[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Verificar tema salvo
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
-    }
+    setMounted(true);
   }, []);
 
   useEffect(() => {
@@ -36,15 +33,10 @@ export default function Home() {
   }, []);
 
   const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    if (!isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
   };
+
+  const isDarkMode = resolvedTheme === 'dark';
 
   return (
     <div className="relative min-h-screen bg-[#f8f9fa] dark:bg-[#121212]">
@@ -66,7 +58,7 @@ export default function Home() {
               onClick={toggleTheme}
               className="flex items-center justify-center rounded-full h-10 w-10 text-white hover:bg-white/20 transition-colors"
             >
-              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              {mounted && (isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />)}
             </button>
             <button className="flex items-center justify-center rounded-full h-10 w-10 text-white hover:bg-white/20 transition-colors">
               <Search className="w-5 h-5" />
@@ -313,6 +305,7 @@ export default function Home() {
                 <li><Link href="/faq" className="hover:text-[#004a80] transition">Perguntas Frequentes</Link></li>
                 <li><Link href="/politicas" className="hover:text-[#004a80] transition">Políticas de Cancelamento</Link></li>
                 <li><Link href="/termos" className="hover:text-[#004a80] transition">Termos de Uso</Link></li>
+                <li><Link href="/contato" className="hover:text-[#004a80] transition">Fale Conosco</Link></li>
               </ul>
             </div>
             <div>
@@ -340,11 +333,11 @@ export default function Home() {
           <Briefcase className="w-6 h-6" />
           <p className="text-xs font-medium">Pacotes</p>
         </Link>
-        <Link href="/minhas-viagens" className="flex flex-col items-center gap-1 text-[#4F4F4F] dark:text-[#E0E0E0] hover:text-[#1A2E40] dark:hover:text-white transition-colors">
+        <Link href="/dashboard" className="flex flex-col items-center gap-1 text-[#4F4F4F] dark:text-[#E0E0E0] hover:text-[#1A2E40] dark:hover:text-white transition-colors">
           <Ticket className="w-6 h-6" />
           <p className="text-xs font-medium">Minhas Viagens</p>
         </Link>
-        <Link href="/perfil" className="flex flex-col items-center gap-1 text-[#4F4F4F] dark:text-[#E0E0E0] hover:text-[#1A2E40] dark:hover:text-white transition-colors">
+        <Link href="/dashboard/perfil" className="flex flex-col items-center gap-1 text-[#4F4F4F] dark:text-[#E0E0E0] hover:text-[#1A2E40] dark:hover:text-white transition-colors">
           <User className="w-6 h-6" />
           <p className="text-xs font-medium">Perfil</p>
         </Link>
