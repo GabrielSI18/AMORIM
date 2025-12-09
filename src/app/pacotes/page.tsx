@@ -1,45 +1,86 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Bus, Search, Home, Briefcase, Ticket, User, Moon, Sun } from 'lucide-react';
+import { 
+  Search, MapPin, Calendar, Users, Star, 
+  X, SlidersHorizontal, Clock, Bus
+} from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
+import { PublicLayout } from '@/components/layout';
 import type { Package } from '@/types';
-import { useTheme } from 'next-themes';
+
+// Formatador de moeda
+const formatPrice = (priceInCents: number) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(priceInCents / 100);
+};
+
+// Formatador de data
+const formatDate = (date: Date | string | undefined) => {
+  if (!date) return null;
+  const d = new Date(date);
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+};
 
 export default function PackagesPage() {
   const [packages, setPackages] = useState<Package[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState('destaques');
-  const { theme, setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  
+  // Filtros
+  const [filters, setFilters] = useState({
+    category: 'all',
+    priceRange: 'all',
+    duration: 'all',
+    sortBy: 'featured',
+  });
 
   const categories = [
-    { id: 'destaques', name: 'Destaques' },
+    { id: 'all', name: 'Todos' },
     { id: 'nordeste', name: 'Nordeste' },
     { id: 'sudeste', name: 'Sudeste' },
-    { id: 'feriados', name: 'Feriados' },
     { id: 'sul', name: 'Sul' },
+    { id: 'norte', name: 'Norte' },
+    { id: 'centro-oeste', name: 'Centro-Oeste' },
+    { id: 'feriados', name: 'Feriados' },
+    { id: 'reveillon', name: 'Réveillon' },
+  ];
+
+  const priceRanges = [
+    { id: 'all', name: 'Qualquer preço' },
+    { id: '0-500', name: 'Até R$ 500' },
+    { id: '500-1000', name: 'R$ 500 - R$ 1.000' },
+    { id: '1000-2000', name: 'R$ 1.000 - R$ 2.000' },
+    { id: '2000+', name: 'Acima de R$ 2.000' },
+  ];
+
+  const durations = [
+    { id: 'all', name: 'Qualquer duração' },
+    { id: '1-3', name: '1 a 3 dias' },
+    { id: '4-7', name: '4 a 7 dias' },
+    { id: '8+', name: '8+ dias' },
+  ];
+
+  const sortOptions = [
+    { id: 'featured', name: 'Destaques' },
+    { id: 'price-asc', name: 'Menor preço' },
+    { id: 'price-desc', name: 'Maior preço' },
+    { id: 'date', name: 'Próximas saídas' },
   ];
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
     loadPackages();
-  }, [selectedCategory]);
+  }, []);
 
   const loadPackages = async () => {
     setIsLoading(true);
     try {
-      const params = new URLSearchParams({ status: 'published' });
-      if (selectedCategory !== 'destaques') {
-        params.append('category', selectedCategory);
-      }
-      
-      const response = await fetch(`/api/packages?${params}`);
+      const response = await fetch('/api/packages?status=published');
       const data = await response.json();
       setPackages(data.data || []);
     } catch (err) {
@@ -49,145 +90,400 @@ export default function PackagesPage() {
     }
   };
 
-  const toggleTheme = () => {
-    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  // Filtrar e ordenar pacotes
+  const filteredPackages = useMemo(() => {
+    let result = [...packages];
+
+    // Busca por texto
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(pkg => 
+        pkg.title?.toLowerCase().includes(query) ||
+        pkg.destination?.toString().toLowerCase().includes(query) ||
+        pkg.description?.toLowerCase().includes(query)
+      );
+    }
+
+    // Filtro por categoria
+    if (filters.category !== 'all') {
+      result = result.filter(pkg => 
+        pkg.category?.slug === filters.category ||
+        pkg.category?.name?.toLowerCase().includes(filters.category)
+      );
+    }
+
+    // Filtro por preço
+    if (filters.priceRange !== 'all') {
+      const priceInReais = (cents: number) => cents / 100;
+      result = result.filter(pkg => {
+        const price = priceInReais(pkg.price);
+        switch (filters.priceRange) {
+          case '0-500': return price <= 500;
+          case '500-1000': return price > 500 && price <= 1000;
+          case '1000-2000': return price > 1000 && price <= 2000;
+          case '2000+': return price > 2000;
+          default: return true;
+        }
+      });
+    }
+
+    // Filtro por duração
+    if (filters.duration !== 'all') {
+      result = result.filter(pkg => {
+        const days = pkg.durationDays || 0;
+        switch (filters.duration) {
+          case '1-3': return days >= 1 && days <= 3;
+          case '4-7': return days >= 4 && days <= 7;
+          case '8+': return days >= 8;
+          default: return true;
+        }
+      });
+    }
+
+    // Ordenação
+    switch (filters.sortBy) {
+      case 'price-asc':
+        result.sort((a, b) => a.price - b.price);
+        break;
+      case 'price-desc':
+        result.sort((a, b) => b.price - a.price);
+        break;
+      case 'date':
+        result.sort((a, b) => {
+          if (!a.departureDate) return 1;
+          if (!b.departureDate) return -1;
+          return new Date(a.departureDate).getTime() - new Date(b.departureDate).getTime();
+        });
+        break;
+      case 'featured':
+      default:
+        result.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
+        break;
+    }
+
+    return result;
+  }, [packages, searchQuery, filters]);
+
+  const hasActiveFilters = filters.category !== 'all' || filters.priceRange !== 'all' || filters.duration !== 'all';
+
+  const clearFilters = () => {
+    setFilters({
+      category: 'all',
+      priceRange: 'all',
+      duration: 'all',
+      sortBy: 'featured',
+    });
+    setSearchQuery('');
   };
 
-  const isDarkMode = resolvedTheme === 'dark';
-
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-[#F5F5F7] dark:bg-[#101622]">
-      {/* Header Sticky */}
-      <header className="sticky top-0 z-10 flex items-center bg-[#F5F5F7]/80 dark:bg-[#101622]/80 p-4 backdrop-blur-sm border-b border-[#e0e0e0]/50 dark:border-white/10">
-        <Link href="/" className="flex size-10 shrink-0 items-center justify-center">
-          <Image
-            src="/favicon.ico"
-            alt="Amorim Turismo"
-            width={32}
-            height={32}
-            className="object-contain"
-          />
-        </Link>
-        <h1 className="text-[#1A2E40] dark:text-white text-xl font-bold leading-tight tracking-[-0.015em] flex-1 text-center">
-          Pacotes de Viagem
-        </h1>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={toggleTheme}
-            className="flex items-center justify-center rounded-full h-10 w-10 text-[#1A2E40] dark:text-white hover:bg-[#1A2E40]/10 transition-colors"
-          >
-            {mounted && (isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />)}
-          </button>
-          <button className="flex items-center justify-center rounded-full h-10 w-10 text-[#1A2E40] dark:text-white hover:bg-[#1A2E40]/10 transition-colors">
-            <Search className="w-5 h-5" />
-          </button>
-        </div>
-      </header>
+    <PublicLayout currentPage="pacotes">
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-primary/10 via-background to-background py-12 md:py-16">
+        <div className="container mx-auto max-w-7xl px-4">
+          <div className="max-w-3xl mx-auto text-center">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+              Encontre sua próxima aventura
+            </h1>
+            <p className="text-muted-foreground text-lg mb-8">
+              Descubra destinos incríveis com os melhores preços e conforto
+            </p>
 
-      {/* Main Content */}
-      <main className="flex-grow pb-24">
-        {/* Chips de Filtro */}
-        <div className="flex gap-3 px-4 py-3 overflow-x-auto whitespace-nowrap scrollbar-hide">
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
-              className={`flex h-9 shrink-0 cursor-pointer items-center justify-center gap-x-2 rounded-full px-4 transition-all ${
-                selectedCategory === category.id
-                  ? 'bg-[#D92E2E] text-white font-semibold'
-                  : 'bg-[#1A2E40]/10 dark:bg-white/10 text-[#1A2E40] dark:text-[#E0E0E0] font-medium hover:bg-[#1A2E40]/20'
-              }`}
+            {/* Barra de Busca */}
+            <div className="relative max-w-2xl mx-auto">
+              <div className="flex items-center bg-card border border-border rounded-full shadow-lg overflow-hidden">
+                <div className="flex-1 flex items-center px-6 py-4">
+                  <Search className="w-5 h-5 text-muted-foreground mr-3" />
+                  <input
+                    type="text"
+                    placeholder="Para onde você quer ir?"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-transparent text-foreground placeholder-muted-foreground focus:outline-none"
+                  />
+                  {searchQuery && (
+                    <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-muted rounded-full">
+                      <X className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  )}
+                </div>
+                <button 
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`px-6 py-4 border-l border-border hover:bg-muted transition-colors ${showFilters ? 'bg-muted' : ''}`}
+                >
+                  <SlidersHorizontal className="w-5 h-5 text-muted-foreground" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Filtros Expandidos */}
+      {showFilters && (
+        <section className="border-b border-border bg-card/50">
+          <div className="container mx-auto max-w-7xl px-4 py-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Categoria */}
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Região</label>
+                <select
+                  value={filters.category}
+                  onChange={(e) => setFilters(f => ({ ...f, category: e.target.value }))}
+                  className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Preço */}
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Faixa de Preço</label>
+                <select
+                  value={filters.priceRange}
+                  onChange={(e) => setFilters(f => ({ ...f, priceRange: e.target.value }))}
+                  className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  {priceRanges.map(range => (
+                    <option key={range.id} value={range.id}>{range.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Duração */}
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Duração</label>
+                <select
+                  value={filters.duration}
+                  onChange={(e) => setFilters(f => ({ ...f, duration: e.target.value }))}
+                  className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  {durations.map(dur => (
+                    <option key={dur.id} value={dur.id}>{dur.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Ordenação */}
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Ordenar por</label>
+                <select
+                  value={filters.sortBy}
+                  onChange={(e) => setFilters(f => ({ ...f, sortBy: e.target.value }))}
+                  className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  {sortOptions.map(opt => (
+                    <option key={opt.id} value={opt.id}>{opt.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {hasActiveFilters && (
+              <div className="mt-4 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Filtros ativos:</span>
+                <button
+                  onClick={clearFilters}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Limpar todos
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Chips de Categoria Rápida */}
+      <section className="border-b border-border">
+        <div className="container mx-auto max-w-7xl px-4">
+          <div className="flex gap-2 py-4 overflow-x-auto scrollbar-hide">
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setFilters(f => ({ ...f, category: category.id }))}
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  filters.category === category.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <main className="container mx-auto max-w-7xl px-4 py-8">
+        {/* Contagem de Resultados */}
+        <div className="flex items-center justify-between mb-6">
+          <p className="text-muted-foreground">
+            {isLoading ? 'Carregando...' : (
+              <>
+                <span className="font-semibold text-foreground">{filteredPackages.length}</span>
+                {' '}pacote{filteredPackages.length !== 1 ? 's' : ''} encontrado{filteredPackages.length !== 1 ? 's' : ''}
+              </>
+            )}
+          </p>
+          
+          {/* Ordenação Mobile */}
+          <div className="md:hidden">
+            <select
+              value={filters.sortBy}
+              onChange={(e) => setFilters(f => ({ ...f, sortBy: e.target.value }))}
+              className="px-3 py-1.5 bg-background border border-border rounded-lg text-sm text-foreground"
             >
-              <p className="text-sm leading-normal">{category.name}</p>
-            </button>
-          ))}
+              {sortOptions.map(opt => (
+                <option key={opt.id} value={opt.id}>{opt.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        {/* Lista de Pacotes */}
+        {/* Loading */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <Spinner size="lg" />
           </div>
+        ) : filteredPackages.length === 0 ? (
+          /* Empty State */
+          <div className="text-center py-16">
+            <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+              <Search className="w-10 h-10 text-muted-foreground" />
+            </div>
+            <h3 className="text-xl font-semibold text-foreground mb-2">Nenhum pacote encontrado</h3>
+            <p className="text-muted-foreground mb-6">
+              Tente ajustar seus filtros ou buscar por outro destino
+            </p>
+            <button
+              onClick={clearFilters}
+              className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
+            >
+              Limpar filtros
+            </button>
+          </div>
         ) : (
-          <div className="flex flex-col gap-4 p-4">
-            {packages.length === 0 ? (
-              <p className="text-center text-[#4F4F4F] dark:text-[#E0E0E0] py-10">
-                Nenhum pacote encontrado
-              </p>
-            ) : (
-              packages.map((pkg) => (
-                <Link
-                  key={pkg.id}
-                  href={`/pacotes/${pkg.slug}`}
-                  className="flex flex-col items-stretch justify-start rounded-xl bg-white dark:bg-[#1A2E40] shadow-md hover:shadow-lg transition-shadow"
-                >
-                  {/* Imagem */}
-                  <div className="relative w-full aspect-video bg-cover bg-center rounded-t-xl overflow-hidden">
-                    {pkg.images?.[0] ? (
-                      <Image
-                        src={pkg.images[0]}
-                        alt={pkg.name}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-[#1A2E40] to-[#D92E2E]" />
+          /* Grid de Pacotes */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredPackages.map((pkg) => (
+              <Link
+                key={pkg.id}
+                href={`/pacotes/${pkg.slug}`}
+                className="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all duration-300"
+              >
+                {/* Imagem */}
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  {pkg.coverImage || pkg.galleryImages?.[0] ? (
+                    <Image
+                      src={pkg.coverImage || pkg.galleryImages?.[0]}
+                      alt={pkg.title}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                      <Bus className="w-12 h-12 text-primary/30" />
+                    </div>
+                  )}
+                  
+                  {/* Badges */}
+                  <div className="absolute top-3 left-3 flex flex-col gap-2">
+                    {pkg.isFeatured && (
+                      <span className="flex items-center gap-1 px-2.5 py-1 bg-yellow-500 text-white text-xs font-semibold rounded-full">
+                        <Star className="w-3 h-3 fill-current" /> Destaque
+                      </span>
+                    )}
+                    {pkg.originalPrice && pkg.originalPrice > pkg.price && (
+                      <span className="px-2.5 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
+                        {Math.round((1 - pkg.price / pkg.originalPrice) * 100)}% OFF
+                      </span>
                     )}
                   </div>
 
-                  {/* Conteúdo */}
-                  <div className="flex w-full flex-col gap-2 p-4">
-                    <p className="text-[#D92E2E] text-sm font-semibold leading-normal">
-                      {pkg.category?.name || 'Destaque'}
+                  {/* Data de saída */}
+                  {pkg.departureDate && (
+                    <div className="absolute bottom-3 right-3 px-2.5 py-1 bg-black/60 backdrop-blur-sm text-white text-xs font-medium rounded-full flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {formatDate(pkg.departureDate)}
+                    </div>
+                  )}
+                </div>
+
+                {/* Conteúdo */}
+                <div className="p-4">
+                  {/* Destino */}
+                  {pkg.destination && (
+                    <p className="flex items-center gap-1 text-primary text-sm font-medium mb-1">
+                      <MapPin className="w-3.5 h-3.5" />
+                      {typeof pkg.destination === 'string' ? pkg.destination : pkg.destination.city}
                     </p>
-                    <p className="text-[#1A2E40] dark:text-white text-xl font-bold leading-tight tracking-[-0.015em]">
-                      {pkg.name}
-                    </p>
-                    <div className="flex flex-col gap-1">
-                      <p className="text-[#4F4F4F] dark:text-[#E0E0E0] text-base font-normal leading-normal">
-                        {pkg.duration} dias{pkg.includes_hotel ? ', inclui hotel' : ''}
-                      </p>
-                      {pkg.departure_city && (
-                        <p className="text-[#4F4F4F] dark:text-[#E0E0E0] text-base font-normal leading-normal">
-                          Saída de {pkg.departure_city}
+                  )}
+
+                  {/* Título */}
+                  <h3 className="text-foreground font-semibold text-lg leading-tight mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                    {pkg.title}
+                  </h3>
+
+                  {/* Detalhes */}
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground mb-3">
+                    {pkg.durationDays && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        {pkg.durationDays} dias
+                      </span>
+                    )}
+                    {pkg.availableSeats && (
+                      <span className="flex items-center gap-1">
+                        <Users className="w-3.5 h-3.5" />
+                        {pkg.availableSeats} vagas
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Preço */}
+                  <div className="flex items-end justify-between">
+                    <div>
+                      {pkg.originalPrice && pkg.originalPrice > pkg.price && (
+                        <p className="text-xs text-muted-foreground line-through">
+                          {formatPrice(pkg.originalPrice)}
                         </p>
                       )}
-                    </div>
-                    <div className="flex items-center gap-3 justify-between mt-2">
-                      <p className="text-[#1A2E40] dark:text-white text-lg font-bold">
-                        A partir de R$ {pkg.price?.toLocaleString('pt-BR') || '0'}
+                      <p className="text-xl font-bold text-foreground">
+                        {formatPrice(pkg.price)}
                       </p>
-                      <span className="flex min-w-[84px] items-center justify-center rounded-lg h-10 px-5 bg-[#D92E2E] text-white text-sm font-bold leading-normal hover:bg-[#A62424] transition-colors">
-                        Ver Detalhes
-                      </span>
+                      <p className="text-xs text-muted-foreground">por pessoa</p>
                     </div>
+                    <span className="px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg group-hover:bg-primary/90 transition-colors">
+                      Ver mais
+                    </span>
                   </div>
-                </Link>
-              ))
-            )}
+                </div>
+              </Link>
+            ))}
           </div>
         )}
-      </main>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-10 flex h-20 items-center justify-around border-t border-[#e0e0e0]/50 dark:border-white/10 bg-[#F5F5F7]/80 dark:bg-[#101622]/80 backdrop-blur-sm">
-        <Link href="/" className="flex flex-col items-center gap-1 text-[#4F4F4F] dark:text-[#E0E0E0] hover:text-[#1A2E40] dark:hover:text-white transition-colors">
-          <Home className="w-6 h-6" />
-          <p className="text-xs font-medium">Início</p>
-        </Link>
-        <Link href="/pacotes" className="flex flex-col items-center gap-1 text-[#D92E2E]">
-          <Briefcase className="w-6 h-6" />
-          <p className="text-xs font-bold">Pacotes</p>
-        </Link>
-        <Link href="/dashboard" className="flex flex-col items-center gap-1 text-[#4F4F4F] dark:text-[#E0E0E0] hover:text-[#1A2E40] dark:hover:text-white transition-colors">
-          <Ticket className="w-6 h-6" />
-          <p className="text-xs font-medium">Minhas Viagens</p>
-        </Link>
-        <Link href="/dashboard/perfil" className="flex flex-col items-center gap-1 text-[#4F4F4F] dark:text-[#E0E0E0] hover:text-[#1A2E40] dark:hover:text-white transition-colors">
-          <User className="w-6 h-6" />
-          <p className="text-xs font-medium">Perfil</p>
-        </Link>
-      </nav>
-    </div>
+        {/* CTA Section */}
+        {!isLoading && filteredPackages.length > 0 && (
+          <section className="mt-16 bg-gradient-to-r from-primary to-primary/80 rounded-2xl p-8 md:p-12 text-center">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+              Não encontrou o que procurava?
+            </h2>
+            <p className="text-white/80 mb-6 max-w-xl mx-auto">
+              Entre em contato conosco e montamos um pacote personalizado para você e seu grupo!
+            </p>
+            <Link
+              href="/contato"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-primary font-semibold rounded-lg hover:bg-white/90 transition-colors"
+            >
+              Fale conosco
+            </Link>
+          </section>
+        )}
+      </main>
+    </PublicLayout>
   );
 }

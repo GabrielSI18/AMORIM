@@ -61,11 +61,24 @@ export interface Package {
   // Detalhes
   price: number // em centavos
   originalPrice?: number
+  priceChild610?: number | null // Preço criança 6-10 anos (centavos)
+  priceChild1113?: number | null // Preço criança 11-13 anos (centavos)
   durationDays: number
   departureLocation: string
   departureTime?: string
+  returnTime?: string | null // Horário de retorno
   departureDate?: Date
   returnDate?: Date
+  
+  // Hospedagem
+  hotelName?: string | null
+  hotelPhotos?: string[]
+  
+  // Atrações
+  attractions?: string[]
+  
+  // Parcelamento
+  maxInstallments?: number
   
   // Disponibilidade
   availableSeats: number

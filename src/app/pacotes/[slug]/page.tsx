@@ -5,6 +5,10 @@ import Image from 'next/image';
 import { MapPin, Calendar, Users, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { PackageSeatsDisplay } from '@/components/packages/package-seats-display';
+import { HotelGallery } from '@/components/packages/hotel-gallery';
+import { PriceTable } from '@/components/packages/price-table';
+import { AttractionsList } from '@/components/packages/attractions-list';
+import { PackageGallery } from '@/components/packages/package-gallery';
 
 interface PackagePageProps {
   params: Promise<{
@@ -113,9 +117,26 @@ export default async function PackagePage({ params }: PackagePageProps) {
                   <p className="font-semibold">
                     {new Date(pkg.departureDate).toLocaleDateString('pt-BR', {
                       day: 'numeric',
-                      month: 'long',
-                      year: 'numeric'
+                      month: 'short'
                     })}
+                    {pkg.departureTime && (
+                      <span className="text-muted-foreground"> às {pkg.departureTime}</span>
+                    )}
+                  </p>
+                </div>
+              )}
+              {pkg.returnDate && (
+                <div className="bg-card rounded-xl p-4 shadow-card">
+                  <Calendar className="h-5 w-5 text-primary mb-2" />
+                  <p className="text-sm text-muted-foreground">Retorno</p>
+                  <p className="font-semibold">
+                    {new Date(pkg.returnDate).toLocaleDateString('pt-BR', {
+                      day: 'numeric',
+                      month: 'short'
+                    })}
+                    {pkg.returnTime && (
+                      <span className="text-muted-foreground"> às {pkg.returnTime}</span>
+                    )}
                   </p>
                 </div>
               )}
@@ -129,19 +150,6 @@ export default async function PackagePage({ params }: PackagePageProps) {
                 <p className="text-sm text-muted-foreground">Disponível</p>
                 <p className="font-semibold">{pkg.availableSeats} vagas</p>
               </div>
-              <div className="bg-card rounded-xl p-4 shadow-card">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-primary mb-2">
-                  <path d="M8 6v6"></path>
-                  <path d="M15 6v6"></path>
-                  <path d="M2 12h19.6"></path>
-                  <path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"></path>
-                  <circle cx="7" cy="18" r="2"></circle>
-                  <path d="M9 18h5"></path>
-                  <circle cx="16" cy="18" r="2"></circle>
-                </svg>
-                <p className="text-sm text-muted-foreground">Conforto</p>
-                <p className="font-semibold">Executivo</p>
-              </div>
             </div>
 
             {/* Descrição */}
@@ -151,6 +159,14 @@ export default async function PackagePage({ params }: PackagePageProps) {
                 {pkg.description}
               </p>
             </section>
+
+            {/* Galeria de Imagens */}
+            {pkg.galleryImages && pkg.galleryImages.length > 0 && (
+              <section className="bg-card rounded-xl p-6 shadow-card">
+                <h2 className="text-2xl font-bold mb-4">Galeria de Fotos</h2>
+                <PackageGallery images={pkg.galleryImages} title={pkg.title} />
+              </section>
+            )}
 
             {/* Conforto no Ônibus */}
             <section className="bg-card rounded-xl p-6 shadow-card">
@@ -216,6 +232,25 @@ export default async function PackagePage({ params }: PackagePageProps) {
               </section>
             )}
 
+            {/* Hospedagem */}
+            {pkg.hotelName && (
+              <section className="bg-card rounded-xl p-6 shadow-card">
+                <h2 className="text-2xl font-bold mb-4">Hospedagem</h2>
+                <HotelGallery 
+                  hotelName={pkg.hotelName}
+                  photos={pkg.hotelPhotos || []}
+                />
+              </section>
+            )}
+
+            {/* Atrações Incluídas */}
+            {pkg.attractions && pkg.attractions.length > 0 && (
+              <section className="bg-card rounded-xl p-6 shadow-card">
+                <h2 className="text-2xl font-bold mb-4">Atrações Incluídas</h2>
+                <AttractionsList attractions={pkg.attractions} />
+              </section>
+            )}
+
             {/* O que está incluso */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {pkg.includes && pkg.includes.length > 0 && (
@@ -263,13 +298,25 @@ export default async function PackagePage({ params }: PackagePageProps) {
 
           {/* Sidebar - Reserva */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24">
+            <div className="sticky top-24 space-y-6">
+              {/* Card de Preços */}
+              <div className="bg-card rounded-xl p-6 shadow-lg border border-border">
+                <h3 className="text-lg font-bold mb-4">Valores por Pessoa</h3>
+                <PriceTable 
+                  price={pkg.price}
+                  priceChild610={pkg.priceChild610 || null}
+                  priceChild1113={pkg.priceChild1113 || null}
+                  maxInstallments={pkg.maxInstallments || 10}
+                />
+              </div>
+
+              {/* Card de Reserva */}
               <div className="bg-card rounded-xl p-6 shadow-lg border border-border">
                 {/* Preço */}
                 <div className="mb-6">
                   <p className="text-sm text-muted-foreground mb-1">A partir de</p>
                   <p className="text-4xl font-bold text-primary">
-                    R$ {(pkg.price / 100).toFixed(0)}
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(pkg.price / 100)}
                     <span className="text-lg font-normal text-muted-foreground">/pessoa</span>
                   </p>
                 </div>

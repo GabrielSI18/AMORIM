@@ -9,13 +9,24 @@ export async function GET(
   try {
     const { packageId } = await params;
 
-    // Busca o pacote para pegar total de assentos
+    // Busca o pacote para pegar total de assentos e ônibus
     const pkg = await prisma.package.findUnique({
       where: { id: packageId },
       select: {
         id: true,
         title: true,
         total_seats: true,
+        bus: {
+          select: {
+            id: true,
+            model: true,
+            year: true,
+            plate: true,
+            seats: true,
+            floors: true,
+            photos: true,
+          },
+        },
       },
     });
 
@@ -64,6 +75,7 @@ export async function GET(
       availableSeats: (pkg.total_seats || 0) - uniqueOccupiedSeats.length,
       totalBookings: bookings.length,
       totalParticipants,
+      bus: pkg.bus,
     });
   } catch (error) {
     console.error('Erro ao buscar assentos:', error);

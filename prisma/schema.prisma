@@ -217,14 +217,33 @@ model Package {
   destination_rel     Destination? @relation(fields: [destination_id], references: [id])
   destination         String?      // Texto livre: "Rio de Janeiro, RJ"
   
+  // Ônibus da frota
+  bus_id              String?      @map("bus_id")
+  bus                 Bus?         @relation(fields: [bus_id], references: [id])
+  
   // Detalhes do pacote
-  price               Int          // Preço em centavos (por pessoa)
+  price               Int          // Preço em centavos (por pessoa - adulto)
   original_price      Int?         @map("original_price") // Preço original (para desconto)
+  price_child_6_10    Int?         @map("price_child_6_10") // Preço criança 6-10 anos (centavos)
+  price_child_11_13   Int?         @map("price_child_11_13") // Preço criança 11-13 anos (centavos)
+  // Obs: Crianças de 0-5 anos são gratuitas
+  
   duration_days       Int?         @map("duration_days") // Duração em dias
   departure_location  String?      @map("departure_location") // "Belo Horizonte, MG"
   departure_time      String?      @map("departure_time") // "06:00"
+  return_time         String?      @map("return_time") // "11:00"
   departure_date      DateTime?    @map("departure_date") // Data de saída
   return_date         DateTime?    @map("return_date") // Data de retorno
+  
+  // Hospedagem
+  hotel_name          String?      @map("hotel_name") // "Hotel Villas DiRoma"
+  hotel_photos        String[]     @default([]) @map("hotel_photos") // Fotos do hotel
+  
+  // Atrações incluídas
+  attractions         String[]     @default([]) // ["Di Roma Acqua Park", "City Tour"]
+  
+  // Pagamento
+  max_installments    Int          @default(10) @map("max_installments") // Parcelas máximas
   
   // Disponibilidade
   available_seats     Int?         @map("available_seats") // Vagas disponíveis
@@ -256,6 +275,7 @@ model Package {
   
   @@index([category_id])
   @@index([destination_id])
+  @@index([bus_id])
   @@index([status])
   @@index([is_featured])
   @@map("packages")
@@ -398,4 +418,28 @@ model Contact {
   @@index([priority])
   @@index([created_at])
   @@map("contacts")
+}
+
+// Bus Model - Ônibus da frota
+model Bus {
+  id          String    @id @default(cuid())
+  model       String    // "Marcopolo Paradiso 1800 DD"
+  year        Int       // 2023
+  plate       String    @unique // "ABC-1234"
+  seats       Int       // 44, 52, etc
+  floors      Int       @default(1) // 1 ou 2 (ônibus de 2 andares)
+  photos      String[]  @default([]) // URLs das fotos do veículo
+  
+  // Status
+  is_active   Boolean   @default(true) @map("is_active")
+  
+  // Metadata
+  created_at  DateTime  @default(now()) @map("created_at")
+  updated_at  DateTime  @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  packages    Package[]
+  
+  @@index([is_active])
+  @@map("buses")
 }

@@ -17,7 +17,11 @@ export function toCamelCase<T extends Record<string, any>>(obj: T): any {
     const camelObj: any = {};
     
     for (const key in obj) {
-      const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+      // Converte snake_case para camelCase
+      // Trata tanto letras quanto números após underscore
+      const camelKey = key
+        .replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+        .replace(/_(\d)/g, (_, digit) => digit); // Remove underscore antes de números
       camelObj[camelKey] = toCamelCase(obj[key]);
     }
     

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { BusSeatMap, BusSeatMapCompact } from './bus-seat-map';
+import { BusSeatMap, BusSeatMapCompact, BusInfo } from './bus-seat-map';
 
 interface PackageSeatsData {
   packageId: string;
@@ -11,6 +11,7 @@ interface PackageSeatsData {
   availableSeats: number;
   totalBookings: number;
   totalParticipants: number;
+  bus?: BusInfo | null;
 }
 
 interface PackageSeatsDisplayProps {
@@ -113,12 +114,15 @@ export function PackageSeatsDisplay({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Mapa de Assentos</h3>
+      <h3 className="text-lg font-semibold">
+        {data.bus ? `Nosso Veículo: ${data.bus.model}` : 'Mapa de Assentos'}
+      </h3>
       <BusSeatMap
         totalSeats={totalSeats}
         occupiedSeats={data.occupiedSeats}
         readonly
         showLegend
+        bus={data.bus}
       />
     </div>
   );

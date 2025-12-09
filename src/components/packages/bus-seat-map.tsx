@@ -3,6 +3,16 @@
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useCallback } from 'react';
 
+export interface BusInfo {
+  id: string;
+  model: string;
+  year: number;
+  plate: string;
+  seats: number;
+  floors: number;
+  photos: string[];
+}
+
 interface BusSeatMapProps {
   totalSeats: number;
   occupiedSeats?: number[];
@@ -11,6 +21,7 @@ interface BusSeatMapProps {
   onSelectionChange?: (seats: number[]) => void;
   readonly?: boolean;
   showLegend?: boolean;
+  bus?: BusInfo | null;
 }
 
 type SeatStatus = 'available' | 'occupied' | 'selected';
@@ -23,6 +34,7 @@ export function BusSeatMap({
   onSelectionChange,
   readonly = false,
   showLegend = true,
+  bus,
 }: BusSeatMapProps) {
   const [selectedSeats, setSelectedSeats] = useState<number[]>(initialSelected);
 

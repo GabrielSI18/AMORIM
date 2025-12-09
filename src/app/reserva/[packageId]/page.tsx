@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import { ArrowLeft, Calendar, MapPin, Users, Clock, Bus, Minus, Plus, CreditCard, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { BusSeatMap } from '@/components/packages/bus-seat-map';
+import { BusSeatMap, BusInfo } from '@/components/packages/bus-seat-map';
 import type { Package } from '@/types';
 
 interface ReservaPageProps {
@@ -35,6 +35,7 @@ export default function ReservaPage({ params }: ReservaPageProps) {
   // Seats state
   const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
   const [occupiedSeats, setOccupiedSeats] = useState<number[]>([]);
+  const [busInfo, setBusInfo] = useState<BusInfo | null>(null);
   const [loadingSeats, setLoadingSeats] = useState(false);
 
   useEffect(() => {
@@ -56,7 +57,7 @@ export default function ReservaPage({ params }: ReservaPageProps) {
     }
   }, [isLoaded, user]);
 
-  // Carregar assentos ocupados
+  // Carregar assentos ocupados e dados do ônibus
   const loadOccupiedSeats = useCallback(async () => {
     if (!packageId) return;
     
@@ -66,6 +67,9 @@ export default function ReservaPage({ params }: ReservaPageProps) {
       if (response.ok) {
         const data = await response.json();
         setOccupiedSeats(data.occupiedSeats || []);
+        if (data.bus) {
+          setBusInfo(data.bus);
+        }
       }
     } catch (error) {
       console.error('Erro ao carregar assentos:', error);
@@ -298,7 +302,7 @@ export default function ReservaPage({ params }: ReservaPageProps) {
                 <div className="bg-white dark:bg-[#1e1e1e] rounded-xl p-6 border border-gray-200 dark:border-gray-800">
                   <h2 className="text-lg font-semibold text-[#1A2E40] dark:text-white mb-4 flex items-center gap-2">
                     <Bus className="w-5 h-5" />
-                    Escolha seus Assentos
+                    {busInfo ? `Nosso Veículo: ${busInfo.model}` : 'Escolha seus Assentos'}
                   </h2>
                   
                   {loadingSeats ? (
@@ -314,6 +318,7 @@ export default function ReservaPage({ params }: ReservaPageProps) {
                       onSelectionChange={handleSeatSelectionChange}
                       readonly={false}
                       showLegend
+                      bus={busInfo}
                     />
                   )}
                   

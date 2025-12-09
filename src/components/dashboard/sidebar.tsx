@@ -8,6 +8,7 @@ import {
   X,
   LayoutDashboard,
   Bus,
+  Truck,
   Users,
   Handshake,
   MessageSquare,
@@ -28,6 +29,7 @@ interface SidebarProps {
 const menuItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/dashboard/pacotes', icon: Bus, label: 'Pacotes de Viagem' },
+  { href: '/dashboard/frota', icon: Truck, label: 'Frota' },
   { href: '/dashboard/clientes', icon: Users, label: 'Clientes' },
   { href: '/dashboard/afiliados', icon: Handshake, label: 'Afiliados' },
   { href: '/dashboard/contatos', icon: MessageSquare, label: 'Contatos' },

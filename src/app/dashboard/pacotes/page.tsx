@@ -4,9 +4,25 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Plus, Edit, Trash2, Eye, Package } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, Package, MapPin, Calendar, Users, Bus, Star } from 'lucide-react'
 import { DashboardShell } from '@/components/dashboard'
+import Image from 'next/image'
 import type { Package as PackageType, Category, Destination } from '@/types'
+
+// Formatador de moeda
+const formatPrice = (priceInCents: number) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(priceInCents / 100)
+}
+
+// Formatador de data
+const formatDate = (date: Date | string | undefined) => {
+  if (!date) return null
+  const d = new Date(date)
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+}
 
 export default function DashboardPackagesPage() {
   const router = useRouter()
@@ -149,47 +165,112 @@ export default function DashboardPackagesPage() {
           packages.map((pkg) => (
             <div
               key={pkg.id}
-              className="bg-[#1E1E1E] rounded-xl p-4 flex items-center gap-4"
+              className="bg-[#1E1E1E] rounded-xl p-4 flex gap-4"
             >
+              {/* Imagem de capa */}
+              {pkg.coverImage ? (
+                <div className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                  <Image
+                    src={pkg.coverImage}
+                    alt={pkg.title}
+                    fill
+                    className="object-cover"
+                  />
+                  {pkg.isFeatured && (
+                    <div className="absolute top-1 right-1 bg-yellow-500 rounded-full p-1">
+                      <Star className="w-3 h-3 text-white fill-white" />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="w-24 h-24 rounded-lg bg-[#2a2a2a] flex items-center justify-center flex-shrink-0">
+                  <Package className="w-8 h-8 text-[#A0A0A0]" />
+                </div>
+              )}
+
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-[#E0E0E0] truncate">
-                  {pkg.title}
-                </p>
-                <p className="text-sm text-[#A0A0A0]">
-                  {pkg.destination?.city} • {pkg.durationDays} dias
-                </p>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-[#D93636] font-bold">
-                    R$ {(pkg.price / 100).toFixed(2)}
-                  </span>
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-semibold text-[#E0E0E0] truncate">
+                      {pkg.title}
+                    </p>
+                    <div className="flex items-center gap-3 mt-1 text-sm text-[#A0A0A0]">
+                      {pkg.destination && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5" />
+                          {typeof pkg.destination === 'string' ? pkg.destination : pkg.destination.city}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5" />
+                        {pkg.durationDays} dias
+                      </span>
+                    </div>
+                  </div>
                   {getStatusBadge(pkg.status)}
                 </div>
-              </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => window.open(`/pacotes/${pkg.slug}`, '_blank')}
-                  className="p-2 hover:bg-[#2a2a2a] text-[#A0A0A0] hover:text-[#E0E0E0] rounded-lg transition"
-                  title="Visualizar"
-                >
-                  <Eye className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => router.push(`/dashboard/pacotes/${pkg.id}/editar`)}
-                  className="p-2 hover:bg-[#2a2a2a] text-[#A0A0A0] hover:text-[#E0E0E0] rounded-lg transition"
-                  title="Editar"
-                >
-                  <Edit className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => handleDelete(pkg.id)}
-                  className="p-2 hover:bg-red-500/10 text-red-400 rounded-lg transition"
-                  title="Remover"
-                >
-                  <Trash2 className="h-5 w-5" />
-                </button>
+                {/* Detalhes extras */}
+                <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-[#A0A0A0]">
+                  {pkg.departureDate && (
+                    <span className="flex items-center gap-1 bg-[#2a2a2a] px-2 py-1 rounded">
+                      <Calendar className="w-3 h-3" />
+                      Saída: {formatDate(pkg.departureDate)}
+                    </span>
+                  )}
+                  {pkg.totalSeats && (
+                    <span className="flex items-center gap-1 bg-[#2a2a2a] px-2 py-1 rounded">
+                      <Users className="w-3 h-3" />
+                      {pkg.availableSeats ?? pkg.totalSeats}/{pkg.totalSeats} vagas
+                    </span>
+                  )}
+                  {(pkg as any).bus && (
+                    <span className="flex items-center gap-1 bg-[#2a2a2a] px-2 py-1 rounded">
+                      <Bus className="w-3 h-3" />
+                      {(pkg as any).bus.model}
+                    </span>
+                  )}
+                </div>
+
+                {/* Preço e ações */}
+                <div className="flex items-center justify-between mt-3">
+                  <div className="flex items-center gap-2">
+                    {pkg.originalPrice && pkg.originalPrice > pkg.price && (
+                      <span className="text-xs text-[#A0A0A0] line-through">
+                        {formatPrice(pkg.originalPrice)}
+                      </span>
+                    )}
+                    <span className="text-[#D93636] font-bold text-lg">
+                      {formatPrice(pkg.price)}
+                    </span>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => window.open(`/pacotes/${pkg.slug}`, '_blank')}
+                      className="p-2 hover:bg-[#2a2a2a] text-[#A0A0A0] hover:text-[#E0E0E0] rounded-lg transition"
+                      title="Visualizar"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => router.push(`/dashboard/pacotes/${pkg.id}/editar`)}
+                      className="p-2 hover:bg-[#2a2a2a] text-[#A0A0A0] hover:text-[#E0E0E0] rounded-lg transition"
+                      title="Editar"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(pkg.id)}
+                      className="p-2 hover:bg-red-500/10 text-red-400 rounded-lg transition"
+                      title="Remover"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           ))
