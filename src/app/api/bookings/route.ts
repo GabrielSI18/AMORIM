@@ -166,7 +166,7 @@ export async function POST(req: NextRequest) {
       where: { id: body.packageId },
       data: {
         available_seats: { decrement: body.numPassengers },
-        bookingsCount: { increment: 1 },
+        bookings_count: { increment: 1 },
       },
     });
 
