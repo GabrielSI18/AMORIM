@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
         num_passengers: body.numPassengers,
         total_amount: totalAmount,
         customer_notes: body.customerNotes,
-        selected_seats: body.selectedSeats || null,
+        selected_seats: body.selectedSeats ?? undefined,
       },
       include: {
         package: {
