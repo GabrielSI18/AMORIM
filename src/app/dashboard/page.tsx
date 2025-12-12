@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { PlusCircle, Users, Handshake, Package, Calendar, DollarSign, TrendingUp } from 'lucide-react'
 import { DashboardShell } from '@/components/dashboard'
 
-export default async function DashboardPage() {
+async function DashboardPageContent() {
   const user = await currentUser()
 
   if (!user) {
@@ -272,4 +272,28 @@ export default async function DashboardPage() {
       </section>
     </DashboardShell>
   )
+}
+
+export default async function DashboardPage() {
+  try {
+    return await DashboardPageContent()
+  } catch (error: any) {
+    console.error('DashboardPage error:', error)
+
+    return (
+      <DashboardShell title="Erro no Dashboard">
+        <div className="space-y-4">
+          <p className="text-red-400 font-medium">
+            Erro ao carregar o dashboard.
+          </p>
+          <p className="text-sm text-[#A0A0A0]">
+            Detalhes (ambiente de debug):
+          </p>
+          <pre className="text-xs whitespace-pre-wrap break-all bg-[#1E1E1E] border border-[#333] rounded-lg p-3 text-red-300">
+            {error?.message || String(error)}
+          </pre>
+        </div>
+      </DashboardShell>
+    )
+  }
 }

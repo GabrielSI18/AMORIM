@@ -91,8 +91,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ data: toCamelCase(bus) }, { status: 201 });
   } catch (error) {
     console.error('[API] POST /api/fleet error:', error);
+    const message =
+      (error as Error)?.message || 'Erro interno ao cadastrar ônibus';
+
     return NextResponse.json(
-      { error: 'Erro ao cadastrar ônibus' },
+      {
+        error: `Erro ao cadastrar ônibus: ${message}`,
+      },
       { status: 500 }
     );
   }
