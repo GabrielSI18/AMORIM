@@ -61,7 +61,13 @@ export default function RootLayout({
   }
 
   return (
-    <ClerkProvider localization={ptBR}>
+    <ClerkProvider 
+      localization={ptBR}
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      afterSignInUrl="/dashboard"
+      afterSignUpUrl="/dashboard"
+    >
       <html lang="pt-BR" suppressHydrationWarning>
         <head>
           <JsonLd data={getOrganizationSchema()} />

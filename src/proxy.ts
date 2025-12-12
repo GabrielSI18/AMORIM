@@ -13,6 +13,7 @@ const isPublicRoute = createRouteMatcher([
   '/contato(.*)',         // Página de contato
   '/sign-in(.*)',         // Páginas de login
   '/sign-up(.*)',         // Páginas de cadastro
+  '/sso-callback(.*)',    // Callback OAuth (Google, Apple)
   '/api/webhooks(.*)',    // Webhooks (Clerk, etc)
   '/api/packages(.*)',    // API de pacotes (pública para listagem)
   '/api/bookings',        // API de reservas (POST público)
