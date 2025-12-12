@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { DashboardShell } from '@/components/dashboard'
 
 export default function PerfilPage() {
-  const { user, isLoaded } = useUser()
+  const { user, isLoaded, isSignedIn } = useUser()
   const { signOut, openUserProfile } = useClerk()
 
   if (!isLoaded) {
@@ -23,10 +23,22 @@ export default function PerfilPage() {
     )
   }
 
-  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'Usuário'
-  const email = user?.emailAddresses[0]?.emailAddress || ''
-  const phone = user?.phoneNumbers[0]?.phoneNumber || ''
-  const createdAt = user?.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR', {
+  if (!isSignedIn || !user) {
+    return (
+      <DashboardShell title="Perfil">
+        <div className="space-y-4">
+          <p className="text-[#E0E0E0] font-medium">
+            Você precisa estar autenticado para acessar esta página.
+          </p>
+        </div>
+      </DashboardShell>
+    )
+  }
+
+  const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Usuário'
+  const email = user.emailAddresses[0]?.emailAddress || ''
+  const phone = user.phoneNumbers[0]?.phoneNumber || ''
+  const createdAt = user.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: 'long',
     year: 'numeric'
