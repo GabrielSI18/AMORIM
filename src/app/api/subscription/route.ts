@@ -8,7 +8,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { stripe } from '@/lib/stripe';
+import { getStripeClient } from '@/lib/stripe';
 
 export async function GET() {
   try {
@@ -75,6 +75,7 @@ export async function GET() {
     let stripeSubscription = null;
     if (subscription.stripe_subscription_id) {
       try {
+        const stripe = getStripeClient();
         stripeSubscription = await stripe.subscriptions.retrieve(
           subscription.stripe_subscription_id
         );

@@ -7,7 +7,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { stripe } from '@/lib/stripe';
+import { getStripeClient } from '@/lib/stripe';
 
 export async function GET(request: Request) {
   try {
@@ -44,6 +44,7 @@ export async function GET(request: Request) {
     const startingAfter = searchParams.get('starting_after') || undefined;
 
     // Buscar invoices do Stripe
+    const stripe = getStripeClient();
     const invoices = await stripe.invoices.list({
       customer: user.stripe_customer_id,
       limit,

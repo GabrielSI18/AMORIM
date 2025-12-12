@@ -7,19 +7,31 @@
 
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing STRIPE_SECRET_KEY environment variable');
-}
-
 /**
- * Singleton do Stripe client
+ * Singleton lazy do Stripe client
  * 
- * Usa apiVersion '2024-12-18.acacia' (última versão estável)
+ * A instância só é criada quando alguma função precisar dela,
+ * evitando erro em ambientes onde STRIPE_SECRET_KEY não está configurada
+ * durante o build.
  */
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2025-10-29.clover',
-  typescript: true,
-});
+let stripeInstance: Stripe | null = null;
+
+export function getStripeClient(): Stripe {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+
+  if (!secretKey) {
+    throw new Error('Missing STRIPE_SECRET_KEY environment variable');
+  }
+
+  if (!stripeInstance) {
+    stripeInstance = new Stripe(secretKey, {
+      apiVersion: '2025-10-29.clover',
+      typescript: true,
+    });
+  }
+
+  return stripeInstance;
+}
 
 /**
  * Helper: Criar ou buscar Customer no Stripe
@@ -34,6 +46,7 @@ export async function getOrCreateCustomer({
   clerkId: string;
   name?: string;
 }): Promise<string> {
+  const stripe = getStripeClient();
   // Buscar customer existente pelo email
   const existingCustomers = await stripe.customers.list({
     email,
@@ -85,6 +98,7 @@ export async function createCheckoutSession({
   cancelUrl: string;
   trialPeriodDays?: number;
 }) {
+  const stripe = getStripeClient();
   const sessionConfig: Stripe.Checkout.SessionCreateParams = {
     mode: 'subscription',
     payment_method_types: ['card'],
@@ -130,6 +144,7 @@ export async function createCustomerPortalSession({
   customerId: string;
   returnUrl: string;
 }) {
+  const stripe = getStripeClient();
   const session = await stripe.billingPortal.sessions.create({
     customer: customerId,
     return_url: returnUrl,
@@ -156,6 +171,7 @@ export async function createPaymentIntent({
   userId: string;
   description: string;
 }) {
+  const stripe = getStripeClient();
   const paymentIntent = await stripe.paymentIntents.create({
     amount,
     currency,
@@ -174,6 +190,7 @@ export async function createPaymentIntent({
  * Helper: Cancelar assinatura ao fim do período
  */
 export async function cancelSubscriptionAtPeriodEnd(subscriptionId: string) {
+  const stripe = getStripeClient();
   const subscription = await stripe.subscriptions.update(subscriptionId, {
     cancel_at_period_end: true,
   });
@@ -185,6 +202,7 @@ export async function cancelSubscriptionAtPeriodEnd(subscriptionId: string) {
  * Helper: Reativar assinatura cancelada
  */
 export async function reactivateSubscription(subscriptionId: string) {
+  const stripe = getStripeClient();
   const subscription = await stripe.subscriptions.update(subscriptionId, {
     cancel_at_period_end: false,
   });
@@ -204,6 +222,7 @@ export async function updateSubscriptionPrice({
   newPriceId: string;
   prorationBehavior?: 'create_prorations' | 'none' | 'always_invoice';
 }) {
+  const stripe = getStripeClient();
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
   
   const updatedSubscription = await stripe.subscriptions.update(subscriptionId, {
