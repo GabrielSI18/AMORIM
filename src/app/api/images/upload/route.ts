@@ -58,9 +58,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Retornar URL pública
+    // Retornar informações do arquivo (inclui URL pública se disponível)
     return NextResponse.json({
-      url: result.file?.url,
+      url: result.file?.publicUrl ?? undefined,
       path: result.file?.path,
       name: result.file?.name,
       size: result.file?.size,
