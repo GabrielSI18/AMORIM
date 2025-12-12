@@ -63,10 +63,10 @@ export async function POST(req: NextRequest) {
       return rateLimitExceededResponse(rateLimitResult);
     }
 
-    const body: CreateBookingDto & { selected_seats?: number[] } = await req.json();
+    const body: CreateBookingDto & { selectedSeats?: number[] } = await req.json();
 
     // Validação
-    if (!body.package_id || !body.customer_name || !body.customer_email || !body.customer_phone || !body.num_passengers) {
+    if (!body.packageId || !body.customerName || !body.customerEmail || !body.customerPhone || !body.numPassengers) {
       return NextResponse.json(
         { error: 'Campos obrigatórios faltando' },
         { status: 400 }
@@ -75,14 +75,14 @@ export async function POST(req: NextRequest) {
 
     // Verificar se pacote existe e tem vagas
     const package_ = await prisma.package.findUnique({
-      where: { id: body.package_id },
+      where: { id: body.packageId },
     });
 
     if (!package_) {
       return NextResponse.json({ error: 'Pacote não encontrado' }, { status: 404 });
     }
 
-    if (package_.available_seats && package_.available_seats < body.num_passengers) {
+    if (package_.available_seats && package_.available_seats < body.numPassengers) {
       return NextResponse.json(
         { error: `Apenas ${package_.available_seats} vagas disponíveis` },
         { status: 400 }
@@ -90,11 +90,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Validar assentos selecionados (se fornecidos)
-    if (body.selected_seats && body.selected_seats.length > 0) {
-      // Verificar se a quantidade de assentos bate com num_passengers
-      if (body.selected_seats.length !== body.num_passengers) {
+    if (body.selectedSeats && body.selectedSeats.length > 0) {
+      // Verificar se a quantidade de assentos bate com numPassengers
+      if (body.selectedSeats.length !== body.numPassengers) {
         return NextResponse.json(
-          { error: `Número de assentos (${body.selected_seats.length}) deve ser igual ao número de passageiros (${body.num_passengers})` },
+          { error: `Número de assentos (${body.selectedSeats.length}) deve ser igual ao número de passageiros (${body.numPassengers})` },
           { status: 400 }
         );
       }
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
       // Buscar assentos já ocupados
       const existingBookings = await prisma.booking.findMany({
         where: {
-          package_id: body.package_id,
+          package_id: body.packageId,
           status: { in: ['pending', 'confirmed'] },
           selected_seats: { not: null },
         },
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Verificar se algum assento selecionado já está ocupado
-      const conflictingSeats = body.selected_seats.filter(seat => occupiedSeats.has(seat));
+      const conflictingSeats = body.selectedSeats.filter(seat => occupiedSeats.has(seat));
       if (conflictingSeats.length > 0) {
         return NextResponse.json(
           { error: `Assento(s) ${conflictingSeats.join(', ')} já está(ão) ocupado(s). Por favor, escolha outro(s).` },
@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
 
       // Verificar se assentos estão dentro do range válido
       const totalSeats = package_.total_seats || 0;
-      const invalidSeats = body.selected_seats.filter(seat => seat < 1 || seat > totalSeats);
+      const invalidSeats = body.selectedSeats.filter(seat => seat < 1 || seat > totalSeats);
       if (invalidSeats.length > 0) {
         return NextResponse.json(
           { error: `Assento(s) inválido(s): ${invalidSeats.join(', ')}` },
@@ -137,21 +137,21 @@ export async function POST(req: NextRequest) {
     }
 
     // Calcular valor total
-    const totalAmount = package_.price * body.num_passengers;
+    const totalAmount = package_.price * body.numPassengers;
 
     // Criar reserva
     const booking = await prisma.booking.create({
       data: {
-        package_id: body.package_id,
+        package_id: body.packageId,
         user_id: userId || undefined,
-        customer_name: body.customer_name,
-        customer_email: body.customer_email,
-        customer_phone: body.customer_phone,
-        customer_cpf: body.customer_cpf,
-        num_passengers: body.num_passengers,
+        customer_name: body.customerName,
+        customer_email: body.customerEmail,
+        customer_phone: body.customerPhone,
+        customer_cpf: body.customerCpf,
+        num_passengers: body.numPassengers,
         total_amount: totalAmount,
-        customer_notes: body.customer_notes,
-        selected_seats: body.selected_seats || null,
+        customer_notes: body.customerNotes,
+        selected_seats: body.selectedSeats || null,
       },
       include: {
         package: {
@@ -164,9 +164,9 @@ export async function POST(req: NextRequest) {
 
     // Atualizar vagas disponíveis
     await prisma.package.update({
-      where: { id: body.package_id },
+      where: { id: body.packageId },
       data: {
-        available_seats: { decrement: body.num_passengers },
+        available_seats: { decrement: body.numPassengers },
         bookingsCount: { increment: 1 },
       },
     });
