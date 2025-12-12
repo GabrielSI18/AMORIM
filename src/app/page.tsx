@@ -69,9 +69,14 @@ export default function Home() {
       
       {/* Hero Section */}
       <section className="relative pt-20 pb-20 overflow-hidden min-h-[80vh]">
-        {/* Imagem de fundo */}
+        {/* Imagem de fundo - Mobile */}
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat md:hidden"
+          style={{ backgroundImage: 'url(/hero-bus-mobile.jpg)' }}
+        />
+        {/* Imagem de fundo - Desktop */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat hidden md:block"
           style={{ backgroundImage: 'url(/hero-bus.jpg)' }}
         />
         
