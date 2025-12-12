@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
 import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
 import { toCamelCase } from '@/lib/case-transform';
 import type { CreateBookingDto } from '@/types';
@@ -105,7 +104,6 @@ export async function POST(req: NextRequest) {
         where: {
           package_id: body.packageId,
           status: { in: ['pending', 'confirmed'] },
-          NOT: { selected_seats: Prisma.JsonNull },
         },
         select: { selected_seats: true },
       });
