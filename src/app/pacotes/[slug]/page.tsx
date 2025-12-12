@@ -257,7 +257,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
                 <section className="bg-card rounded-xl p-6 shadow-card">
                   <h3 className="font-bold mb-4 text-lg">O que está incluído</h3>
                   <ul className="space-y-2">
-                    {pkg.includes.map((item, i) => (
+                    {pkg.includes.map((item: string, i: number) => (
                       <li key={i} className="flex items-start gap-2 text-sm">
                         <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                           <div className="w-2 h-2 rounded-full bg-primary"></div>
@@ -274,7 +274,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
                 <section className="bg-card rounded-xl p-6 shadow-card">
                   <h3 className="font-bold mb-4 text-lg">O que NÃO está incluído</h3>
                   <ul className="space-y-2">
-                    {pkg.notIncludes.map((item, i) => (
+                    {pkg.notIncludes.map((item: string, i: number) => (
                       <li key={i} className="flex items-start gap-2 text-sm">
                         <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
                           <div className="w-2 h-2 rounded-full bg-muted-foreground"></div>

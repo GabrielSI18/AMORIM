@@ -57,15 +57,6 @@ export const baseMetadata: Metadata = {
     images: [`${BASE_URL}/amorim-logo.png`],
   },
   icons: {
-    icon: [
-      { url: '/favicon_amorim.png' },
-      { url: '/favicon_amorim.png', sizes: '32x32', type: 'image/png' },
-      { url: '/favicon_amorim.png', sizes: '16x16', type: 'image/png' },
-    ],
-    shortcut: '/favicon_amorim.png',
-    apple: '/favicon_amorim.png',
-  },
-  icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon-16x16.png',
     apple: '/apple-touch-icon.png',
