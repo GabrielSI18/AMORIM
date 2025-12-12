@@ -56,7 +56,7 @@ export default function Error({ error, reset }: ErrorProps) {
         </p>
 
         {/* Código do erro (apenas em desenvolvimento) */}
-        {process.env.NODE_ENV === 'development' && error.message && (
+          {error.message && (
           <div className="mb-6 p-4 bg-muted rounded-lg text-left">
             <p className="text-xs text-muted-foreground mb-1">Detalhes do erro:</p>
             <code className="text-sm text-red-600 dark:text-red-400 break-all">
