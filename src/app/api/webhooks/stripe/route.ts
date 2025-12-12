@@ -7,10 +7,7 @@ import {
   sendPaymentFailedEmail,
   sendSubscriptionCanceledEmail,
 } from '@/lib/email';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-10-29.clover',
-});
+import { getStripeClient } from '@/lib/stripe';
 
 /**
  * Helper: Converte Unix timestamp do Stripe para Date
@@ -54,6 +51,7 @@ export async function POST(req: Request) {
   let event: Stripe.Event;
 
   try {
+    const stripe = getStripeClient();
     // Verificar assinatura do webhook (SEGURANÇA)
     event = stripe.webhooks.constructEvent(
       body,
@@ -209,6 +207,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
     console.log('⏳ User not found by customer_id, checking Stripe customer metadata...');
     
     try {
+      const stripe = getStripeClient();
       const customer = await stripe.customers.retrieve(customerId);
       
       if (customer && !customer.deleted && 'metadata' in customer) {
@@ -415,6 +414,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
     if (scheduledPrice?.stripe_price_id) {
       try {
         // Atualizar subscription no Stripe para o novo price
+        const stripe = getStripeClient();
         await stripe.subscriptions.update(subscriptionId, {
           items: [{
             id: (await stripe.subscriptions.retrieve(subscriptionId)).items.data[0].id,
@@ -440,6 +440,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   }
 
   // Buscar subscription completa no Stripe para pegar current_period_end atualizado
+  const stripe = getStripeClient();
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
   // Atualizar subscription no DB com novo período
