@@ -5,6 +5,9 @@ import { NextResponse } from 'next/server'
 // Email do administrador do sistema
 const ADMIN_EMAIL = 'gabriel.sistemas18@gmail.com'
 
+// Desabilitar cache nesta rota
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const { userId } = await auth()

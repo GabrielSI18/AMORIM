@@ -1,0 +1,26 @@
+{
+  "name": "Amorim Turismo",
+  "short_name": "Amorim",
+  "description": "Viaje com conforto e segurança. Descubra destinos incríveis com nossos pacotes exclusivos.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#004a80",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/amorim-logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/amorim-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

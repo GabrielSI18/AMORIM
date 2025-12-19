@@ -1,13 +1,26 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useTheme } from 'next-themes'
 import { Bell, Moon, Globe, CreditCard, Shield, HelpCircle, ChevronRight } from 'lucide-react'
 import { DashboardShell } from '@/components/dashboard'
 
 export default function ConfiguracoesPage() {
   const [notifications, setNotifications] = useState(true)
-  const [darkMode, setDarkMode] = useState(true)
+  const { theme, setTheme, resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
   const [language, setLanguage] = useState('pt-BR')
+
+  // Evitar hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const isDarkMode = mounted && resolvedTheme === 'dark'
+
+  const toggleTheme = () => {
+    setTheme(isDarkMode ? 'light' : 'dark')
+  }
 
   return (
     <DashboardShell title="Configurações">
@@ -54,14 +67,14 @@ export default function ConfiguracoesPage() {
                 </div>
               </div>
               <button
-                onClick={() => setDarkMode(!darkMode)}
+                onClick={toggleTheme}
                 className={`w-12 h-6 rounded-full transition-colors ${
-                  darkMode ? 'bg-[#D93636]' : 'bg-gray-300 dark:bg-[#333]'
+                  isDarkMode ? 'bg-[#D93636]' : 'bg-gray-300 dark:bg-[#333]'
                 }`}
               >
                 <div 
                   className={`w-5 h-5 rounded-full bg-white transition-transform ${
-                    darkMode ? 'translate-x-6' : 'translate-x-0.5'
+                    isDarkMode ? 'translate-x-6' : 'translate-x-0.5'
                   }`}
                 />
               </button>

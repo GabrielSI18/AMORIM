@@ -19,14 +19,34 @@ export function BottomNav() {
   const pathname = usePathname()
   const { isAdmin, isLoading } = useUserRole()
 
-  // Filtrar itens de navegação baseado na role
+  // Durante o loading, mostra itens neutros (que aparecem para todos)
   const navItems = allNavItems.filter(item => {
+    // Durante loading, mostra apenas itens que não são específicos de role
+    if (isLoading) {
+      return !item.adminOnly && !item.userOnly
+    }
     // Se é admin-only e usuário não é admin, não mostra
     if (item.adminOnly && !isAdmin) return false
     // Se é user-only (ex: link para pacotes público) e usuário é admin, não mostra
     if (item.userOnly && isAdmin) return false
     return true
   })
+
+  // Se ainda está carregando, não renderiza nada para evitar flash
+  if (isLoading) {
+    return (
+      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1E1E1E] border-t border-gray-200 dark:border-gray-700 p-2 flex justify-around z-50">
+        <div className="flex flex-col items-center justify-center gap-1 w-20">
+          <LayoutDashboard className="w-6 h-6 text-gray-300 dark:text-gray-600" />
+          <span className="text-xs font-medium text-gray-300 dark:text-gray-600">Dashboard</span>
+        </div>
+        <div className="flex flex-col items-center justify-center gap-1 w-20">
+          <UserCircle className="w-6 h-6 text-gray-300 dark:text-gray-600" />
+          <span className="text-xs font-medium text-gray-300 dark:text-gray-600">Perfil</span>
+        </div>
+      </nav>
+    )
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1E1E1E] border-t border-gray-200 dark:border-gray-700 p-2 flex justify-around z-50">

@@ -43,16 +43,22 @@ export default function Home() {
       {/* Header Flutuante */}
       <header className="absolute top-0 left-0 right-0 z-50 p-4">
         <div className="flex items-center justify-between">
+          {/* Espaço vazio à esquerda para balancear */}
+          <div className="w-24" />
+          
+          {/* Logo centralizada */}
           <Link href="/" className="flex items-center">
             <Image
               src="/amorim-logo.png"
               alt="Amorim Turismo"
-              width={100}
-              height={40}
-              className="h-10 w-auto object-contain"
+              width={156}
+              height={62}
+              className="h-[52px] w-auto object-contain"
               priority
             />
           </Link>
+          
+          {/* Botões à direita */}
           <div className="flex items-center gap-2">
             <button
               onClick={toggleTheme}
