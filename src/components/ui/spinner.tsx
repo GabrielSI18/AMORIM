@@ -43,9 +43,9 @@ interface SpinnerWithTextProps extends SpinnerProps {
 
 export function SpinnerWithText({ text = 'Carregando...', size = 'md', className }: SpinnerWithTextProps) {
   return (
-    <div className={cn('flex flex-col items-center gap-3', className)}>
+    <div className={cn('flex flex-col items-center justify-center gap-3', className)}>
       <Spinner size={size} />
-      <p className="text-sm text-muted-foreground animate-pulse">{text}</p>
+      <p className="text-sm text-muted-foreground animate-pulse text-center">{text}</p>
     </div>
   );
 }
@@ -59,5 +59,22 @@ export function SpinnerInline({ className }: { className?: string }) {
       size="sm" 
       className={cn('inline-block', className)} 
     />
+  );
+}
+
+/**
+ * Page Loading - Loading centralizado para páginas
+ */
+interface PageLoadingProps {
+  text?: string;
+  minHeight?: string;
+}
+
+export function PageLoading({ text = 'Carregando...', minHeight = 'min-h-[400px]' }: PageLoadingProps) {
+  return (
+    <div className={cn('flex flex-col items-center justify-center gap-3', minHeight)}>
+      <Spinner size="lg" />
+      <p className="text-sm text-muted-foreground animate-pulse text-center">{text}</p>
+    </div>
   );
 }
