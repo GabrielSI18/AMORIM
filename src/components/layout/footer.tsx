@@ -12,11 +12,10 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Sobre */}
           <div>
-            <Image
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src="/amorim-logo.png"
               alt="Amorim Turismo"
-              width={156}
-              height={62}
               className="h-[52px] w-auto object-contain mb-4"
             />
             <p className="text-sm text-muted-foreground mb-4">

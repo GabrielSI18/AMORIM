@@ -291,7 +291,13 @@ export default function Home() {
         <div className="container-custom">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <h3 className="font-bold text-lg mb-4 text-[#212529] dark:text-[#f8f9fa]">Amorim Turismo</h3>
+              <Image
+                src="/amorim-logo.png"
+                alt="Amorim Turismo"
+                width={156}
+                height={62}
+                className="h-[52px] w-auto object-contain mb-4"
+              />
               <p className="text-sm text-[#6c757d] dark:text-[#adb5bd]">
                 Viaje com conforto e segurança. Descubra destinos incríveis com nossos pacotes exclusivos.
               </p>
