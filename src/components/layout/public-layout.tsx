@@ -36,9 +36,9 @@ export function PublicLayout({ children, currentPage }: PublicLayoutProps) {
               <Image
                 src="/amorim-logo.png"
                 alt="Amorim Turismo"
-                width={100}
-                height={40}
-                className="h-10 w-auto object-contain"
+                width={130}
+                height={52}
+                className="h-[52px] w-auto object-contain"
                 priority
               />
             </Link>

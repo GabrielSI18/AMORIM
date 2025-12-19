@@ -18,9 +18,9 @@ export function Header() {
             <Image 
               src="/amorim-logo.png" 
               alt="Amorim Turismo" 
-              width={160} 
-              height={40}
-              className="h-12 w-auto"
+              width={208} 
+              height={52}
+              className="h-[62px] w-auto"
               priority
             />
           </Link>

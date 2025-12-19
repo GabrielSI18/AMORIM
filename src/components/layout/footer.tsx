@@ -15,9 +15,9 @@ export function Footer() {
             <Image
               src="/amorim-logo.png"
               alt="Amorim Turismo"
-              width={120}
-              height={48}
-              className="h-10 w-auto object-contain mb-4"
+              width={156}
+              height={62}
+              className="h-[52px] w-auto object-contain mb-4"
             />
             <p className="text-sm text-muted-foreground mb-4">
               Viaje com conforto e segurança. Descubra destinos incríveis com nossos pacotes exclusivos de turismo rodoviário.
