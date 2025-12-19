@@ -172,6 +172,7 @@ export interface CreateBookingDto {
   customerCpf?: string
   numPassengers: number
   customerNotes?: string
+  affiliateCode?: string // Código de afiliado (opcional)
 }
 
 export interface PackageFilters {

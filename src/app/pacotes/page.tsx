@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { PublicLayout } from '@/components/layout';
+import { useAffiliateTracking } from '@/hooks/use-affiliate-tracking';
 import type { Package } from '@/types';
 
 // Formatador de moeda
@@ -26,7 +27,11 @@ const formatDate = (date: Date | string | undefined) => {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
 };
 
-export default function PackagesPage() {
+// Componente interno que usa useSearchParams (precisa de Suspense)
+function PackagesContent() {
+  // Rastrear código de afiliado da URL
+  useAffiliateTracking();
+  
   const [packages, setPackages] = useState<Package[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -485,5 +490,20 @@ export default function PackagesPage() {
         )}
       </main>
     </PublicLayout>
+  );
+}
+
+// Wrapper com Suspense para useSearchParams
+export default function PackagesPage() {
+  return (
+    <Suspense fallback={
+      <PublicLayout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <Spinner size="lg" />
+        </div>
+      </PublicLayout>
+    }>
+      <PackagesContent />
+    </Suspense>
   );
 }

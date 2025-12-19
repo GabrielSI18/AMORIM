@@ -138,6 +138,17 @@ export async function POST(req: NextRequest) {
     // Calcular valor total
     const totalAmount = package_.price * body.numPassengers;
 
+    // Verificar se há código de afiliado
+    let affiliate = null;
+    if (body.affiliateCode) {
+      affiliate = await prisma.affiliate.findUnique({
+        where: { 
+          code: body.affiliateCode.toUpperCase(),
+          status: 'active', // Apenas afiliados ativos
+        },
+      });
+    }
+
     // Criar reserva
     const booking = await prisma.booking.create({
       data: {
@@ -161,6 +172,23 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Se há afiliado válido, criar registro de indicação
+    if (affiliate) {
+      const commissionAmount = Math.floor(totalAmount * (affiliate.commission_rate / 100));
+      
+      await prisma.affiliateReferral.create({
+        data: {
+          affiliate_id: affiliate.id,
+          booking_id: booking.id,
+          package_title: package_.title,
+          customer_email: body.customerEmail,
+          sale_amount: totalAmount,
+          commission_amount: commissionAmount,
+          commission_status: 'pending', // Aguarda aprovação manual
+        },
+      });
+    }
+
     // Atualizar vagas disponíveis
     await prisma.package.update({
       where: { id: body.packageId },
@@ -170,7 +198,10 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ data: booking }, { status: 201 });
+    return NextResponse.json({ 
+      data: booking,
+      affiliateApplied: affiliate ? affiliate.code : null,
+    }, { status: 201 });
   } catch (error) {
     console.error('[API] POST /api/bookings error:', error);
     return NextResponse.json(

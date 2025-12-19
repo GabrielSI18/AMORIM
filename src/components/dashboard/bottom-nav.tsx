@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUserRole } from '@/hooks/use-user-role'
-import { LayoutDashboard, Bus, Users, UserCircle, Map } from 'lucide-react'
+import { LayoutDashboard, Bus, Users, UserCircle, Map, Handshake } from 'lucide-react'
 
 // Itens de navegação com flag de admin-only
 const allNavItems = [
@@ -11,6 +11,7 @@ const allNavItems = [
   { href: '/dashboard/pacotes', icon: Bus, label: 'Viagens', adminOnly: true },
   { href: '/dashboard/clientes', icon: Users, label: 'Clientes', adminOnly: true },
   { href: '/pacotes', icon: Map, label: 'Pacotes', adminOnly: false, userOnly: true },
+  { href: '/dashboard/parceiro', icon: Handshake, label: 'Parceiro', adminOnly: false, userOnly: true },
   { href: '/dashboard/perfil', icon: UserCircle, label: 'Perfil', adminOnly: false },
 ]
 

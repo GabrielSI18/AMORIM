@@ -53,10 +53,10 @@ async function DashboardPageContent() {
     prisma.user.count({ where: { role: 'USER' } as any }),
     // Contagem de afiliados
     prisma.user.count({ where: { role: 'AFFILIATE' } as any }),
-    // Total de pacotes
-    prisma.package.count(),
-    // Pacotes publicados
-    prisma.package.count({ where: { status: 'published' } }),
+    // Total de pacotes ativos
+    prisma.package.count({ where: { is_active: true } }),
+    // Pacotes publicados e ativos
+    prisma.package.count({ where: { status: 'published', is_active: true } }),
     // Total de reservas
     prisma.booking.count(),
     // Reservas pagas
@@ -72,9 +72,9 @@ async function DashboardPageContent() {
         created_at: true,
       },
     }),
-    // Estatísticas de ocupação dos pacotes publicados
+    // Estatísticas de ocupação dos pacotes publicados e ativos
     prisma.package.aggregate({
-      where: { status: 'published' },
+      where: { status: 'published', is_active: true },
       _sum: {
         available_seats: true,
         total_seats: true,

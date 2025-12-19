@@ -8,6 +8,7 @@ import { useUser } from '@clerk/nextjs';
 import { ArrowLeft, Calendar, MapPin, Users, Clock, Bus, Minus, Plus, CreditCard, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { BusSeatMap, BusInfo } from '@/components/packages/bus-seat-map';
+import { getAffiliateCode, clearAffiliateCode } from '@/hooks/use-affiliate-tracking';
 import type { Package } from '@/types';
 
 interface ReservaPageProps {
@@ -172,6 +173,9 @@ export default function ReservaPage({ params }: ReservaPageProps) {
     setIsSubmitting(true);
 
     try {
+      // Obter código de afiliado salvo (se houver)
+      const affiliateCode = getAffiliateCode();
+      
       const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -184,6 +188,7 @@ export default function ReservaPage({ params }: ReservaPageProps) {
           num_passengers: numPassengers,
           customer_notes: customerNotes,
           selected_seats: selectedSeats.length > 0 ? selectedSeats : null,
+          affiliate_code: affiliateCode, // Código do afiliado
         }),
       });
 
@@ -191,6 +196,11 @@ export default function ReservaPage({ params }: ReservaPageProps) {
 
       if (!response.ok) {
         throw new Error(data.error || 'Erro ao criar reserva');
+      }
+
+      // Limpar código de afiliado após reserva bem sucedida
+      if (affiliateCode) {
+        clearAffiliateCode();
       }
 
       toast.success('Reserva criada com sucesso!');

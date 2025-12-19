@@ -27,7 +27,7 @@ interface SidebarProps {
   userEmail?: string
 }
 
-// Itens de menu com flag de admin-only
+// Itens de menu com flag de admin-only e userOnly
 const menuItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', adminOnly: false },
   { href: '/dashboard/pacotes', icon: Bus, label: 'Pacotes de Viagem', adminOnly: true },
@@ -37,6 +37,7 @@ const menuItems = [
   { href: '/dashboard/contatos', icon: MessageSquare, label: 'Contatos', adminOnly: true },
   { href: '/dashboard/relatorios', icon: BarChart3, label: 'Relatórios', adminOnly: true },
   { href: '/pacotes', icon: Map, label: 'Ver Viagens', adminOnly: false },
+  { href: '/dashboard/parceiro', icon: Handshake, label: 'Parceiro Amorim', adminOnly: false, userOnly: true },
   { href: '/dashboard/perfil', icon: UserCircle, label: 'Meu Perfil', adminOnly: false },
   { href: '/dashboard/configuracoes', icon: Settings, label: 'Configurações', adminOnly: false },
 ]
@@ -47,7 +48,13 @@ export function Sidebar({ isOpen, onClose, userName, userEmail }: SidebarProps) 
   const { isAdmin, isLoading } = useUserRole()
 
   // Filtrar itens de menu baseado na role
-  const visibleMenuItems = menuItems.filter(item => !item.adminOnly || isAdmin)
+  const visibleMenuItems = menuItems.filter(item => {
+    // Se é admin-only e usuário não é admin, não mostra
+    if (item.adminOnly && !isAdmin) return false
+    // Se é userOnly e usuário é admin, não mostra (admin tem seu próprio menu de afiliados)
+    if ((item as any).userOnly && isAdmin) return false
+    return true
+  })
 
   const handleLogout = async () => {
     await signOut()

@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
     const code = searchParams.get('code');
     const email = searchParams.get('email');
     const id = searchParams.get('id');
+    const status = searchParams.get('status');
 
     // Buscar afiliado específico
     if (code || email || id) {
@@ -38,13 +39,35 @@ export async function GET(request: NextRequest) {
         );
       }
 
+      // Get user data if user_id exists
+      let userData = null;
+      if (affiliate.user_id) {
+        const affiliateUser = await prisma.user.findUnique({
+          where: { id: affiliate.user_id },
+          select: {
+            id: true,
+            first_name: true,
+            last_name: true,
+            email: true,
+          },
+        });
+        userData = affiliateUser;
+      }
+
       return NextResponse.json({
-        data: toCamelCase(affiliate),
+        data: toCamelCase({ ...affiliate, user: userData }),
       });
+    }
+
+    // Build where clause
+    const where: Record<string, unknown> = {};
+    if (status) {
+      where.status = status.toUpperCase();
     }
 
     // Listar todos os afiliados (admin)
     const affiliates = await prisma.affiliate.findMany({
+      where,
       orderBy: { created_at: 'desc' },
       include: {
         referrals: {
@@ -52,13 +75,54 @@ export async function GET(request: NextRequest) {
             id: true,
             sale_amount: true,
             commission_amount: true,
+            commission_status: true,
           },
         },
       },
     });
 
+    // Fetch user data for affiliates with user_id
+    const userIds = affiliates
+      .filter(a => a.user_id)
+      .map(a => a.user_id as string);
+    
+    const users = userIds.length > 0 
+      ? await prisma.user.findMany({
+          where: { id: { in: userIds } },
+          select: {
+            id: true,
+            first_name: true,
+            last_name: true,
+            email: true,
+          },
+        })
+      : [];
+    
+    const usersMap = new Map(users.map(u => [u.id, u]));
+
     return NextResponse.json({
-      data: toCamelCase(affiliates),
+      affiliates: affiliates.map(a => ({
+        ...a,
+        user: a.user_id ? usersMap.get(a.user_id) || { 
+          id: null,
+          first_name: a.name.split(' ')[0],
+          last_name: a.name.split(' ').slice(1).join(' '),
+          email: a.email,
+        } : {
+          id: null,
+          first_name: a.name.split(' ')[0],
+          last_name: a.name.split(' ').slice(1).join(' '),
+          email: a.email,
+        },
+        // Add computed fields
+        total_referrals: a.referrals.length,
+        total_earnings: a.referrals
+          .filter(r => r.commission_status === 'PAID')
+          .reduce((sum, r) => sum + (r.commission_amount || 0), 0),
+        pending_earnings: a.referrals
+          .filter(r => ['PENDING', 'APPROVED'].includes(r.commission_status || ''))
+          .reduce((sum, r) => sum + (r.commission_amount || 0), 0),
+      })),
       total: affiliates.length,
     });
   } catch (error) {

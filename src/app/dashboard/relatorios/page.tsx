@@ -1,7 +1,7 @@
 import { currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
-import { BarChart3, TrendingUp, DollarSign, Users, Calendar, Package } from 'lucide-react'
+import { BarChart3, TrendingUp, DollarSign, Users, Calendar, Package, Handshake } from 'lucide-react'
 import { DashboardShell } from '@/components/dashboard'
 
 export default async function RelatoriosPage() {
@@ -52,15 +52,27 @@ export default async function RelatoriosPage() {
       },
       select: { total_amount: true },
     }),
-    // Últimas reservas com detalhes
+    // Últimas reservas com detalhes e informação de afiliado
     prisma.booking.findMany({
       orderBy: { created_at: 'desc' },
-      take: 5,
+      take: 10,
       include: {
         package: { select: { title: true } },
       },
     }),
   ])
+
+  // Buscar indicações de afiliados para as reservas
+  const bookingIds = recentBookingsList.map(b => b.id)
+  const affiliateReferrals = await prisma.affiliateReferral.findMany({
+    where: { booking_id: { in: bookingIds } },
+    include: { affiliate: { select: { name: true, code: true } } },
+  })
+  
+  // Criar mapa de booking -> afiliado
+  const bookingAffiliateMap = new Map(
+    affiliateReferrals.map(r => [r.booking_id, r.affiliate])
+  )
 
   // Calcular métricas
   const recentRevenue = recentPaidBookings.reduce((sum, b) => sum + b.total_amount, 0)
@@ -167,23 +179,32 @@ export default async function RelatoriosPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {recentBookingsList.map((booking) => (
-                <div key={booking.id} className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-[#333] last:border-0">
-                  <div>
-                    <p className="text-gray-900 dark:text-[#E0E0E0] font-medium">
-                      {booking.status === 'confirmed' ? 'Reserva confirmada' : 
-                       booking.payment_status === 'paid' ? 'Pagamento confirmado' : 'Nova reserva'}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">{booking.package.title}</p>
+              {recentBookingsList.map((booking) => {
+                const affiliate = bookingAffiliateMap.get(booking.id)
+                return (
+                  <div key={booking.id} className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-[#333] last:border-0">
+                    <div>
+                      <p className="text-gray-900 dark:text-[#E0E0E0] font-medium">
+                        {booking.status === 'confirmed' ? 'Reserva confirmada' : 
+                         booking.payment_status === 'paid' ? 'Pagamento confirmado' : 'Nova reserva'}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">{booking.package.title}</p>
+                      {affiliate && (
+                        <p className="text-xs text-purple-500 dark:text-purple-400 flex items-center gap-1 mt-1">
+                          <Handshake className="w-3 h-3" />
+                          Indicado por: {affiliate.name} ({affiliate.code})
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <p className="text-gray-900 dark:text-[#E0E0E0] font-medium">
+                        {(booking.total_amount / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">{getRelativeTime(booking.created_at)}</p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-gray-900 dark:text-[#E0E0E0] font-medium">
-                      {(booking.total_amount / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">{getRelativeTime(booking.created_at)}</p>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
