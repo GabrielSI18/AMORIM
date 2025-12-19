@@ -43,10 +43,7 @@ export default function Home() {
       {/* Header Flutuante */}
       <header className="absolute top-0 left-0 right-0 z-50 p-4">
         <div className="flex items-center justify-between">
-          {/* Espaço vazio à esquerda para balancear */}
-          <div className="w-24" />
-          
-          {/* Logo centralizada */}
+          {/* Logo à esquerda */}
           <Link href="/" className="flex items-center">
             <Image
               src="/amorim-logo.png"
