@@ -13,10 +13,10 @@ export default function PerfilPage() {
     return (
       <DashboardShell title="Perfil">
         <div className="space-y-6 animate-pulse">
-          <div className="flex flex-col items-center gap-4 p-6 bg-[#1E1E1E] rounded-xl">
-            <div className="w-24 h-24 rounded-full bg-[#2A2A2A]" />
-            <div className="h-6 w-32 bg-[#2A2A2A] rounded" />
-            <div className="h-4 w-48 bg-[#2A2A2A] rounded" />
+          <div className="flex flex-col items-center gap-4 p-6 bg-white dark:bg-[#1E1E1E] rounded-xl">
+            <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-[#2A2A2A]" />
+            <div className="h-6 w-32 bg-gray-100 dark:bg-[#2A2A2A] rounded" />
+            <div className="h-4 w-48 bg-gray-100 dark:bg-[#2A2A2A] rounded" />
           </div>
         </div>
       </DashboardShell>
@@ -27,7 +27,7 @@ export default function PerfilPage() {
     return (
       <DashboardShell title="Perfil">
         <div className="space-y-4">
-          <p className="text-[#E0E0E0] font-medium">
+          <p className="text-gray-900 dark:text-[#E0E0E0] font-medium">
             Você precisa estar autenticado para acessar esta página.
           </p>
         </div>
@@ -48,9 +48,9 @@ export default function PerfilPage() {
     <DashboardShell title="Perfil">
       <div className="space-y-6">
         {/* Profile Card */}
-        <div className="flex flex-col items-center gap-4 p-6 bg-[#1E1E1E] border border-[#333] rounded-xl">
+        <div className="flex flex-col items-center gap-4 p-6 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl">
           <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-[#2A2A2A] border-2 border-[#333] overflow-hidden">
+            <div className="w-24 h-24 rounded-full bg-gray-50 dark:bg-[#2A2A2A] border-2 border-gray-200 dark:border-[#333] overflow-hidden">
               {user?.imageUrl ? (
                 <Image
                   src={user.imageUrl}
@@ -60,7 +60,7 @@ export default function PerfilPage() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-[#A0A0A0] text-3xl font-medium">
+                <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-[#A0A0A0] text-3xl font-medium">
                   {fullName[0]?.toUpperCase()}
                 </div>
               )}
@@ -71,45 +71,45 @@ export default function PerfilPage() {
           </div>
           
           <div className="text-center">
-            <h2 className="text-xl font-bold text-[#E0E0E0]">{fullName}</h2>
-            <p className="text-[#A0A0A0]">Cliente</p>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">{fullName}</h2>
+            <p className="text-gray-500 dark:text-[#A0A0A0]">Cliente</p>
           </div>
         </div>
 
         {/* Info Cards */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-[#E0E0E0] px-1">Informações</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-[#E0E0E0] px-1">Informações</h3>
           
-          <div className="bg-[#1E1E1E] border border-[#333] rounded-xl divide-y divide-[#333]">
+          <div className="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl divide-y divide-gray-200 dark:divide-[#333]">
             <div className="flex items-center gap-4 p-4">
-              <div className="w-10 h-10 rounded-full bg-[#2A2A2A] flex items-center justify-center">
-                <Mail className="w-5 h-5 text-[#A0A0A0]" />
+              <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-[#2A2A2A] flex items-center justify-center">
+                <Mail className="w-5 h-5 text-gray-500 dark:text-[#A0A0A0]" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-[#A0A0A0]">Email</p>
-                <p className="text-[#E0E0E0] truncate">{email}</p>
+                <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Email</p>
+                <p className="text-gray-900 dark:text-[#E0E0E0] truncate">{email}</p>
               </div>
             </div>
 
             {phone && (
               <div className="flex items-center gap-4 p-4">
-                <div className="w-10 h-10 rounded-full bg-[#2A2A2A] flex items-center justify-center">
-                  <Phone className="w-5 h-5 text-[#A0A0A0]" />
+                <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-[#2A2A2A] flex items-center justify-center">
+                  <Phone className="w-5 h-5 text-gray-500 dark:text-[#A0A0A0]" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-[#A0A0A0]">Telefone</p>
-                  <p className="text-[#E0E0E0]">{phone}</p>
+                  <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Telefone</p>
+                  <p className="text-gray-900 dark:text-[#E0E0E0]">{phone}</p>
                 </div>
               </div>
             )}
 
             <div className="flex items-center gap-4 p-4">
-              <div className="w-10 h-10 rounded-full bg-[#2A2A2A] flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-[#A0A0A0]" />
+              <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-[#2A2A2A] flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-gray-500 dark:text-[#A0A0A0]" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-[#A0A0A0]">Membro desde</p>
-                <p className="text-[#E0E0E0]">{createdAt}</p>
+                <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Membro desde</p>
+                <p className="text-gray-900 dark:text-[#E0E0E0]">{createdAt}</p>
               </div>
             </div>
           </div>
@@ -117,45 +117,45 @@ export default function PerfilPage() {
 
         {/* Actions */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-[#E0E0E0] px-1">Conta</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-[#E0E0E0] px-1">Conta</h3>
           
-          <div className="bg-[#1E1E1E] border border-[#333] rounded-xl divide-y divide-[#333]">
+          <div className="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl divide-y divide-gray-200 dark:divide-[#333]">
             <button 
               onClick={() => openUserProfile()}
-              className="flex items-center gap-4 p-4 w-full text-left hover:bg-[#2A2A2A] transition-colors"
+              className="flex items-center gap-4 p-4 w-full text-left hover:bg-gray-50 dark:hover:bg-[#2A2A2A] transition-colors"
             >
-              <div className="w-10 h-10 rounded-full bg-[#2A2A2A] flex items-center justify-center">
-                <User className="w-5 h-5 text-[#A0A0A0]" />
+              <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-[#2A2A2A] flex items-center justify-center">
+                <User className="w-5 h-5 text-gray-500 dark:text-[#A0A0A0]" />
               </div>
               <div className="flex-1">
-                <p className="text-[#E0E0E0]">Editar perfil</p>
-                <p className="text-sm text-[#A0A0A0]">Alterar nome, foto e informações</p>
+                <p className="text-gray-900 dark:text-[#E0E0E0]">Editar perfil</p>
+                <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Alterar nome, foto e informações</p>
               </div>
             </button>
 
             <button 
               onClick={() => openUserProfile()}
-              className="flex items-center gap-4 p-4 w-full text-left hover:bg-[#2A2A2A] transition-colors"
+              className="flex items-center gap-4 p-4 w-full text-left hover:bg-gray-50 dark:hover:bg-[#2A2A2A] transition-colors"
             >
-              <div className="w-10 h-10 rounded-full bg-[#2A2A2A] flex items-center justify-center">
-                <Shield className="w-5 h-5 text-[#A0A0A0]" />
+              <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-[#2A2A2A] flex items-center justify-center">
+                <Shield className="w-5 h-5 text-gray-500 dark:text-[#A0A0A0]" />
               </div>
               <div className="flex-1">
-                <p className="text-[#E0E0E0]">Segurança</p>
-                <p className="text-sm text-[#A0A0A0]">Senha e autenticação</p>
+                <p className="text-gray-900 dark:text-[#E0E0E0]">Segurança</p>
+                <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Senha e autenticação</p>
               </div>
             </button>
 
             <button 
               onClick={() => signOut({ redirectUrl: '/' })}
-              className="flex items-center gap-4 p-4 w-full text-left hover:bg-[#2A2A2A] transition-colors"
+              className="flex items-center gap-4 p-4 w-full text-left hover:bg-gray-50 dark:hover:bg-[#2A2A2A] transition-colors"
             >
               <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
                 <LogOut className="w-5 h-5 text-red-400" />
               </div>
               <div className="flex-1">
                 <p className="text-red-400">Sair da conta</p>
-                <p className="text-sm text-[#A0A0A0]">Encerrar sessão</p>
+                <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Encerrar sessão</p>
               </div>
             </button>
           </div>

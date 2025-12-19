@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, Bus, Edit2, Trash2, Loader2, Calendar, Hash, Users, Layers } from 'lucide-react';
 import { toast } from 'sonner';
-import { DashboardShell } from '@/components/dashboard';
+import { DashboardShell, AdminGuard } from '@/components/dashboard';
 
 interface BusData {
   id: string;
@@ -25,6 +25,14 @@ interface BusPageProps {
 }
 
 export default function BusViewPage({ params }: BusPageProps) {
+  return (
+    <AdminGuard>
+      <BusViewContent params={params} />
+    </AdminGuard>
+  );
+}
+
+function BusViewContent({ params }: BusPageProps) {
   const router = useRouter();
   const [busId, setBusId] = useState<string>('');
   const [bus, setBus] = useState<BusData | null>(null);

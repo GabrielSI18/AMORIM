@@ -6,9 +6,17 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, Bus, Upload, X, Loader2, Plus, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { DashboardShell } from '@/components/dashboard';
+import { DashboardShell, AdminGuard } from '@/components/dashboard';
 
 export default function NovoBusPage() {
+  return (
+    <AdminGuard>
+      <NovoBusContent />
+    </AdminGuard>
+  );
+}
+
+function NovoBusContent() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);

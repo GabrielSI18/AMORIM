@@ -123,7 +123,7 @@ export default function PoliticasPage() {
                   <h4 className="font-medium text-[#212529] dark:text-[#f8f9fa] mb-1">Entre em contato</h4>
                   <p className="text-sm">
                     Envie um e-mail para contato@amorimturismo.com.br ou entre em contato 
-                    pelo WhatsApp (31) 99999-9999 informando seu desejo de cancelar.
+                    pelo WhatsApp (31) 99973-2079 informando seu desejo de cancelar.
                   </p>
                 </div>
               </li>

@@ -5,7 +5,7 @@ import { useAuth } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Plus, Edit, Trash2, Eye, Package, MapPin, Calendar, Users, Bus, Star } from 'lucide-react'
-import { DashboardShell } from '@/components/dashboard'
+import { DashboardShell, AdminGuard } from '@/components/dashboard'
 import Image from 'next/image'
 import type { Package as PackageType, Category, Destination } from '@/types'
 
@@ -25,6 +25,14 @@ const formatDate = (date: Date | string | undefined) => {
 }
 
 export default function DashboardPackagesPage() {
+  return (
+    <AdminGuard>
+      <PackagesContent />
+    </AdminGuard>
+  )
+}
+
+function PackagesContent() {
   const router = useRouter()
   const { userId } = useAuth()
   const [packages, setPackages] = useState<PackageType[]>([])
@@ -107,7 +115,7 @@ export default function DashboardPackagesPage() {
     return (
       <DashboardShell title="Pacotes">
         <div className="flex items-center justify-center py-12">
-          <p className="text-[#A0A0A0]">
+          <p className="text-gray-500 dark:text-[#A0A0A0]">
             Voce precisa estar logado para acessar esta pagina.
           </p>
         </div>
@@ -120,7 +128,7 @@ export default function DashboardPackagesPage() {
       {/* Header com botão */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[#A0A0A0]">
+          <p className="text-gray-500 dark:text-[#A0A0A0]">
             Cadastre e gerencie os pacotes de viagem
           </p>
         </div>
@@ -135,12 +143,12 @@ export default function DashboardPackagesPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-[#1E1E1E] rounded-xl p-4">
-          <p className="text-sm text-[#A0A0A0] mb-1">Total</p>
-          <p className="text-2xl font-bold text-[#E0E0E0]">{packages.length}</p>
+        <div className="bg-white dark:bg-[#1E1E1E] rounded-xl p-4">
+          <p className="text-sm text-gray-500 dark:text-[#A0A0A0] mb-1">Total</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0]">{packages.length}</p>
         </div>
-        <div className="bg-[#1E1E1E] rounded-xl p-4">
-          <p className="text-sm text-[#A0A0A0] mb-1">Publicados</p>
+        <div className="bg-white dark:bg-[#1E1E1E] rounded-xl p-4">
+          <p className="text-sm text-gray-500 dark:text-[#A0A0A0] mb-1">Publicados</p>
           <p className="text-2xl font-bold text-green-400">
             {packages.filter((p) => p.status === 'published').length}
           </p>
@@ -150,14 +158,14 @@ export default function DashboardPackagesPage() {
       {/* Lista de Pacotes */}
       <div className="flex flex-col gap-3">
         {isLoading ? (
-          <div className="bg-[#1E1E1E] rounded-xl p-6 text-center">
-            <p className="text-[#A0A0A0]">Carregando...</p>
+          <div className="bg-white dark:bg-[#1E1E1E] rounded-xl p-6 text-center">
+            <p className="text-gray-500 dark:text-[#A0A0A0]">Carregando...</p>
           </div>
         ) : packages.length === 0 ? (
-          <div className="bg-[#1E1E1E] rounded-xl p-6 text-center">
-            <Package className="w-12 h-12 text-[#A0A0A0] mx-auto mb-3" />
-            <p className="text-[#A0A0A0]">Nenhum pacote cadastrado.</p>
-            <p className="text-[#A0A0A0] text-sm">
+          <div className="bg-white dark:bg-[#1E1E1E] rounded-xl p-6 text-center">
+            <Package className="w-12 h-12 text-gray-500 dark:text-[#A0A0A0] mx-auto mb-3" />
+            <p className="text-gray-500 dark:text-[#A0A0A0]">Nenhum pacote cadastrado.</p>
+            <p className="text-gray-500 dark:text-[#A0A0A0] text-sm">
               Clique em "Novo" para comecar.
             </p>
           </div>
@@ -165,7 +173,7 @@ export default function DashboardPackagesPage() {
           packages.map((pkg) => (
             <div
               key={pkg.id}
-              className="bg-[#1E1E1E] rounded-xl p-4 flex gap-4"
+              className="bg-white dark:bg-[#1E1E1E] rounded-xl p-4 flex gap-4"
             >
               {/* Imagem de capa */}
               {pkg.coverImage ? (
@@ -183,8 +191,8 @@ export default function DashboardPackagesPage() {
                   )}
                 </div>
               ) : (
-                <div className="w-24 h-24 rounded-lg bg-[#2a2a2a] flex items-center justify-center flex-shrink-0">
-                  <Package className="w-8 h-8 text-[#A0A0A0]" />
+                <div className="w-24 h-24 rounded-lg bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center flex-shrink-0">
+                  <Package className="w-8 h-8 text-gray-500 dark:text-[#A0A0A0]" />
                 </div>
               )}
 
@@ -192,10 +200,10 @@ export default function DashboardPackagesPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="font-semibold text-[#E0E0E0] truncate">
+                    <p className="font-semibold text-gray-900 dark:text-[#E0E0E0] truncate">
                       {pkg.title}
                     </p>
-                    <div className="flex items-center gap-3 mt-1 text-sm text-[#A0A0A0]">
+                    <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-[#A0A0A0]">
                       {pkg.destination && (
                         <span className="flex items-center gap-1">
                           <MapPin className="w-3.5 h-3.5" />
@@ -212,21 +220,21 @@ export default function DashboardPackagesPage() {
                 </div>
 
                 {/* Detalhes extras */}
-                <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-[#A0A0A0]">
+                <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-gray-500 dark:text-[#A0A0A0]">
                   {pkg.departureDate && (
-                    <span className="flex items-center gap-1 bg-[#2a2a2a] px-2 py-1 rounded">
+                    <span className="flex items-center gap-1 bg-gray-100 dark:bg-[#2a2a2a] px-2 py-1 rounded">
                       <Calendar className="w-3 h-3" />
                       Saída: {formatDate(pkg.departureDate)}
                     </span>
                   )}
                   {pkg.totalSeats && (
-                    <span className="flex items-center gap-1 bg-[#2a2a2a] px-2 py-1 rounded">
+                    <span className="flex items-center gap-1 bg-gray-100 dark:bg-[#2a2a2a] px-2 py-1 rounded">
                       <Users className="w-3 h-3" />
                       {pkg.availableSeats ?? pkg.totalSeats}/{pkg.totalSeats} vagas
                     </span>
                   )}
                   {(pkg as any).bus && (
-                    <span className="flex items-center gap-1 bg-[#2a2a2a] px-2 py-1 rounded">
+                    <span className="flex items-center gap-1 bg-gray-100 dark:bg-[#2a2a2a] px-2 py-1 rounded">
                       <Bus className="w-3 h-3" />
                       {(pkg as any).bus.model}
                     </span>
@@ -237,7 +245,7 @@ export default function DashboardPackagesPage() {
                 <div className="flex items-center justify-between mt-3">
                   <div className="flex items-center gap-2">
                     {pkg.originalPrice && pkg.originalPrice > pkg.price && (
-                      <span className="text-xs text-[#A0A0A0] line-through">
+                      <span className="text-xs text-gray-500 dark:text-[#A0A0A0] line-through">
                         {formatPrice(pkg.originalPrice)}
                       </span>
                     )}
@@ -250,14 +258,14 @@ export default function DashboardPackagesPage() {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => window.open(`/pacotes/${pkg.slug}`, '_blank')}
-                      className="p-2 hover:bg-[#2a2a2a] text-[#A0A0A0] hover:text-[#E0E0E0] rounded-lg transition"
+                      className="p-2 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-gray-500 dark:text-[#A0A0A0] hover:text-gray-900 dark:hover:text-[#E0E0E0] rounded-lg transition"
                       title="Visualizar"
                     >
                       <Eye className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => router.push(`/dashboard/pacotes/${pkg.id}/editar`)}
-                      className="p-2 hover:bg-[#2a2a2a] text-[#A0A0A0] hover:text-[#E0E0E0] rounded-lg transition"
+                      className="p-2 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-gray-500 dark:text-[#A0A0A0] hover:text-gray-900 dark:hover:text-[#E0E0E0] rounded-lg transition"
                       title="Editar"
                     >
                       <Edit className="h-4 w-4" />

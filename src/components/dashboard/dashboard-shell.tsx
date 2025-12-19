@@ -24,7 +24,7 @@ export function DashboardShell({
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-[#121212] font-sans">
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#121212] font-sans">
       {/* Sidebar */}
       <Sidebar
         isOpen={sidebarOpen}
@@ -34,14 +34,14 @@ export function DashboardShell({
       />
 
       {/* Top App Bar */}
-      <header className="flex items-center justify-between p-4 pb-2 sticky top-0 z-10 bg-[#121212]">
+      <header className="flex items-center justify-between p-4 pb-2 sticky top-0 z-10 bg-[#f8f9fa] dark:bg-[#121212]">
         <button
           onClick={() => setSidebarOpen(true)}
-          className="flex items-center justify-center size-12 rounded-lg hover:bg-[#1E1E1E] transition-colors"
+          className="flex items-center justify-center size-12 rounded-lg hover:bg-gray-200 dark:hover:bg-[#1E1E1E] transition-colors"
         >
-          <Menu className="w-6 h-6 text-[#E0E0E0]" />
+          <Menu className="w-6 h-6 text-[#333333] dark:text-[#E0E0E0]" />
         </button>
-        <h1 className="text-lg font-bold text-[#E0E0E0] tracking-tight">
+        <h1 className="text-lg font-bold text-[#333333] dark:text-[#E0E0E0] tracking-tight">
           {title}
         </h1>
         {action ? action : <UserMenu />}

@@ -20,7 +20,7 @@ import {
   Eye,
   X
 } from 'lucide-react'
-import { DashboardShell } from '@/components/dashboard'
+import { DashboardShell, AdminGuard } from '@/components/dashboard'
 
 // Função para formatar data relativa
 function formatRelativeDate(dateString: string): string {
@@ -79,6 +79,14 @@ const priorityConfig = {
 }
 
 export default function ContatosAdminPage() {
+  return (
+    <AdminGuard>
+      <ContatosContent />
+    </AdminGuard>
+  )
+}
+
+function ContatosContent() {
   const router = useRouter()
   const [contacts, setContacts] = useState<Contact[]>([])
   const [stats, setStats] = useState<Stats>({ pending: 0, in_progress: 0, resolved: 0, archived: 0 })
@@ -172,12 +180,12 @@ export default function ContatosAdminPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
           <div>
-            <h1 className="text-2xl font-bold text-[#E0E0E0]">Central de Contatos</h1>
-            <p className="text-[#A0A0A0]">Gerencie mensagens recebidas pelo formulário de contato</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0]">Central de Contatos</h1>
+            <p className="text-gray-500 dark:text-[#A0A0A0]">Gerencie mensagens recebidas pelo formulário de contato</p>
           </div>
           <button
             onClick={() => loadContacts()}
-            className="flex items-center gap-2 px-4 py-2 bg-[#2A2A2A] border border-[#444] rounded-lg text-[#E0E0E0] hover:bg-[#333] transition"
+            className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-[#2A2A2A] border border-gray-200 dark:border-[#444] rounded-lg text-gray-900 dark:text-[#E0E0E0] hover:bg-gray-100 dark:hover:bg-[#333] transition"
           >
             <RefreshCw className="w-4 h-4" />
             Atualizar
@@ -191,7 +199,7 @@ export default function ContatosAdminPage() {
             className={`p-4 rounded-xl border transition ${
               statusFilter === 'pending' 
                 ? 'bg-yellow-500/20 border-yellow-500/50' 
-                : 'bg-[#1E1E1E] border-[#333] hover:border-yellow-500/30'
+                : 'bg-white dark:bg-[#1E1E1E] border-gray-200 dark:border-[#333] hover:border-yellow-500/30'
             }`}
           >
             <div className="flex items-center gap-3">
@@ -199,8 +207,8 @@ export default function ContatosAdminPage() {
                 <Clock className="w-5 h-5 text-yellow-500" />
               </div>
               <div className="text-left">
-                <p className="text-2xl font-bold text-[#E0E0E0]">{stats.pending}</p>
-                <p className="text-sm text-[#A0A0A0]">Pendentes</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0]">{stats.pending}</p>
+                <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Pendentes</p>
               </div>
             </div>
           </button>
@@ -210,7 +218,7 @@ export default function ContatosAdminPage() {
             className={`p-4 rounded-xl border transition ${
               statusFilter === 'in_progress' 
                 ? 'bg-blue-500/20 border-blue-500/50' 
-                : 'bg-[#1E1E1E] border-[#333] hover:border-blue-500/30'
+                : 'bg-white dark:bg-[#1E1E1E] border-gray-200 dark:border-[#333] hover:border-blue-500/30'
             }`}
           >
             <div className="flex items-center gap-3">
@@ -218,8 +226,8 @@ export default function ContatosAdminPage() {
                 <MessageSquare className="w-5 h-5 text-blue-500" />
               </div>
               <div className="text-left">
-                <p className="text-2xl font-bold text-[#E0E0E0]">{stats.in_progress}</p>
-                <p className="text-sm text-[#A0A0A0]">Em Andamento</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0]">{stats.in_progress}</p>
+                <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Em Andamento</p>
               </div>
             </div>
           </button>
@@ -229,7 +237,7 @@ export default function ContatosAdminPage() {
             className={`p-4 rounded-xl border transition ${
               statusFilter === 'resolved' 
                 ? 'bg-green-500/20 border-green-500/50' 
-                : 'bg-[#1E1E1E] border-[#333] hover:border-green-500/30'
+                : 'bg-white dark:bg-[#1E1E1E] border-gray-200 dark:border-[#333] hover:border-green-500/30'
             }`}
           >
             <div className="flex items-center gap-3">
@@ -237,8 +245,8 @@ export default function ContatosAdminPage() {
                 <CheckCircle2 className="w-5 h-5 text-green-500" />
               </div>
               <div className="text-left">
-                <p className="text-2xl font-bold text-[#E0E0E0]">{stats.resolved}</p>
-                <p className="text-sm text-[#A0A0A0]">Resolvidos</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0]">{stats.resolved}</p>
+                <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Resolvidos</p>
               </div>
             </div>
           </button>
@@ -248,7 +256,7 @@ export default function ContatosAdminPage() {
             className={`p-4 rounded-xl border transition ${
               statusFilter === 'archived' 
                 ? 'bg-gray-500/20 border-gray-500/50' 
-                : 'bg-[#1E1E1E] border-[#333] hover:border-gray-500/30'
+                : 'bg-white dark:bg-[#1E1E1E] border-gray-200 dark:border-[#333] hover:border-gray-500/30'
             }`}
           >
             <div className="flex items-center gap-3">
@@ -256,8 +264,8 @@ export default function ContatosAdminPage() {
                 <Archive className="w-5 h-5 text-gray-500" />
               </div>
               <div className="text-left">
-                <p className="text-2xl font-bold text-[#E0E0E0]">{stats.archived}</p>
-                <p className="text-sm text-[#A0A0A0]">Arquivados</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0]">{stats.archived}</p>
+                <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Arquivados</p>
               </div>
             </div>
           </button>
@@ -266,13 +274,13 @@ export default function ContatosAdminPage() {
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#666]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-[#666]" />
             <input
               type="text"
               placeholder="Buscar por nome, email, telefone ou mensagem..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-[#1E1E1E] border border-[#333] rounded-lg text-[#E0E0E0] placeholder-[#666] focus:outline-none focus:border-[#D93636] transition"
+              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-lg text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 dark:placeholder-[#666] focus:outline-none focus:border-[#D93636] transition"
             />
           </div>
           
@@ -281,7 +289,7 @@ export default function ContatosAdminPage() {
               <select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
-                className="appearance-none px-4 py-3 pr-10 bg-[#1E1E1E] border border-[#333] rounded-lg text-[#E0E0E0] focus:outline-none focus:border-[#D93636] transition cursor-pointer"
+                className="appearance-none px-4 py-3 pr-10 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-lg text-gray-900 dark:text-[#E0E0E0] focus:outline-none focus:border-[#D93636] transition cursor-pointer"
               >
                 <option value="all">Todas Prioridades</option>
                 <option value="urgent">Urgente</option>
@@ -289,30 +297,30 @@ export default function ContatosAdminPage() {
                 <option value="normal">Normal</option>
                 <option value="low">Baixa</option>
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#666] pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-[#666] pointer-events-none" />
             </div>
           </div>
         </div>
 
         {/* Contacts List */}
-        <div className="bg-[#1E1E1E] border border-[#333] rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 text-[#D93636] animate-spin" />
             </div>
           ) : contacts.length === 0 ? (
             <div className="text-center py-12">
-              <MessageSquare className="w-12 h-12 text-[#444] mx-auto mb-4" />
-              <p className="text-[#A0A0A0]">Nenhum contato encontrado</p>
+              <MessageSquare className="w-12 h-12 text-gray-300 dark:text-[#444] mx-auto mb-4" />
+              <p className="text-gray-500 dark:text-[#A0A0A0]">Nenhum contato encontrado</p>
             </div>
           ) : (
-            <div className="divide-y divide-[#333]">
+            <div className="divide-y divide-gray-200 dark:divide-[#333]">
               {contacts.map((contact) => {
                 const StatusIcon = statusConfig[contact.status].icon
                 return (
                   <div
                     key={contact.id}
-                    className={`p-4 hover:bg-[#2A2A2A] transition cursor-pointer ${
+                    className={`p-4 hover:bg-gray-50 dark:hover:bg-[#2A2A2A] transition cursor-pointer ${
                       !contact.read_at ? 'bg-[#D93636]/5' : ''
                     }`}
                     onClick={() => setSelectedContact(contact)}
@@ -328,7 +336,7 @@ export default function ContatosAdminPage() {
                       {/* Conteúdo */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-[#E0E0E0] truncate">{contact.name}</h3>
+                          <h3 className="font-semibold text-gray-900 dark:text-[#E0E0E0] truncate">{contact.name}</h3>
                           <span className={`px-2 py-0.5 text-xs rounded-full border ${statusConfig[contact.status].color}`}>
                             {statusConfig[contact.status].label}
                           </span>
@@ -337,7 +345,7 @@ export default function ContatosAdminPage() {
                           </span>
                         </div>
                         
-                        <div className="flex items-center gap-4 text-sm text-[#A0A0A0] mb-2">
+                        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-[#A0A0A0] mb-2">
                           <span className="flex items-center gap-1">
                             <Mail className="w-3 h-3" />
                             {contact.email}
@@ -356,14 +364,14 @@ export default function ContatosAdminPage() {
                           </p>
                         )}
 
-                        <p className="text-sm text-[#A0A0A0] line-clamp-2">
+                        <p className="text-sm text-gray-500 dark:text-[#A0A0A0] line-clamp-2">
                           {contact.message}
                         </p>
                       </div>
 
                       {/* Data e ações */}
                       <div className="text-right flex-shrink-0">
-                        <p className="text-xs text-[#666] mb-2">
+                        <p className="text-xs text-gray-400 dark:text-[#666] mb-2">
                           {formatDate(contact.created_at)}
                         </p>
                         <div className="flex items-center gap-1">
@@ -403,18 +411,18 @@ export default function ContatosAdminPage() {
       {/* Modal de Detalhes */}
       {selectedContact && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-[#1E1E1E] border border-[#333] rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-[#333]">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-[#333]">
               <div>
-                <h2 className="text-xl font-bold text-[#E0E0E0]">{selectedContact.name}</h2>
-                <p className="text-sm text-[#A0A0A0]">{formatDate(selectedContact.created_at)}</p>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">{selectedContact.name}</h2>
+                <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">{formatDate(selectedContact.created_at)}</p>
               </div>
               <button
                 onClick={() => setSelectedContact(null)}
-                className="p-2 hover:bg-[#2A2A2A] rounded-lg transition"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-[#2A2A2A] rounded-lg transition"
               >
-                <X className="w-5 h-5 text-[#A0A0A0]" />
+                <X className="w-5 h-5 text-gray-500 dark:text-[#A0A0A0]" />
               </button>
             </div>
 
@@ -422,32 +430,32 @@ export default function ContatosAdminPage() {
             <div className="p-6 space-y-6">
               {/* Informações de Contato */}
               <div className="grid sm:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 p-3 bg-[#2A2A2A] rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg">
                   <Mail className="w-5 h-5 text-blue-500" />
                   <div>
-                    <p className="text-xs text-[#A0A0A0]">E-mail</p>
-                    <p className="text-[#E0E0E0]">{selectedContact.email}</p>
+                    <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">E-mail</p>
+                    <p className="text-gray-900 dark:text-[#E0E0E0]">{selectedContact.email}</p>
                   </div>
                   <button
                     onClick={() => openEmail(selectedContact.email, selectedContact.subject)}
-                    className="ml-auto p-2 hover:bg-[#333] rounded-lg transition"
+                    className="ml-auto p-2 hover:bg-gray-200 dark:hover:bg-[#333] rounded-lg transition"
                   >
-                    <ExternalLink className="w-4 h-4 text-[#A0A0A0]" />
+                    <ExternalLink className="w-4 h-4 text-gray-500 dark:text-[#A0A0A0]" />
                   </button>
                 </div>
 
                 {selectedContact.phone && (
-                  <div className="flex items-center gap-3 p-3 bg-[#2A2A2A] rounded-lg">
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg">
                     <Phone className="w-5 h-5 text-green-500" />
                     <div>
-                      <p className="text-xs text-[#A0A0A0]">Telefone</p>
-                      <p className="text-[#E0E0E0]">{selectedContact.phone}</p>
+                      <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Telefone</p>
+                      <p className="text-gray-900 dark:text-[#E0E0E0]">{selectedContact.phone}</p>
                     </div>
                     <button
                       onClick={() => openWhatsApp(selectedContact.phone!, selectedContact.name)}
-                      className="ml-auto p-2 hover:bg-[#333] rounded-lg transition"
+                      className="ml-auto p-2 hover:bg-gray-200 dark:hover:bg-[#333] rounded-lg transition"
                     >
-                      <ExternalLink className="w-4 h-4 text-[#A0A0A0]" />
+                      <ExternalLink className="w-4 h-4 text-gray-500 dark:text-[#A0A0A0]" />
                     </button>
                   </div>
                 )}
@@ -456,28 +464,28 @@ export default function ContatosAdminPage() {
               {/* Assunto */}
               {selectedContact.subject && (
                 <div>
-                  <p className="text-sm text-[#A0A0A0] mb-1">Assunto</p>
+                  <p className="text-sm text-gray-500 dark:text-[#A0A0A0] mb-1">Assunto</p>
                   <p className="text-[#D93636] font-medium">{selectedContact.subject}</p>
                 </div>
               )}
 
               {/* Mensagem */}
               <div>
-                <p className="text-sm text-[#A0A0A0] mb-2">Mensagem</p>
-                <div className="p-4 bg-[#2A2A2A] rounded-lg">
-                  <p className="text-[#E0E0E0] whitespace-pre-wrap">{selectedContact.message}</p>
+                <p className="text-sm text-gray-500 dark:text-[#A0A0A0] mb-2">Mensagem</p>
+                <div className="p-4 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg">
+                  <p className="text-gray-900 dark:text-[#E0E0E0] whitespace-pre-wrap">{selectedContact.message}</p>
                 </div>
               </div>
 
               {/* Status e Prioridade */}
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-[#A0A0A0] mb-2">Status</p>
+                  <p className="text-sm text-gray-500 dark:text-[#A0A0A0] mb-2">Status</p>
                   <select
                     value={selectedContact.status}
                     onChange={(e) => updateContact(selectedContact.id, { status: e.target.value as Contact['status'] })}
                     disabled={isUpdating}
-                    className="w-full px-4 py-3 bg-[#2A2A2A] border border-[#444] rounded-lg text-[#E0E0E0] focus:outline-none focus:border-[#D93636] transition"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-[#2A2A2A] border border-gray-200 dark:border-[#444] rounded-lg text-gray-900 dark:text-[#E0E0E0] focus:outline-none focus:border-[#D93636] transition"
                   >
                     <option value="pending">Pendente</option>
                     <option value="in_progress">Em Andamento</option>
@@ -487,12 +495,12 @@ export default function ContatosAdminPage() {
                 </div>
 
                 <div>
-                  <p className="text-sm text-[#A0A0A0] mb-2">Prioridade</p>
+                  <p className="text-sm text-gray-500 dark:text-[#A0A0A0] mb-2">Prioridade</p>
                   <select
                     value={selectedContact.priority}
                     onChange={(e) => updateContact(selectedContact.id, { priority: e.target.value as Contact['priority'] })}
                     disabled={isUpdating}
-                    className="w-full px-4 py-3 bg-[#2A2A2A] border border-[#444] rounded-lg text-[#E0E0E0] focus:outline-none focus:border-[#D93636] transition"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-[#2A2A2A] border border-gray-200 dark:border-[#444] rounded-lg text-gray-900 dark:text-[#E0E0E0] focus:outline-none focus:border-[#D93636] transition"
                   >
                     <option value="low">Baixa</option>
                     <option value="normal">Normal</option>
@@ -504,7 +512,7 @@ export default function ContatosAdminPage() {
 
               {/* Notas Internas */}
               <div>
-                <p className="text-sm text-[#A0A0A0] mb-2">Notas Internas (visível apenas para admins)</p>
+                <p className="text-sm text-gray-500 dark:text-[#A0A0A0] mb-2">Notas Internas (visível apenas para admins)</p>
                 <textarea
                   defaultValue={selectedContact.notes || ''}
                   placeholder="Adicione notas sobre este contato..."
@@ -514,14 +522,14 @@ export default function ContatosAdminPage() {
                       updateContact(selectedContact.id, { notes: e.target.value })
                     }
                   }}
-                  className="w-full px-4 py-3 bg-[#2A2A2A] border border-[#444] rounded-lg text-[#E0E0E0] placeholder-[#666] focus:outline-none focus:border-[#D93636] transition resize-none"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-[#2A2A2A] border border-gray-200 dark:border-[#444] rounded-lg text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 dark:placeholder-[#666] focus:outline-none focus:border-[#D93636] transition resize-none"
                 />
               </div>
             </div>
 
             {/* Footer Actions */}
-            <div className="flex items-center justify-between p-6 border-t border-[#333]">
-              <div className="text-xs text-[#666]">
+            <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-[#333]">
+              <div className="text-xs text-gray-400 dark:text-[#666]">
                 {selectedContact.read_at && (
                   <span>Lido {formatDate(selectedContact.read_at)}</span>
                 )}

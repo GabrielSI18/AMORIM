@@ -115,9 +115,9 @@ export function PublicLayout({ children, currentPage }: PublicLayoutProps) {
             <div>
               <h4 className="font-semibold mb-4 text-[#212529] dark:text-[#f8f9fa]">Contato</h4>
               <ul className="space-y-2 text-sm text-[#6c757d] dark:text-[#adb5bd]">
-                <li>(31) 99999-9999</li>
+                <li>(31) 99973-2079 / (31) 98886-2079</li>
                 <li>contato@amorimturismo.com.br</li>
-                <li>Belo Horizonte, MG</li>
+                <li>Rua Manaus, 48 - Bairro Amazonas, Contagem - MG</li>
               </ul>
             </div>
           </div>

@@ -55,33 +55,33 @@ export default async function AfiliadosPage() {
       <div className="space-y-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="flex items-center gap-4 p-4 bg-[#1E1E1E] border border-[#333] rounded-xl">
+          <div className="flex items-center gap-4 p-4 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl">
             <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center">
               <UserCheck className="w-6 h-6 text-purple-400" />
             </div>
             <div>
-              <p className="text-sm text-[#A0A0A0]">Total de Afiliados</p>
-              <p className="text-2xl font-bold text-[#E0E0E0]">{stats.totalAffiliates}</p>
+              <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Total de Afiliados</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0]">{stats.totalAffiliates}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 p-4 bg-[#1E1E1E] border border-[#333] rounded-xl">
+          <div className="flex items-center gap-4 p-4 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl">
             <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center">
               <TrendingUp className="w-6 h-6 text-green-400" />
             </div>
             <div>
-              <p className="text-sm text-[#A0A0A0]">Novos este mês</p>
-              <p className="text-2xl font-bold text-[#E0E0E0]">{stats.activeThisMonth}</p>
+              <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Novos este mês</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0]">{stats.activeThisMonth}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 p-4 bg-[#1E1E1E] border border-[#333] rounded-xl">
+          <div className="flex items-center gap-4 p-4 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl">
             <div className="w-12 h-12 rounded-lg bg-orange-500/10 flex items-center justify-center">
               <DollarSign className="w-6 h-6 text-orange-400" />
             </div>
             <div>
-              <p className="text-sm text-[#A0A0A0]">Comissões Pagas</p>
-              <p className="text-2xl font-bold text-[#E0E0E0]">R$ 0,00</p>
+              <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Comissões Pagas</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0]">R$ 0,00</p>
             </div>
           </div>
         </div>
@@ -89,14 +89,14 @@ export default async function AfiliadosPage() {
         {/* Filters */}
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A0A0A0]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-[#A0A0A0]" />
             <input
               type="text"
               placeholder="Buscar afiliado..."
-              className="w-full h-10 pl-10 pr-4 rounded-lg bg-[#1E1E1E] border border-[#333] text-[#E0E0E0] placeholder:text-[#A0A0A0] focus:outline-none focus:border-[#D93636] transition-colors"
+              className="w-full h-10 pl-10 pr-4 rounded-lg bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] text-gray-900 dark:text-[#E0E0E0] placeholder:text-gray-500 dark:placeholder:text-[#A0A0A0] focus:outline-none focus:border-[#D93636] transition-colors"
             />
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#1E1E1E] border border-[#333] text-[#A0A0A0] rounded-lg hover:border-[#D93636] transition-colors">
+          <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] text-gray-500 dark:text-[#A0A0A0] rounded-lg hover:border-[#D93636] transition-colors">
             <Filter className="w-4 h-4" />
             Filtrar
           </button>
@@ -105,14 +105,14 @@ export default async function AfiliadosPage() {
         {/* Affiliate Cards (Mobile) */}
         <div className="block lg:hidden space-y-4">
           {affiliates.length === 0 ? (
-            <div className="p-8 text-center bg-[#1E1E1E] rounded-xl border border-[#333]">
+            <div className="p-8 text-center bg-white dark:bg-[#1E1E1E] rounded-xl border border-gray-200 dark:border-[#333]">
               <div className="flex flex-col items-center gap-4">
-                <div className="p-4 rounded-full bg-[#2A2A2A]">
-                  <Users className="w-8 h-8 text-[#A0A0A0]" />
+                <div className="p-4 rounded-full bg-gray-50 dark:bg-[#2A2A2A]">
+                  <Users className="w-8 h-8 text-gray-500 dark:text-[#A0A0A0]" />
                 </div>
                 <div>
-                  <p className="text-[#E0E0E0] font-medium">Nenhum afiliado ainda</p>
-                  <p className="text-[#A0A0A0] text-sm mt-1">
+                  <p className="text-gray-900 dark:text-[#E0E0E0] font-medium">Nenhum afiliado ainda</p>
+                  <p className="text-gray-500 dark:text-[#A0A0A0] text-sm mt-1">
                     Convide afiliados para começar
                   </p>
                 </div>
@@ -128,10 +128,10 @@ export default async function AfiliadosPage() {
             affiliates.map((affiliate) => (
               <div 
                 key={affiliate.id} 
-                className="p-4 bg-[#1E1E1E] border border-[#333] rounded-xl space-y-3"
+                className="p-4 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl space-y-3"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-[#2A2A2A] border border-[#333] overflow-hidden flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-gray-50 dark:bg-[#2A2A2A] border border-gray-200 dark:border-[#333] overflow-hidden flex-shrink-0">
                     {affiliate.image_url ? (
                       <Image
                         src={affiliate.image_url}
@@ -141,21 +141,21 @@ export default async function AfiliadosPage() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[#A0A0A0] text-lg font-medium">
+                      <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-[#A0A0A0] text-lg font-medium">
                         {affiliate.first_name?.[0] || affiliate.email[0].toUpperCase()}
                       </div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-[#E0E0E0] truncate">
+                    <p className="font-medium text-gray-900 dark:text-[#E0E0E0] truncate">
                       {affiliate.first_name} {affiliate.last_name}
                     </p>
-                    <p className="text-sm text-[#A0A0A0] truncate">{affiliate.email}</p>
+                    <p className="text-sm text-gray-500 dark:text-[#A0A0A0] truncate">{affiliate.email}</p>
                   </div>
                 </div>
                 
                 <div className="flex items-center justify-between text-sm">
-                  <code className="px-2 py-1 bg-[#2A2A2A] text-[#A0A0A0] rounded text-xs">
+                  <code className="px-2 py-1 bg-gray-50 dark:bg-[#2A2A2A] text-gray-500 dark:text-[#A0A0A0] rounded text-xs">
                     AF-{affiliate.id.slice(0, 6).toUpperCase()}
                   </code>
                   <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-400">
@@ -164,17 +164,17 @@ export default async function AfiliadosPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="p-2 bg-[#2A2A2A] rounded-lg text-center">
-                    <p className="text-[#A0A0A0]">Vendas</p>
-                    <p className="font-medium text-[#E0E0E0]">0</p>
+                  <div className="p-2 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg text-center">
+                    <p className="text-gray-500 dark:text-[#A0A0A0]">Vendas</p>
+                    <p className="font-medium text-gray-900 dark:text-[#E0E0E0]">0</p>
                   </div>
-                  <div className="p-2 bg-[#2A2A2A] rounded-lg text-center">
-                    <p className="text-[#A0A0A0]">Comissões</p>
-                    <p className="font-medium text-[#E0E0E0]">R$ 0,00</p>
+                  <div className="p-2 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg text-center">
+                    <p className="text-gray-500 dark:text-[#A0A0A0]">Comissões</p>
+                    <p className="font-medium text-gray-900 dark:text-[#E0E0E0]">R$ 0,00</p>
                   </div>
                 </div>
                 
-                <button className="w-full py-2 text-sm bg-[#2A2A2A] text-[#E0E0E0] hover:bg-[#333] rounded-lg transition-colors">
+                <button className="w-full py-2 text-sm bg-gray-50 dark:bg-[#2A2A2A] text-gray-900 dark:text-[#E0E0E0] hover:bg-gray-100 dark:hover:bg-[#333] rounded-lg transition-colors">
                   Ver perfil
                 </button>
               </div>
@@ -183,30 +183,30 @@ export default async function AfiliadosPage() {
         </div>
 
         {/* Table (Desktop) */}
-        <div className="hidden lg:block bg-[#1E1E1E] border border-[#333] rounded-xl overflow-hidden">
+        <div className="hidden lg:block bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-[#2A2A2A] border-b border-[#333]">
+              <thead className="bg-gray-50 dark:bg-[#2A2A2A] border-b border-gray-200 dark:border-[#333]">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-[#E0E0E0]">Afiliado</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-[#E0E0E0]">Código</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-[#E0E0E0]">Vendas</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-[#E0E0E0]">Comissões</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-[#E0E0E0]">Status</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-[#E0E0E0]">Ações</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">Afiliado</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">Código</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">Vendas</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">Comissões</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">Status</th>
+                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#333]">
+              <tbody className="divide-y divide-gray-200 dark:divide-[#333]">
                 {affiliates.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center gap-4">
-                        <div className="p-4 rounded-full bg-[#2A2A2A]">
-                          <Users className="w-8 h-8 text-[#A0A0A0]" />
+                        <div className="p-4 rounded-full bg-gray-50 dark:bg-[#2A2A2A]">
+                          <Users className="w-8 h-8 text-gray-500 dark:text-[#A0A0A0]" />
                         </div>
                         <div>
-                          <p className="text-[#E0E0E0] font-medium">Nenhum afiliado ainda</p>
-                          <p className="text-[#A0A0A0] text-sm mt-1">
+                          <p className="text-gray-900 dark:text-[#E0E0E0] font-medium">Nenhum afiliado ainda</p>
+                          <p className="text-gray-500 dark:text-[#A0A0A0] text-sm mt-1">
                             Convide afiliados para começar a expandir suas vendas
                           </p>
                         </div>
@@ -221,10 +221,10 @@ export default async function AfiliadosPage() {
                   </tr>
                 ) : (
                   affiliates.map((affiliate) => (
-                    <tr key={affiliate.id} className="hover:bg-[#2A2A2A] transition">
+                    <tr key={affiliate.id} className="hover:bg-gray-50 dark:hover:bg-[#2A2A2A] transition">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-[#2A2A2A] border border-[#333] overflow-hidden">
+                          <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-[#2A2A2A] border border-gray-200 dark:border-[#333] overflow-hidden">
                             {affiliate.image_url ? (
                               <Image
                                 src={affiliate.image_url}
@@ -234,28 +234,28 @@ export default async function AfiliadosPage() {
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-[#A0A0A0]">
+                              <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-[#A0A0A0]">
                                 {affiliate.first_name?.[0] || affiliate.email[0].toUpperCase()}
                               </div>
                             )}
                           </div>
                           <div>
-                            <p className="font-medium text-[#E0E0E0]">
+                            <p className="font-medium text-gray-900 dark:text-[#E0E0E0]">
                               {affiliate.first_name} {affiliate.last_name}
                             </p>
-                            <p className="text-sm text-[#A0A0A0]">{affiliate.email}</p>
+                            <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">{affiliate.email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <code className="px-2 py-1 bg-[#2A2A2A] text-[#A0A0A0] rounded text-sm">
+                        <code className="px-2 py-1 bg-gray-50 dark:bg-[#2A2A2A] text-gray-500 dark:text-[#A0A0A0] rounded text-sm">
                           AF-{affiliate.id.slice(0, 6).toUpperCase()}
                         </code>
                       </td>
-                      <td className="px-6 py-4 text-[#E0E0E0] font-medium">
+                      <td className="px-6 py-4 text-gray-900 dark:text-[#E0E0E0] font-medium">
                         0 vendas
                       </td>
-                      <td className="px-6 py-4 text-[#E0E0E0] font-medium">
+                      <td className="px-6 py-4 text-gray-900 dark:text-[#E0E0E0] font-medium">
                         R$ 0,00
                       </td>
                       <td className="px-6 py-4">
@@ -265,7 +265,7 @@ export default async function AfiliadosPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
-                          <button className="px-3 py-1.5 text-sm bg-[#2A2A2A] text-[#A0A0A0] hover:text-[#E0E0E0] rounded-lg transition-colors">
+                          <button className="px-3 py-1.5 text-sm bg-gray-50 dark:bg-[#2A2A2A] text-gray-500 dark:text-[#A0A0A0] hover:text-gray-900 dark:hover:text-[#E0E0E0] rounded-lg transition-colors">
                             Ver perfil
                           </button>
                         </div>
@@ -279,22 +279,22 @@ export default async function AfiliadosPage() {
         </div>
 
         {/* Info Box */}
-        <div className="bg-[#1E1E1E] border border-[#333] rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-[#E0E0E0] mb-4">
+        <div className="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-[#E0E0E0] mb-4">
             📊 Como funciona o programa de afiliados
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
             <div>
               <p className="text-[#D93636] mb-2 font-medium">1. Convite</p>
-              <p className="text-[#A0A0A0]">Afiliados recebem um link único para compartilhar</p>
+              <p className="text-gray-500 dark:text-[#A0A0A0]">Afiliados recebem um link único para compartilhar</p>
             </div>
             <div>
               <p className="text-[#D93636] mb-2 font-medium">2. Vendas</p>
-              <p className="text-[#A0A0A0]">Quando um cliente compra pelo link, a venda é rastreada</p>
+              <p className="text-gray-500 dark:text-[#A0A0A0]">Quando um cliente compra pelo link, a venda é rastreada</p>
             </div>
             <div>
               <p className="text-[#D93636] mb-2 font-medium">3. Comissão</p>
-              <p className="text-[#A0A0A0]">O afiliado recebe uma porcentagem de cada venda</p>
+              <p className="text-gray-500 dark:text-[#A0A0A0]">O afiliado recebe uma porcentagem de cada venda</p>
             </div>
           </div>
         </div>

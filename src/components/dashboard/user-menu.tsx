@@ -30,7 +30,7 @@ export function UserMenu() {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center size-10 rounded-full bg-[#1E1E1E] text-[#E0E0E0] hover:bg-[#2a2a2a] transition-colors overflow-hidden"
+        className="flex items-center justify-center size-10 rounded-full bg-gray-100 dark:bg-[#1E1E1E] text-gray-600 dark:text-[#E0E0E0] hover:bg-gray-200 dark:hover:bg-[#2a2a2a] transition-colors overflow-hidden"
       >
         {user?.imageUrl ? (
           <img
@@ -45,13 +45,13 @@ export function UserMenu() {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 top-12 w-56 bg-[#1E1E1E] border border-gray-700 rounded-xl shadow-lg overflow-hidden z-50">
+        <div className="absolute right-0 top-12 w-56 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden z-50">
           {/* User Info */}
-          <div className="p-4 border-b border-gray-700">
-            <p className="text-[#E0E0E0] font-semibold truncate">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <p className="text-gray-900 dark:text-[#E0E0E0] font-semibold truncate">
               {user?.firstName} {user?.lastName}
             </p>
-            <p className="text-[#A0A0A0] text-sm truncate">
+            <p className="text-gray-500 dark:text-[#A0A0A0] text-sm truncate">
               {user?.emailAddresses[0]?.emailAddress}
             </p>
           </div>
@@ -61,7 +61,7 @@ export function UserMenu() {
             <Link
               href="/dashboard/perfil"
               onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#A0A0A0] hover:bg-[#2a2a2a] hover:text-[#E0E0E0] transition-colors"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-[#A0A0A0] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] hover:text-gray-900 dark:hover:text-[#E0E0E0] transition-colors"
             >
               <User className="w-4 h-4" />
               <span className="text-sm">Meu Perfil</span>
@@ -69,7 +69,7 @@ export function UserMenu() {
             <Link
               href="/dashboard/configuracoes"
               onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#A0A0A0] hover:bg-[#2a2a2a] hover:text-[#E0E0E0] transition-colors"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-[#A0A0A0] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] hover:text-gray-900 dark:hover:text-[#E0E0E0] transition-colors"
             >
               <Settings className="w-4 h-4" />
               <span className="text-sm">Configurações</span>
@@ -77,7 +77,7 @@ export function UserMenu() {
             <Link
               href="/ajuda"
               onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#A0A0A0] hover:bg-[#2a2a2a] hover:text-[#E0E0E0] transition-colors"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-[#A0A0A0] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] hover:text-gray-900 dark:hover:text-[#E0E0E0] transition-colors"
             >
               <HelpCircle className="w-4 h-4" />
               <span className="text-sm">Ajuda</span>
@@ -85,10 +85,10 @@ export function UserMenu() {
           </div>
 
           {/* Logout */}
-          <div className="p-2 border-t border-gray-700">
+          <div className="p-2 border-t border-gray-200 dark:border-gray-700">
             <button
               onClick={handleLogout}
-              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-[#D93636] hover:bg-[#D93636]/10 transition-colors"
+              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-[#D93636] hover:bg-red-50 dark:hover:bg-[#D93636]/10 transition-colors"
             >
               <LogOut className="w-4 h-4" />
               <span className="text-sm font-medium">Sair da conta</span>

@@ -93,94 +93,94 @@ export default async function RelatoriosPage() {
       <div className="space-y-6">
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 bg-[#1E1E1E] border border-[#333] rounded-xl">
+          <div className="p-4 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
                 <DollarSign className="w-5 h-5 text-green-400" />
               </div>
             </div>
-            <p className="text-sm text-[#A0A0A0]">Receita (30 dias)</p>
-            <p className="text-xl font-bold text-[#E0E0E0]">
+            <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Receita (30 dias)</p>
+            <p className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">
               {(recentRevenue / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </p>
           </div>
 
-          <div className="p-4 bg-[#1E1E1E] border border-[#333] rounded-xl">
+          <div className="p-4 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-blue-400" />
               </div>
             </div>
-            <p className="text-sm text-[#A0A0A0]">Crescimento</p>
+            <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Crescimento</p>
             <p className={`text-xl font-bold ${growthRate >= 0 ? 'text-green-400' : 'text-red-400'}`}>
               {growthRate >= 0 ? '+' : ''}{growthRate}%
             </p>
           </div>
 
-          <div className="p-4 bg-[#1E1E1E] border border-[#333] rounded-xl">
+          <div className="p-4 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
                 <Calendar className="w-5 h-5 text-purple-400" />
               </div>
             </div>
-            <p className="text-sm text-[#A0A0A0]">Total Reservas</p>
-            <p className="text-xl font-bold text-[#E0E0E0]">{totalBookings}</p>
+            <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Total Reservas</p>
+            <p className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">{totalBookings}</p>
           </div>
 
-          <div className="p-4 bg-[#1E1E1E] border border-[#333] rounded-xl">
+          <div className="p-4 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
                 <BarChart3 className="w-5 h-5 text-orange-400" />
               </div>
             </div>
-            <p className="text-sm text-[#A0A0A0]">Ticket Médio</p>
-            <p className="text-xl font-bold text-[#E0E0E0]">
+            <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Ticket Médio</p>
+            <p className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">
               {(averageTicket / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </p>
           </div>
         </div>
 
         {/* Resumo */}
-        <div className="bg-[#1E1E1E] border border-[#333] rounded-xl p-4">
-          <h3 className="text-lg font-semibold text-[#E0E0E0] mb-4">Resumo</h3>
+        <div className="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl p-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-[#E0E0E0] mb-4">Resumo</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="flex justify-between p-3 bg-[#2A2A2A] rounded-lg">
-              <span className="text-[#A0A0A0]">Reservas pagas</span>
-              <span className="text-[#E0E0E0] font-medium">{paidBookings}</span>
+            <div className="flex justify-between p-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg">
+              <span className="text-gray-500 dark:text-[#A0A0A0]">Reservas pagas</span>
+              <span className="text-gray-900 dark:text-[#E0E0E0] font-medium">{paidBookings}</span>
             </div>
-            <div className="flex justify-between p-3 bg-[#2A2A2A] rounded-lg">
-              <span className="text-[#A0A0A0]">Pendentes</span>
-              <span className="text-[#E0E0E0] font-medium">{totalBookings - paidBookings}</span>
+            <div className="flex justify-between p-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg">
+              <span className="text-gray-500 dark:text-[#A0A0A0]">Pendentes</span>
+              <span className="text-gray-900 dark:text-[#E0E0E0] font-medium">{totalBookings - paidBookings}</span>
             </div>
           </div>
         </div>
 
         {/* Atividade Recente */}
-        <div className="bg-[#1E1E1E] border border-[#333] rounded-xl p-4">
-          <h3 className="text-lg font-semibold text-[#E0E0E0] mb-4">Atividade Recente</h3>
+        <div className="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl p-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-[#E0E0E0] mb-4">Atividade Recente</h3>
           
           {recentBookingsList.length === 0 ? (
             <div className="text-center py-8">
-              <Package className="w-12 h-12 text-[#333] mx-auto mb-2" />
-              <p className="text-[#A0A0A0]">Nenhuma reserva ainda</p>
-              <p className="text-sm text-[#666]">As reservas aparecerão aqui</p>
+              <Package className="w-12 h-12 text-gray-200 dark:text-[#333] mx-auto mb-2" />
+              <p className="text-gray-500 dark:text-[#A0A0A0]">Nenhuma reserva ainda</p>
+              <p className="text-sm text-gray-400 dark:text-[#666]">As reservas aparecerão aqui</p>
             </div>
           ) : (
             <div className="space-y-4">
               {recentBookingsList.map((booking) => (
-                <div key={booking.id} className="flex items-center justify-between py-2 border-b border-[#333] last:border-0">
+                <div key={booking.id} className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-[#333] last:border-0">
                   <div>
-                    <p className="text-[#E0E0E0] font-medium">
+                    <p className="text-gray-900 dark:text-[#E0E0E0] font-medium">
                       {booking.status === 'confirmed' ? 'Reserva confirmada' : 
                        booking.payment_status === 'paid' ? 'Pagamento confirmado' : 'Nova reserva'}
                     </p>
-                    <p className="text-sm text-[#A0A0A0]">{booking.package.title}</p>
+                    <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">{booking.package.title}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[#E0E0E0] font-medium">
+                    <p className="text-gray-900 dark:text-[#E0E0E0] font-medium">
                       {(booking.total_amount / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </p>
-                    <p className="text-xs text-[#A0A0A0]">{getRelativeTime(booking.created_at)}</p>
+                    <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">{getRelativeTime(booking.created_at)}</p>
                   </div>
                 </div>
               ))}

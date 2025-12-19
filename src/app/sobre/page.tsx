@@ -121,7 +121,7 @@ export default function SobrePage() {
               </div>
               <h3 className="text-lg font-semibold text-[#212529] dark:text-[#f8f9fa] mb-2">Endereço</h3>
               <p className="text-[#6c757d] dark:text-[#adb5bd] text-sm">
-                Belo Horizonte, MG
+                Rua Manaus, 48 - Amazonas, Contagem - MG
               </p>
             </div>
             <div className="bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-gray-700 rounded-xl p-6 text-center shadow-sm">
@@ -130,7 +130,7 @@ export default function SobrePage() {
               </div>
               <h3 className="text-lg font-semibold text-[#212529] dark:text-[#f8f9fa] mb-2">Telefone</h3>
               <p className="text-[#6c757d] dark:text-[#adb5bd] text-sm">
-                (31) 99999-9999
+                (31) 99973-2079
               </p>
             </div>
             <div className="bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-gray-700 rounded-xl p-6 text-center shadow-sm">

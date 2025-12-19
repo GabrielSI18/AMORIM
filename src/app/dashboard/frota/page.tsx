@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Plus, Bus, Edit2, Trash2, Eye, Loader2, Search } from 'lucide-react';
 import { toast } from 'sonner';
-import { DashboardShell } from '@/components/dashboard';
+import { DashboardShell, AdminGuard } from '@/components/dashboard';
 
 interface BusData {
   id: string;
@@ -20,6 +20,14 @@ interface BusData {
 }
 
 export default function FrotaPage() {
+  return (
+    <AdminGuard>
+      <FrotaContent />
+    </AdminGuard>
+  );
+}
+
+function FrotaContent() {
   const [buses, setBuses] = useState<BusData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');

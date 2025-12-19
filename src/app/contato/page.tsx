@@ -67,18 +67,18 @@ export default function ContatoPage() {
     {
       icon: Phone,
       title: 'Telefone',
-      value: '(11) 9999-9999',
+      value: '(31) 99973-2079',
       description: 'Seg a Sex, 9h às 18h',
-      href: 'tel:+5511999999999',
+      href: 'tel:+5531999732079',
       color: 'text-green-500',
       bgColor: 'bg-green-500/10',
     },
     {
       icon: MessageCircle,
       title: 'WhatsApp',
-      value: '(11) 99999-9999',
+      value: '(31) 98886-2079',
       description: 'Resposta rápida!',
-      href: 'https://wa.me/5511999999999',
+      href: 'https://wa.me/5531988862079',
       color: 'text-green-500',
       bgColor: 'bg-green-500/10',
     },
@@ -94,9 +94,9 @@ export default function ContatoPage() {
     {
       icon: MapPin,
       title: 'Endereço',
-      value: 'Rua das Viagens, 123',
-      description: 'Centro - São Paulo/SP',
-      href: 'https://maps.google.com',
+      value: 'Rua Manaus, 48 - Bairro Amazonas',
+      description: 'Contagem - MG',
+      href: 'https://maps.google.com/?q=Rua+Manaus+48+Amazonas+Contagem+MG',
       color: 'text-accent',
       bgColor: 'bg-accent/10',
     },
@@ -215,7 +215,7 @@ export default function ContatoPage() {
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      placeholder="(11) 99999-9999"
+                      placeholder="(31) 99999-9999"
                       className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary transition"
                     />
                   </div>

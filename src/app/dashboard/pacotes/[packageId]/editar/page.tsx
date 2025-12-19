@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
 import { toast } from 'sonner'
 import { ArrowLeft, Save, Plus, X, Calendar, MapPin, DollarSign, Bus, Loader2, ImagePlus, Upload } from 'lucide-react'
-import { DashboardShell } from '@/components/dashboard'
+import { DashboardShell, AdminGuard } from '@/components/dashboard'
 import Image from 'next/image'
 
 interface BusData {
@@ -49,6 +49,14 @@ const formatCentsToDisplay = (cents: number): string => {
 }
 
 export default function EditarPacotePage({ params }: EditarPacotePageProps) {
+  return (
+    <AdminGuard>
+      <EditarPacoteContent params={params} />
+    </AdminGuard>
+  )
+}
+
+function EditarPacoteContent({ params }: EditarPacotePageProps) {
   const router = useRouter()
   const { userId } = useAuth()
   const [packageId, setPackageId] = useState<string>('')

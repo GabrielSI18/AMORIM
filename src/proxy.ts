@@ -6,6 +6,7 @@ const isPublicRoute = createRouteMatcher([
   '/',                    // Landing page
   '/pacotes(.*)',         // Página de pacotes
   '/reserva(.*)',         // Página de reserva/checkout
+  '/frota(.*)',           // Página da frota
   '/afiliados(.*)',       // Página de afiliados
   '/sobre(.*)',           // Página sobre nós
   '/faq(.*)',             // Perguntas frequentes
@@ -17,6 +18,7 @@ const isPublicRoute = createRouteMatcher([
   '/sso-callback(.*)',    // Callback OAuth (Google, Apple)
   '/api/webhooks(.*)',    // Webhooks (Clerk, etc)
   '/api/packages(.*)',    // API de pacotes (pública para listagem)
+  '/api/fleet(.*)',       // API de frota (pública para listagem)
   '/api/bookings',        // API de reservas (POST público)
   '/api/test-env',        // Rota de teste de env
 ])

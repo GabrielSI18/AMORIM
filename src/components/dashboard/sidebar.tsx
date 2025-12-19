@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useClerk } from '@clerk/nextjs'
+import { useUserRole } from '@/hooks/use-user-role'
 import {
   X,
   LayoutDashboard,
@@ -17,6 +17,7 @@ import {
   LogOut,
   ChevronRight,
   UserCircle,
+  Map,
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -26,21 +27,27 @@ interface SidebarProps {
   userEmail?: string
 }
 
+// Itens de menu com flag de admin-only
 const menuItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/dashboard/pacotes', icon: Bus, label: 'Pacotes de Viagem' },
-  { href: '/dashboard/frota', icon: Truck, label: 'Frota' },
-  { href: '/dashboard/clientes', icon: Users, label: 'Clientes' },
-  { href: '/dashboard/afiliados', icon: Handshake, label: 'Afiliados' },
-  { href: '/dashboard/contatos', icon: MessageSquare, label: 'Contatos' },
-  { href: '/dashboard/relatorios', icon: BarChart3, label: 'Relatórios' },
-  { href: '/dashboard/perfil', icon: UserCircle, label: 'Meu Perfil' },
-  { href: '/dashboard/configuracoes', icon: Settings, label: 'Configurações' },
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', adminOnly: false },
+  { href: '/dashboard/pacotes', icon: Bus, label: 'Pacotes de Viagem', adminOnly: true },
+  { href: '/dashboard/frota', icon: Truck, label: 'Frota', adminOnly: true },
+  { href: '/dashboard/clientes', icon: Users, label: 'Clientes', adminOnly: true },
+  { href: '/dashboard/afiliados', icon: Handshake, label: 'Afiliados', adminOnly: true },
+  { href: '/dashboard/contatos', icon: MessageSquare, label: 'Contatos', adminOnly: true },
+  { href: '/dashboard/relatorios', icon: BarChart3, label: 'Relatórios', adminOnly: true },
+  { href: '/pacotes', icon: Map, label: 'Ver Viagens', adminOnly: false },
+  { href: '/dashboard/perfil', icon: UserCircle, label: 'Meu Perfil', adminOnly: false },
+  { href: '/dashboard/configuracoes', icon: Settings, label: 'Configurações', adminOnly: false },
 ]
 
 export function Sidebar({ isOpen, onClose, userName, userEmail }: SidebarProps) {
   const pathname = usePathname()
   const { signOut } = useClerk()
+  const { isAdmin, isLoading } = useUserRole()
+
+  // Filtrar itens de menu baseado na role
+  const visibleMenuItems = menuItems.filter(item => !item.adminOnly || isAdmin)
 
   const handleLogout = async () => {
     await signOut()
@@ -58,36 +65,36 @@ export function Sidebar({ isOpen, onClose, userName, userEmail }: SidebarProps) 
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-72 bg-[#1E1E1E] z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-full w-72 bg-white dark:bg-[#1E1E1E] z-50 transform transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#D93636] flex items-center justify-center text-white font-bold">
               {userName?.charAt(0).toUpperCase() || 'A'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[#E0E0E0] font-semibold truncate">
+              <p className="text-[#333333] dark:text-[#E0E0E0] font-semibold truncate">
                 {userName || 'Admin'}
               </p>
-              <p className="text-[#A0A0A0] text-xs truncate">
+              <p className="text-gray-500 dark:text-[#A0A0A0] text-xs truncate">
                 {userEmail || ''}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-[#2a2a2a] transition-colors"
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
           >
-            <X className="w-5 h-5 text-[#A0A0A0]" />
+            <X className="w-5 h-5 text-gray-500 dark:text-[#A0A0A0]" />
           </button>
         </div>
 
         {/* Menu Items */}
         <nav className="p-4 flex flex-col gap-1">
-          {menuItems.map((item) => {
+          {visibleMenuItems.map((item) => {
             const isActive =
               pathname === item.href ||
               (item.href !== '/dashboard' && pathname.startsWith(item.href))
@@ -100,7 +107,7 @@ export function Sidebar({ isOpen, onClose, userName, userEmail }: SidebarProps) 
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   isActive
                     ? 'bg-[#D93636] text-white'
-                    : 'text-[#A0A0A0] hover:bg-[#2a2a2a] hover:text-[#E0E0E0]'
+                    : 'text-gray-600 dark:text-[#A0A0A0] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] hover:text-gray-900 dark:hover:text-[#E0E0E0]'
                 }`}
               >
                 <item.icon className="w-5 h-5" />
@@ -112,10 +119,10 @@ export function Sidebar({ isOpen, onClose, userName, userEmail }: SidebarProps) 
         </nav>
 
         {/* Logout Button */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-[#D93636] hover:bg-[#D93636]/10 transition-colors"
+            className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-[#D93636] hover:bg-red-50 dark:hover:bg-[#D93636]/10 transition-colors"
           >
             <LogOut className="w-5 h-5" />
             <span className="font-medium">Sair da conta</span>

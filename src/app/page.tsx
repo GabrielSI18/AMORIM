@@ -264,7 +264,7 @@ export default function Home() {
                 <Phone className="h-6 w-6" />
                 <div>
                   <p className="font-semibold">Telefone</p>
-                  <p className="opacity-90">(31) 99999-9999</p>
+                  <p className="opacity-90">(31) 99973-2079</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -278,7 +278,7 @@ export default function Home() {
                 <MapPin className="h-6 w-6" />
                 <div>
                   <p className="font-semibold">Localização</p>
-                  <p className="opacity-90">Belo Horizonte, MG</p>
+                  <p className="opacity-90">Contagem, MG</p>
                 </div>
               </div>
             </motion.div>
@@ -300,6 +300,7 @@ export default function Home() {
               <h4 className="font-semibold mb-4 text-[#212529] dark:text-[#f8f9fa]">Links Rápidos</h4>
               <ul className="space-y-2 text-sm text-[#6c757d] dark:text-[#adb5bd]">
                 <li><Link href="/pacotes" className="hover:text-[#004a80] transition">Pacotes de Viagem</Link></li>
+                <li><Link href="/frota" className="hover:text-[#004a80] transition">Nossa Frota</Link></li>
                 <li><Link href="/afiliados" className="hover:text-[#004a80] transition">Seja um Afiliado</Link></li>
                 <li><Link href="/sobre" className="hover:text-[#004a80] transition">Sobre Nós</Link></li>
               </ul>
@@ -316,9 +317,9 @@ export default function Home() {
             <div>
               <h4 className="font-semibold mb-4 text-[#212529] dark:text-[#f8f9fa]">Contato</h4>
               <ul className="space-y-2 text-sm text-[#6c757d] dark:text-[#adb5bd]">
-                <li>(31) 99999-9999</li>
+                <li>(31) 99973-2079 / (31) 98886-2079</li>
                 <li>contato@amorimturismo.com.br</li>
-                <li>Belo Horizonte, MG</li>
+                <li>Rua Manaus, 48 - Bairro Amazonas, Contagem - MG</li>
               </ul>
             </div>
           </div>
