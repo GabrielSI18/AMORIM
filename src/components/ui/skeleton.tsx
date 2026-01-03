@@ -2,12 +2,13 @@ import { cn } from "@/lib/utils"
 
 /**
  * Skeleton base (shadcn/ui)
+ * Usa cores consistentes com o tema
  */
 function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="skeleton"
-      className={cn("bg-accent animate-pulse rounded-md", className)}
+      className={cn("bg-muted animate-pulse rounded-md", className)}
       {...props}
     />
   )
@@ -18,7 +19,7 @@ function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
  */
 function SkeletonCard({ className }: { className?: string }) {
   return (
-    <div className={cn('glass p-6 rounded-xl space-y-4', className)}>
+    <div className={cn('bg-card border border-border p-6 rounded-xl space-y-4', className)}>
       <Skeleton className="h-4 w-1/3" />
       <Skeleton className="h-8 w-1/2" />
       <Skeleton className="h-4 w-full" />
@@ -47,7 +48,7 @@ function SkeletonTableRow({ columns = 4 }: { columns?: number }) {
  */
 function SkeletonTable({ rows = 5, columns = 4 }: { rows?: number; columns?: number }) {
   return (
-    <div className="glass p-6 rounded-xl">
+    <div className="bg-card border border-border p-6 rounded-xl">
       <div className="flex gap-4 mb-6">
         <Skeleton className="h-6 w-32" />
         <Skeleton className="h-6 w-24" />
@@ -93,7 +94,7 @@ function SkeletonListItem({ className }: { className?: string }) {
  */
 function SkeletonList({ items = 5, className }: { items?: number; className?: string }) {
   return (
-    <div className={cn('glass rounded-xl divide-y divide-border/50', className)}>
+    <div className={cn('bg-card border border-border rounded-xl divide-y divide-border/50', className)}>
       {Array.from({ length: items }).map((_, i) => (
         <SkeletonListItem key={i} />
       ))}
@@ -106,7 +107,7 @@ function SkeletonList({ items = 5, className }: { items?: number; className?: st
  */
 function SkeletonStatsCard({ className }: { className?: string }) {
   return (
-    <div className={cn('glass p-6 rounded-xl', className)}>
+    <div className={cn('bg-card border border-border p-6 rounded-xl', className)}>
       <div className="flex items-center justify-between mb-4">
         <Skeleton className="h-4 w-20" />
         <Skeleton className="h-8 w-8 rounded-full" />
