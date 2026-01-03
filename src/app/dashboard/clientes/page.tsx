@@ -3,7 +3,7 @@ import { currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { Users, Mail, Calendar, Search, Filter } from 'lucide-react'
 import Image from 'next/image'
-import { DashboardShell } from '@/components/dashboard'
+import { PageHeader } from '@/components/dashboard'
 
 export default async function ClientesPage() {
   const user = await currentUser()
@@ -42,7 +42,8 @@ export default async function ClientesPage() {
   const withBookings = clients.filter(c => c.bookings.length > 0).length
 
   return (
-    <DashboardShell title="Clientes">
+    <>
+      <PageHeader title="Clientes" />
       <div className="space-y-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -231,6 +232,6 @@ export default async function ClientesPage() {
           </div>
         </div>
       </div>
-    </DashboardShell>
+    </>
   )
 }

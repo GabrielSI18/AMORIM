@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { ArrowLeft, Save, ImagePlus, Plus, X, Calendar, MapPin, Clock, Users, DollarSign, Bus, Upload, Loader2 } from 'lucide-react'
 import { DashboardShell, AdminGuard } from '@/components/dashboard'
 import Image from 'next/image'
+import { compressImage } from '@/lib/image-compression'
 
 interface BusData {
   id: string;
@@ -777,21 +778,29 @@ function NovoPacoteContent() {
                     toast.error('Apenas imagens são permitidas')
                     return
                   }
-                  if (file.size > 5 * 1024 * 1024) {
-                    toast.error('Imagem muito grande (máx. 5MB)')
+                  if (file.size > 10 * 1024 * 1024) {
+                    toast.error('Imagem muito grande (máx. 10MB)')
                     return
                   }
 
                   setIsUploading(true)
-                  const reader = new FileReader()
-                  reader.onload = (event) => {
-                    const dataUrl = event.target?.result as string
-                    setFormData(prev => ({ ...prev, cover_image: dataUrl }))
-                    setIsUploading(false)
+                  try {
+                    // Comprimir imagem antes de salvar
+                    const compressedDataUrl = await compressImage(file, {
+                      maxWidth: 1200,
+                      maxHeight: 630,
+                      quality: 0.85,
+                      format: 'image/webp',
+                    })
+                    setFormData(prev => ({ ...prev, cover_image: compressedDataUrl }))
                     toast.success('Imagem de capa adicionada!')
+                  } catch (error) {
+                    console.error('Erro ao comprimir imagem:', error)
+                    toast.error('Erro ao processar imagem')
+                  } finally {
+                    setIsUploading(false)
+                    e.target.value = ''
                   }
-                  reader.readAsDataURL(file)
-                  e.target.value = ''
                 }}
                 className="hidden"
               />
@@ -877,27 +886,35 @@ function NovoPacoteContent() {
                   setIsUploading(true)
 
                   try {
+                    const compressedImages: string[] = []
+                    
                     for (const file of Array.from(files)) {
                       if (!file.type.startsWith('image/')) {
                         toast.error('Apenas imagens são permitidas')
                         continue
                       }
-                      if (file.size > 5 * 1024 * 1024) {
-                        toast.error('Imagem muito grande (máx. 5MB)')
+                      if (file.size > 10 * 1024 * 1024) {
+                        toast.error('Imagem muito grande (máx. 10MB)')
                         continue
                       }
 
-                      const reader = new FileReader()
-                      reader.onload = (event) => {
-                        const dataUrl = event.target?.result as string
-                        setFormData(prev => ({
-                          ...prev,
-                          gallery_images: [...prev.gallery_images, dataUrl]
-                        }))
-                      }
-                      reader.readAsDataURL(file)
+                      // Comprimir imagem
+                      const compressedDataUrl = await compressImage(file, {
+                        maxWidth: 1200,
+                        maxHeight: 800,
+                        quality: 0.8,
+                        format: 'image/webp',
+                      })
+                      compressedImages.push(compressedDataUrl)
                     }
-                    toast.success('Imagem(ns) adicionada(s)!')
+                    
+                    if (compressedImages.length > 0) {
+                      setFormData(prev => ({
+                        ...prev,
+                        gallery_images: [...prev.gallery_images, ...compressedImages]
+                      }))
+                      toast.success('Imagem(ns) adicionada(s)!')
+                    }
                   } catch (error) {
                     console.error('Erro no upload:', error)
                     toast.error('Erro ao adicionar imagem')
@@ -993,7 +1010,7 @@ function NovoPacoteContent() {
                   accept="image/*"
                   multiple
                   className="hidden"
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const files = Array.from(e.target.files || [])
                     if (formData.hotel_photos.length + files.length > 5) {
                       toast.error('Máximo de 5 fotos do hotel')
@@ -1002,25 +1019,39 @@ function NovoPacoteContent() {
                     
                     setIsUploading(true)
                     
-                    files.forEach(file => {
-                      if (file.size > 5 * 1024 * 1024) {
-                        toast.error(`Arquivo ${file.name} muito grande (máx. 5MB)`)
-                        return
+                    try {
+                      const compressedImages: string[] = []
+                      
+                      for (const file of files) {
+                        if (file.size > 10 * 1024 * 1024) {
+                          toast.error(`Arquivo ${file.name} muito grande (máx. 10MB)`)
+                          continue
+                        }
+                        
+                        // Comprimir imagem
+                        const compressedDataUrl = await compressImage(file, {
+                          maxWidth: 1200,
+                          maxHeight: 800,
+                          quality: 0.8,
+                          format: 'image/webp',
+                        })
+                        compressedImages.push(compressedDataUrl)
                       }
                       
-                      const reader = new FileReader()
-                      reader.onload = (event) => {
-                        const dataUrl = event.target?.result as string
+                      if (compressedImages.length > 0) {
                         setFormData(prev => ({
                           ...prev,
-                          hotel_photos: [...prev.hotel_photos, dataUrl]
+                          hotel_photos: [...prev.hotel_photos, ...compressedImages]
                         }))
+                        toast.success('Foto(s) do hotel adicionada(s)!')
                       }
-                      reader.readAsDataURL(file)
-                    })
-                    
-                    setIsUploading(false)
-                    if (hotelInputRef.current) hotelInputRef.current.value = ''
+                    } catch (error) {
+                      console.error('Erro ao processar imagens:', error)
+                      toast.error('Erro ao processar imagens')
+                    } finally {
+                      setIsUploading(false)
+                      if (hotelInputRef.current) hotelInputRef.current.value = ''
+                    }
                   }}
                 />
                 <button

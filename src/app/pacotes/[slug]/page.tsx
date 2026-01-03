@@ -9,6 +9,7 @@ import { HotelGallery } from '@/components/packages/hotel-gallery';
 import { PriceTable } from '@/components/packages/price-table';
 import { AttractionsList } from '@/components/packages/attractions-list';
 import { PackageGallery } from '@/components/packages/package-gallery';
+import { ShareButton } from '@/components/ui/share-button';
 
 interface PackagePageProps {
   params: Promise<{
@@ -89,15 +90,10 @@ export default async function PackagePage({ params }: PackagePageProps) {
                 </div>
               </div>
 
-              <button className="inline-flex items-center justify-center gap-2 rounded-xl h-11 w-11 text-white hover:bg-white/20 transition-all">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                  <circle cx="18" cy="5" r="3"></circle>
-                  <circle cx="6" cy="12" r="3"></circle>
-                  <circle cx="18" cy="19" r="3"></circle>
-                  <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line>
-                  <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line>
-                </svg>
-              </button>
+              <ShareButton 
+                title={pkg.title} 
+                description={pkg.shortDescription || `Pacote de viagem: ${pkg.title}`}
+              />
             </div>
           </div>
         </div>

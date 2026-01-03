@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { AdminGuard } from '@/components/dashboard/admin-guard';
+import { DashboardShell } from '@/components/dashboard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
@@ -14,8 +15,7 @@ import {
   TrendingUp,
   Handshake,
   Eye,
-  RefreshCw,
-  ArrowLeft
+  RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -256,362 +256,364 @@ function AfiliadosContent() {
   };
 
   return (
-    <div className="container-custom py-8 space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold">Gerenciar Afiliados</h1>
-            <p className="text-muted-foreground">
-              Aprove novos afiliados e gerencie comissões
-            </p>
-          </div>
-        </div>
+    <DashboardShell 
+      title="Afiliados"
+      action={
         <Button 
-          variant="outline" 
+          variant="ghost" 
+          size="sm"
           onClick={() => { fetchAffiliates(); fetchReferrals(); }}
           disabled={loading || loadingReferrals}
         >
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading || loadingReferrals ? 'animate-spin' : ''}`} />
-          Atualizar
+          <RefreshCw className={`h-4 w-4 ${loading || loadingReferrals ? 'animate-spin' : ''}`} />
         </Button>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <div className="rounded-xl border bg-card p-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-muted-foreground">Total Afiliados</span>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <p className="text-2xl font-bold">{totalAffiliates}</p>
-        </div>
-        
-        <div className="rounded-xl border bg-card p-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-muted-foreground">Pendentes</span>
-            <Clock className="h-4 w-4 text-yellow-500" />
-          </div>
-          <p className="text-2xl font-bold text-yellow-600">{pendingAffiliates}</p>
-        </div>
-
-        <div className="rounded-xl border bg-card p-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-muted-foreground">Ativos</span>
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
-          </div>
-          <p className="text-2xl font-bold text-green-600">{activeAffiliates}</p>
-        </div>
-
-        <div className="rounded-xl border bg-card p-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-muted-foreground">Comissões Pagas</span>
-            <DollarSign className="h-4 w-4 text-green-500" />
-          </div>
-          <p className="text-2xl font-bold text-green-600">{formatCurrency(totalCommissionsPaid)}</p>
-        </div>
-
-        <div className="rounded-xl border bg-card p-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-muted-foreground">Comissões Pendentes</span>
-            <TrendingUp className="h-4 w-4 text-yellow-500" />
-          </div>
-          <p className="text-2xl font-bold text-yellow-600">{formatCurrency(pendingCommissions)}</p>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="space-y-4">
-        <div className="flex border-b">
-          <button
-            onClick={() => setActiveTab('affiliates')}
-            className={`px-4 py-2 flex items-center gap-2 border-b-2 transition-colors ${
-              activeTab === 'affiliates' 
-                ? 'border-primary text-primary font-medium' 
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Users className="h-4 w-4" />
-            Afiliados
-            {pendingAffiliates > 0 && (
-              <span className="ml-1 h-5 w-5 flex items-center justify-center text-xs bg-red-500 text-white rounded-full">
-                {pendingAffiliates}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab('referrals')}
-            className={`px-4 py-2 flex items-center gap-2 border-b-2 transition-colors ${
-              activeTab === 'referrals' 
-                ? 'border-primary text-primary font-medium' 
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Handshake className="h-4 w-4" />
-            Indicações
-          </button>
-        </div>
-
-        {/* Affiliates Tab */}
-        {activeTab === 'affiliates' && (
-          <div className="space-y-4">
-            {/* Filters */}
-            <div className="flex gap-2">
-              <Button
-                variant={filter === 'all' ? 'primary' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('all')}
-              >
-                Todos
-              </Button>
-              <Button
-                variant={filter === 'pending' ? 'primary' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('pending')}
-              >
-                Pendentes
-              </Button>
-              <Button
-                variant={filter === 'active' ? 'primary' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('active')}
-              >
-                Ativos
-              </Button>
+      }
+    >
+      <div className="space-y-6">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="flex items-center gap-3 p-4 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl">
+            <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+              <Users className="w-5 h-5 text-blue-400" />
             </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Total</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">{totalAffiliates}</p>
+            </div>
+          </div>
 
-            {loading ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="rounded-xl border bg-card p-6">
-                    <Skeleton className="h-6 w-40 mb-2" />
-                    <Skeleton className="h-4 w-32 mb-4" />
-                    <Skeleton className="h-4 w-full mb-2" />
-                    <Skeleton className="h-4 w-3/4 mb-4" />
-                    <Skeleton className="h-10 w-full" />
-                  </div>
-                ))}
-              </div>
-            ) : filteredAffiliates.length === 0 ? (
-              <div className="rounded-xl border bg-card p-10 text-center">
-                <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
-                  {filter === 'pending' 
-                    ? 'Nenhum afiliado pendente de aprovação'
-                    : 'Nenhum afiliado encontrado'}
-                </p>
-              </div>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredAffiliates.map((affiliate) => (
-                  <div 
-                    key={affiliate.id} 
-                    className={`rounded-xl border bg-card p-6 ${affiliate.status.toUpperCase() === 'PENDING' ? 'border-yellow-500/50' : ''}`}
+          <div className="flex items-center gap-3 p-4 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl">
+            <div className="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-yellow-400" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Pendentes</p>
+              <p className="text-xl font-bold text-yellow-600">{pendingAffiliates}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 p-4 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl">
+            <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+              <CheckCircle2 className="w-5 h-5 text-green-400" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Ativos</p>
+              <p className="text-xl font-bold text-green-600">{activeAffiliates}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 p-4 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl">
+            <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+              <DollarSign className="w-5 h-5 text-green-400" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Pago</p>
+              <p className="text-lg font-bold text-green-600">{formatCurrency(totalCommissionsPaid)}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 p-4 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl">
+            <div className="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-yellow-400" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Pendente</p>
+              <p className="text-lg font-bold text-yellow-600">{formatCurrency(pendingCommissions)}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl overflow-hidden">
+          <div className="flex border-b border-gray-200 dark:border-[#333]">
+            <button
+              onClick={() => setActiveTab('affiliates')}
+              className={`flex-1 px-4 py-3 flex items-center justify-center gap-2 text-sm font-medium transition-colors ${
+                activeTab === 'affiliates' 
+                  ? 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-900 dark:text-white' 
+                  : 'text-gray-500 dark:text-[#A0A0A0] hover:bg-gray-50 dark:hover:bg-[#252525]'
+              }`}
+            >
+              <Users className="h-4 w-4" />
+              Afiliados
+              {pendingAffiliates > 0 && (
+                <span className="ml-1 h-5 w-5 flex items-center justify-center text-xs bg-red-500 text-white rounded-full">
+                  {pendingAffiliates}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('referrals')}
+              className={`flex-1 px-4 py-3 flex items-center justify-center gap-2 text-sm font-medium transition-colors ${
+                activeTab === 'referrals' 
+                  ? 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-900 dark:text-white' 
+                  : 'text-gray-500 dark:text-[#A0A0A0] hover:bg-gray-50 dark:hover:bg-[#252525]'
+              }`}
+            >
+              <Handshake className="h-4 w-4" />
+              Indicações
+            </button>
+          </div>
+
+          <div className="p-4">
+            {/* Affiliates Tab */}
+            {activeTab === 'affiliates' && (
+              <div className="space-y-4">
+                {/* Filters */}
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  <Button
+                    variant={filter === 'all' ? 'primary' : 'outline'}
+                    size="sm"
+                    onClick={() => setFilter('all')}
                   >
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold">
-                          {affiliate.user.first_name} {affiliate.user.last_name}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">{affiliate.user.email}</p>
-                      </div>
-                      {getStatusBadge(affiliate.status)}
-                    </div>
+                    Todos
+                  </Button>
+                  <Button
+                    variant={filter === 'pending' ? 'primary' : 'outline'}
+                    size="sm"
+                    onClick={() => setFilter('pending')}
+                  >
+                    Pendentes
+                  </Button>
+                  <Button
+                    variant={filter === 'active' ? 'primary' : 'outline'}
+                    size="sm"
+                    onClick={() => setFilter('active')}
+                  >
+                    Ativos
+                  </Button>
+                </div>
 
-                    {/* Code */}
-                    <div className="flex items-center gap-2 mb-4">
-                      <code className="bg-muted px-2 py-1 rounded text-sm font-mono flex-1">
-                        {affiliate.code}
-                      </code>
-                      <button
-                        onClick={() => copyCode(affiliate.code)}
-                        className="p-2 hover:bg-muted rounded transition-colors"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </button>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                      <div>
-                        <p className="text-muted-foreground">Indicações</p>
-                        <p className="font-semibold">{affiliate.total_referrals}</p>
+                {loading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="p-4 bg-gray-50 dark:bg-[#252525] rounded-lg">
+                        <Skeleton className="h-5 w-40 mb-2" />
+                        <Skeleton className="h-4 w-32 mb-3" />
+                        <Skeleton className="h-8 w-full" />
                       </div>
-                      <div>
-                        <p className="text-muted-foreground">Comissão</p>
-                        <p className="font-semibold">{affiliate.commission_rate}%</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Total Ganho</p>
-                        <p className="font-semibold text-green-600">{formatCurrency(affiliate.total_earnings)}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Pendente</p>
-                        <p className="font-semibold text-yellow-600">{formatCurrency(affiliate.pending_earnings)}</p>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-muted-foreground mb-4">
-                      Cadastrado {formatDate(affiliate.created_at)}
+                    ))}
+                  </div>
+                ) : filteredAffiliates.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <Users className="h-12 w-12 mx-auto text-gray-400 dark:text-[#666] mb-4" />
+                    <p className="text-gray-500 dark:text-[#A0A0A0]">
+                      {filter === 'pending' 
+                        ? 'Nenhum afiliado pendente'
+                        : 'Nenhum afiliado encontrado'}
                     </p>
-
-                    {/* Actions */}
-                    {affiliate.status.toUpperCase() === 'PENDING' && (
-                      <div className="flex gap-2">
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          className="flex-1"
-                          onClick={() => handleApproveAffiliate(affiliate.id)}
-                          disabled={processingId === affiliate.id}
-                        >
-                          <CheckCircle2 className="h-4 w-4 mr-2" />
-                          Aprovar
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1"
-                          onClick={() => handleRejectAffiliate(affiliate.id)}
-                          disabled={processingId === affiliate.id}
-                        >
-                          <XCircle className="h-4 w-4 mr-2" />
-                          Rejeitar
-                        </Button>
-                      </div>
-                    )}
-
-                    {affiliate.status.toUpperCase() === 'ACTIVE' && (
-                      <Link 
-                        href={`/dashboard/afiliados/${affiliate.id}`}
-                        className="flex items-center justify-center gap-2 w-full h-10 px-4 text-sm rounded-lg border hover:bg-muted transition-colors"
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredAffiliates.map((affiliate) => (
+                      <div 
+                        key={affiliate.id} 
+                        className={`p-4 rounded-lg ${
+                          affiliate.status.toUpperCase() === 'PENDING' 
+                            ? 'bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800/30' 
+                            : 'bg-gray-50 dark:bg-[#252525]'
+                        }`}
                       >
-                        <Eye className="h-4 w-4" />
-                        Ver Detalhes
-                      </Link>
-                    )}
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h3 className="font-semibold text-gray-900 dark:text-white">
+                              {affiliate.user.first_name} {affiliate.user.last_name}
+                            </h3>
+                            <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">{affiliate.user.email}</p>
+                          </div>
+                          {getStatusBadge(affiliate.status)}
+                        </div>
+
+                        {/* Code */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <code className="flex-1 bg-white dark:bg-[#1E1E1E] px-3 py-1.5 rounded text-sm font-mono border border-gray-200 dark:border-[#333]">
+                            {affiliate.code}
+                          </code>
+                          <button
+                            onClick={() => copyCode(affiliate.code)}
+                            className="p-2 hover:bg-gray-200 dark:hover:bg-[#333] rounded transition-colors"
+                          >
+                            <Copy className="h-4 w-4 text-gray-500" />
+                          </button>
+                        </div>
+
+                        {/* Stats */}
+                        <div className="grid grid-cols-4 gap-2 text-center text-sm mb-3">
+                          <div className="bg-white dark:bg-[#1E1E1E] rounded p-2">
+                            <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Indicações</p>
+                            <p className="font-semibold text-gray-900 dark:text-white">{affiliate.total_referrals}</p>
+                          </div>
+                          <div className="bg-white dark:bg-[#1E1E1E] rounded p-2">
+                            <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Taxa</p>
+                            <p className="font-semibold text-gray-900 dark:text-white">{affiliate.commission_rate}%</p>
+                          </div>
+                          <div className="bg-white dark:bg-[#1E1E1E] rounded p-2">
+                            <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Ganho</p>
+                            <p className="font-semibold text-green-600">{formatCurrency(affiliate.total_earnings)}</p>
+                          </div>
+                          <div className="bg-white dark:bg-[#1E1E1E] rounded p-2">
+                            <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Pendente</p>
+                            <p className="font-semibold text-yellow-600">{formatCurrency(affiliate.pending_earnings)}</p>
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-gray-500 dark:text-[#A0A0A0] mb-3">
+                          Cadastrado {formatDate(affiliate.created_at)}
+                        </p>
+
+                        {/* Actions */}
+                        {affiliate.status.toUpperCase() === 'PENDING' && (
+                          <div className="flex gap-2">
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => handleApproveAffiliate(affiliate.id)}
+                              disabled={processingId === affiliate.id}
+                            >
+                              <CheckCircle2 className="h-4 w-4 mr-1" />
+                              Aprovar
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => handleRejectAffiliate(affiliate.id)}
+                              disabled={processingId === affiliate.id}
+                            >
+                              <XCircle className="h-4 w-4 mr-1" />
+                              Rejeitar
+                            </Button>
+                          </div>
+                        )}
+
+                        {affiliate.status.toUpperCase() === 'ACTIVE' && (
+                          <Link 
+                            href={`/dashboard/afiliados/${affiliate.id}`}
+                            className="flex items-center justify-center gap-2 w-full h-9 px-4 text-sm rounded-lg bg-gray-200 dark:bg-[#333] hover:bg-gray-300 dark:hover:bg-[#444] transition-colors text-gray-700 dark:text-white"
+                          >
+                            <Eye className="h-4 w-4" />
+                            Ver Detalhes
+                          </Link>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
+              </div>
+            )}
+
+            {/* Referrals Tab */}
+            {activeTab === 'referrals' && (
+              <div className="space-y-4">
+                {/* Filters */}
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  <Button
+                    variant={referralFilter === 'all' ? 'primary' : 'outline'}
+                    size="sm"
+                    onClick={() => setReferralFilter('all')}
+                  >
+                    Todas
+                  </Button>
+                  <Button
+                    variant={referralFilter === 'pending' ? 'primary' : 'outline'}
+                    size="sm"
+                    onClick={() => setReferralFilter('pending')}
+                  >
+                    Pendentes
+                  </Button>
+                  <Button
+                    variant={referralFilter === 'approved' ? 'primary' : 'outline'}
+                    size="sm"
+                    onClick={() => setReferralFilter('approved')}
+                  >
+                    Aprovadas
+                  </Button>
+                  <Button
+                    variant={referralFilter === 'paid' ? 'primary' : 'outline'}
+                    size="sm"
+                    onClick={() => setReferralFilter('paid')}
+                  >
+                    Pagas
+                  </Button>
+                </div>
+
+                {loadingReferrals ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="p-4 bg-gray-50 dark:bg-[#252525] rounded-lg">
+                        <Skeleton className="h-5 w-40 mb-2" />
+                        <Skeleton className="h-4 w-32" />
+                      </div>
+                    ))}
+                  </div>
+                ) : filteredReferrals.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <Handshake className="h-12 w-12 mx-auto text-gray-400 dark:text-[#666] mb-4" />
+                    <p className="text-gray-500 dark:text-[#A0A0A0]">Nenhuma indicação encontrada</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredReferrals.map((referral) => (
+                      <div key={referral.id} className="p-4 bg-gray-50 dark:bg-[#252525] rounded-lg">
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-start justify-between">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-semibold text-gray-900 dark:text-white text-sm">
+                                  {referral.booking.package.title}
+                                </span>
+                                {getCommissionStatusBadge(referral.commission_status)}
+                              </div>
+                              <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">
+                                Por: {referral.affiliate.user.first_name} {referral.affiliate.user.last_name}
+                                {' '}({referral.affiliate.code})
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">
+                                Reserva: {formatCurrency(referral.booking.total_price)} • {formatDate(referral.created_at)}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Comissão</p>
+                              <p className="text-lg font-bold text-green-600">{formatCurrency(referral.commission_amount)}</p>
+                            </div>
+                          </div>
+
+                          {referral.commission_status.toUpperCase() === 'PENDING' && (
+                            <Button
+                              size="sm"
+                              className="w-full"
+                              onClick={() => handleUpdateReferralStatus(referral.id, 'APPROVED')}
+                              disabled={processingId === referral.id}
+                            >
+                              <CheckCircle2 className="h-4 w-4 mr-1" />
+                              Aprovar Comissão
+                            </Button>
+                          )}
+
+                          {referral.commission_status.toUpperCase() === 'APPROVED' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full"
+                              onClick={() => handleUpdateReferralStatus(referral.id, 'PAID')}
+                              disabled={processingId === referral.id}
+                            >
+                              <DollarSign className="h-4 w-4 mr-1" />
+                              Marcar como Pago
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
-
-        {/* Referrals Tab */}
-        {activeTab === 'referrals' && (
-          <div className="space-y-4">
-            {/* Filters */}
-            <div className="flex gap-2">
-              <Button
-                variant={referralFilter === 'all' ? 'primary' : 'outline'}
-                size="sm"
-                onClick={() => setReferralFilter('all')}
-              >
-                Todas
-              </Button>
-              <Button
-                variant={referralFilter === 'pending' ? 'primary' : 'outline'}
-                size="sm"
-                onClick={() => setReferralFilter('pending')}
-              >
-                Pendentes
-              </Button>
-              <Button
-                variant={referralFilter === 'approved' ? 'primary' : 'outline'}
-                size="sm"
-                onClick={() => setReferralFilter('approved')}
-              >
-                Aprovadas
-              </Button>
-              <Button
-                variant={referralFilter === 'paid' ? 'primary' : 'outline'}
-                size="sm"
-                onClick={() => setReferralFilter('paid')}
-              >
-                Pagas
-              </Button>
-            </div>
-
-            {loadingReferrals ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="rounded-xl border bg-card p-4">
-                    <div className="flex items-center justify-between">
-                      <Skeleton className="h-6 w-40" />
-                      <Skeleton className="h-6 w-20" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : filteredReferrals.length === 0 ? (
-              <div className="rounded-xl border bg-card p-10 text-center">
-                <Handshake className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">Nenhuma indicação encontrada</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredReferrals.map((referral) => (
-                  <div key={referral.id} className="rounded-xl border bg-card p-4">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">{referral.booking.package.title}</span>
-                          {getCommissionStatusBadge(referral.commission_status)}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          Indicado por: <span className="font-medium">{referral.affiliate.user.first_name} {referral.affiliate.user.last_name}</span>
-                          {' '}({referral.affiliate.code})
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Reserva: {formatCurrency(referral.booking.total_price)}
-                          {' • '}
-                          {formatDate(referral.created_at)}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <p className="text-sm text-muted-foreground">Comissão</p>
-                          <p className="text-lg font-bold text-green-600">{formatCurrency(referral.commission_amount)}</p>
-                        </div>
-
-                        {referral.commission_status.toUpperCase() === 'PENDING' && (
-                          <Button
-                            size="sm"
-                            onClick={() => handleUpdateReferralStatus(referral.id, 'APPROVED')}
-                            disabled={processingId === referral.id}
-                          >
-                            Aprovar
-                          </Button>
-                        )}
-
-                        {referral.commission_status.toUpperCase() === 'APPROVED' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleUpdateReferralStatus(referral.id, 'PAID')}
-                            disabled={processingId === referral.id}
-                          >
-                            <DollarSign className="h-4 w-4 mr-1" />
-                            Marcar Pago
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        </div>
       </div>
-    </div>
+    </DashboardShell>
   );
 }
 

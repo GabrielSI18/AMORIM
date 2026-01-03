@@ -1,5 +1,6 @@
 import { currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
+import { DashboardLayoutClient } from '@/components/dashboard/dashboard-layout-client'
 
 export default async function DashboardLayout({
   children,
@@ -12,6 +13,12 @@ export default async function DashboardLayout({
     redirect('/sign-in')
   }
 
-  // Layout simples - a página gerencia seu próprio design
-  return <>{children}</>
+  const userName = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Usuário'
+  const userEmail = user.emailAddresses[0]?.emailAddress || ''
+
+  return (
+    <DashboardLayoutClient userName={userName} userEmail={userEmail}>
+      {children}
+    </DashboardLayoutClient>
+  )
 }

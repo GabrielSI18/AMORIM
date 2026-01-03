@@ -2,21 +2,24 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@clerk/nextjs'
+import { useUserStore } from '@/stores/user-store'
 
 type UserRole = 'USER' | 'AFFILIATE' | 'ADMIN' | 'SUPER_ADMIN'
 
 interface UseUserRoleReturn {
   role: UserRole | null
   isAdmin: boolean
+  isSuperAdmin: boolean
   isLoading: boolean
   error: string | null
 }
 
 export function useUserRole(): UseUserRoleReturn {
-  const { isLoaded, isSignedIn } = useAuth()
-  const [role, setRole] = useState<UserRole | null>(null)
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const { isLoaded, isSignedIn, userId } = useAuth()
+  const { role: cachedRole, isAdmin: cachedIsAdmin, setRole } = useUserStore()
+  const [role, setLocalRole] = useState<UserRole | null>(cachedRole)
+  const [isAdmin, setIsAdmin] = useState(cachedIsAdmin)
+  const [isLoading, setIsLoading] = useState(!cachedRole) // Se já tem cache, não está loading
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -24,10 +27,18 @@ export function useUserRole(): UseUserRoleReturn {
       if (!isLoaded) return
       
       if (!isSignedIn) {
-        setRole(null)
+        setLocalRole(null)
         setIsAdmin(false)
+        setRole(null as unknown as UserRole, false)
         setIsLoading(false)
         return
+      }
+
+      // Se já tem cache, usa imediatamente
+      if (cachedRole) {
+        setLocalRole(cachedRole)
+        setIsAdmin(cachedIsAdmin)
+        setIsLoading(false)
       }
 
       try {
@@ -38,20 +49,27 @@ export function useUserRole(): UseUserRoleReturn {
         }
 
         const data = await response.json()
-        setRole(data.role)
+        setLocalRole(data.role)
         setIsAdmin(data.isAdmin)
+        // Salva no cache persistente
+        setRole(data.role, data.isAdmin)
       } catch (err) {
         console.error('Erro ao buscar role:', err)
         setError(err instanceof Error ? err.message : 'Erro desconhecido')
-        setRole('USER')
-        setIsAdmin(false)
+        // Se não tem cache, fallback para USER
+        if (!cachedRole) {
+          setLocalRole('USER')
+          setIsAdmin(false)
+        }
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchRole()
-  }, [isLoaded, isSignedIn])
+  }, [isLoaded, isSignedIn, userId, cachedRole, cachedIsAdmin, setRole])
 
-  return { role, isAdmin, isLoading, error }
+  const isSuperAdmin = role === 'SUPER_ADMIN'
+
+  return { role, isAdmin, isSuperAdmin, isLoading, error }
 }

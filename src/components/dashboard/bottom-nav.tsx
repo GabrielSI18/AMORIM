@@ -35,7 +35,7 @@ export function BottomNav() {
   // Se ainda está carregando, não renderiza nada para evitar flash
   if (isLoading) {
     return (
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1E1E1E] border-t border-gray-200 dark:border-gray-700 p-2 flex justify-around z-50 overflow-hidden">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1E1E1E] border-t border-gray-200 dark:border-gray-700 p-2 flex justify-around z-50 overflow-hidden lg:hidden">
         <div className="flex flex-col items-center justify-center gap-1 flex-1 min-w-0">
           <LayoutDashboard className="w-6 h-6 text-gray-300 dark:text-gray-600" />
           <span className="text-xs font-medium text-gray-300 dark:text-gray-600">Dashboard</span>
@@ -49,7 +49,7 @@ export function BottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1E1E1E] border-t border-gray-200 dark:border-gray-700 p-2 flex justify-around z-50 overflow-hidden">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1E1E1E] border-t border-gray-200 dark:border-gray-700 p-2 flex justify-around z-50 overflow-hidden lg:hidden">
       {navItems.map((item) => {
         const isActive = pathname === item.href || 
           (item.href !== '/dashboard' && pathname.startsWith(item.href))

@@ -21,6 +21,7 @@
 
 import { StorageProvider, StorageError } from './types';
 import { supabaseStorageProvider } from './providers/supabase';
+import { r2StorageProvider } from './providers/r2';
 
 // ============================================================================
 // Provider Registry
@@ -32,8 +33,8 @@ import { supabaseStorageProvider } from './providers/supabase';
  */
 const providers: Record<string, StorageProvider> = {
   supabase: supabaseStorageProvider,
+  r2: r2StorageProvider,
   // s3: s3StorageProvider,
-  // r2: r2StorageProvider,
   // blob: vercelBlobProvider,
 };
 
@@ -43,7 +44,7 @@ const providers: Record<string, StorageProvider> = {
 
 /**
  * Determina qual provider usar baseado nas variáveis de ambiente
- * Ordem de prioridade: s3 > r2 > blob > supabase (default)
+ * Ordem de prioridade: r2 > s3 > blob > supabase (default)
  */
 function getActiveProvider(): StorageProvider {
   // Verifica se storage está desabilitado
@@ -54,19 +55,19 @@ function getActiveProvider(): StorageProvider {
     );
   }
 
-  // Ordem de prioridade (futuro)
-  // if (process.env.ACTIVE_STORAGE_S3 === 'true' && providers.s3) {
-  //   return providers.s3;
-  // }
-  // if (process.env.ACTIVE_STORAGE_R2 === 'true' && providers.r2) {
-  //   return providers.r2;
-  // }
-  // if (process.env.ACTIVE_STORAGE_BLOB === 'true' && providers.blob) {
-  //   return providers.blob;
-  // }
+  // Cloudflare R2 (prioridade)
+  if (process.env.ACTIVE_STORAGE_R2 === 'true') {
+    if (!process.env.R2_ACCESS_KEY_ID) {
+      throw new StorageError(
+        'NOT_CONFIGURED',
+        'Cloudflare R2 não configurado. Defina R2_ACCOUNT_ID, R2_ACCESS_KEY_ID e R2_SECRET_ACCESS_KEY'
+      );
+    }
+    return providers.r2;
+  }
 
-  // Default: Supabase
-  if (process.env.ACTIVE_STORAGE_SUPABASE === 'true' || !hasOtherProvider()) {
+  // Supabase (fallback)
+  if (process.env.ACTIVE_STORAGE_SUPABASE === 'true') {
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
       throw new StorageError(
         'NOT_CONFIGURED',
@@ -78,18 +79,7 @@ function getActiveProvider(): StorageProvider {
 
   throw new StorageError(
     'NOT_CONFIGURED',
-    'Nenhum provider de storage ativo. Defina ACTIVE_STORAGE_SUPABASE=true'
-  );
-}
-
-/**
- * Verifica se há outro provider além do Supabase configurado
- */
-function hasOtherProvider(): boolean {
-  return (
-    process.env.ACTIVE_STORAGE_S3 === 'true' ||
-    process.env.ACTIVE_STORAGE_R2 === 'true' ||
-    process.env.ACTIVE_STORAGE_BLOB === 'true'
+    'Nenhum provider de storage ativo. Defina ACTIVE_STORAGE_R2=true ou ACTIVE_STORAGE_SUPABASE=true'
   );
 }
 
@@ -145,6 +135,7 @@ export const storage: StorageProvider = {
 
 export * from './types';
 export { supabaseStorageProvider } from './providers/supabase';
+export { r2StorageProvider } from './providers/r2';
 
 // ============================================================================
 // Utility Functions

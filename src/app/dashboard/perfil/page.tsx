@@ -4,10 +4,20 @@ import { useUser, useClerk } from '@clerk/nextjs'
 import { User, Mail, Phone, Calendar, Edit2, LogOut, Shield } from 'lucide-react'
 import Image from 'next/image'
 import { DashboardShell } from '@/components/dashboard'
+import { useUserRole } from '@/hooks/use-user-role'
 
 export default function PerfilPage() {
   const { user, isLoaded, isSignedIn } = useUser()
   const { signOut, openUserProfile } = useClerk()
+  const { isAdmin, isSuperAdmin, isLoading: isLoadingRole } = useUserRole()
+
+  // Determinar o label do role
+  const getRoleLabel = () => {
+    if (isLoadingRole) return '...'  // Loading indicator
+    if (isSuperAdmin) return 'Super Admin'
+    if (isAdmin) return 'Administrador'
+    return 'Cliente'
+  }
 
   if (!isLoaded) {
     return (
@@ -72,7 +82,7 @@ export default function PerfilPage() {
           
           <div className="text-center">
             <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">{fullName}</h2>
-            <p className="text-gray-500 dark:text-[#A0A0A0]">Cliente</p>
+            <p className="text-gray-500 dark:text-[#A0A0A0]">{getRoleLabel()}</p>
           </div>
         </div>
 

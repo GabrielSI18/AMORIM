@@ -27,6 +27,10 @@ export default function ReservaPage({ params }: ReservaPageProps) {
   
   // Form state
   const [numPassengers, setNumPassengers] = useState(1);
+  const [numAdults, setNumAdults] = useState(1);
+  const [numChildren610, setNumChildren610] = useState(0); // 6-10 anos
+  const [numChildren1113, setNumChildren1113] = useState(0); // 11-13 anos  
+  const [numChildrenFree, setNumChildrenFree] = useState(0); // 0-5 anos (colo)
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -92,6 +96,15 @@ export default function ReservaPage({ params }: ReservaPageProps) {
       setNumPassengers(selectedSeats.length);
     }
   }, [selectedSeats]);
+
+  // Sincronizar numPassengers com soma dos tipos (exceto crianças de colo)
+  useEffect(() => {
+    const totalWithSeats = numAdults + numChildren610 + numChildren1113;
+    setNumPassengers(totalWithSeats);
+  }, [numAdults, numChildren610, numChildren1113]);
+
+  // Verificar se há preços de crianças configurados
+  const hasChildPrices = pkg ? ((pkg.priceChild610 && pkg.priceChild610 > 0) || (pkg.priceChild1113 && pkg.priceChild1113 > 0)) : false;
 
   const handleSeatSelectionChange = (seats: number[]) => {
     setSelectedSeats(seats);
@@ -169,6 +182,14 @@ export default function ReservaPage({ params }: ReservaPageProps) {
       toast.error('Selecione os assentos desejados no mapa do ônibus');
       return;
     }
+    
+    // Validar quantidade de assentos selecionados (se tem preços de criança)
+    if (hasChildPrices && pkg.totalSeats && pkg.totalSeats > 0) {
+      if (selectedSeats.length !== totalPassengersWithSeats) {
+        toast.error(`Selecione exatamente ${totalPassengersWithSeats} assento(s) no mapa`);
+        return;
+      }
+    }
 
     setIsSubmitting(true);
 
@@ -189,6 +210,14 @@ export default function ReservaPage({ params }: ReservaPageProps) {
           customer_notes: customerNotes,
           selected_seats: selectedSeats.length > 0 ? selectedSeats : null,
           affiliate_code: affiliateCode, // Código do afiliado
+          // Detalhes dos tipos de passageiros
+          passenger_details: hasChildPrices ? {
+            adults: numAdults,
+            children_11_13: numChildren1113,
+            children_6_10: numChildren610,
+            children_free: numChildrenFree,
+          } : null,
+          total_price: totalPrice, // Enviar o total calculado
         }),
       });
 
@@ -213,8 +242,21 @@ export default function ReservaPage({ params }: ReservaPageProps) {
     }
   };
 
-  const totalPrice = pkg ? pkg.price * numPassengers : 0;
+  // Calcular preço total com base nos tipos de passageiros
+  const calculateTotalPrice = () => {
+    if (!pkg) return 0;
+    
+    const adultPrice = pkg.price * numAdults;
+    const child1113Price = (pkg.priceChild1113 || pkg.price) * numChildren1113;
+    const child610Price = (pkg.priceChild610 || pkg.price) * numChildren610;
+    // Crianças até 5 anos não pagam (colo)
+    
+    return adultPrice + child1113Price + child610Price;
+  };
+  
+  const totalPrice = calculateTotalPrice();
   const availableSeats = pkg?.availableSeats ?? pkg?.totalSeats ?? 0;
+  const totalPassengersWithSeats = numAdults + numChildren610 + numChildren1113;
 
   if (isLoading) {
     return (
@@ -263,47 +305,201 @@ export default function ReservaPage({ params }: ReservaPageProps) {
                   Quantidade de Passageiros
                 </h2>
                 
-                {/* Se tem mapa de assentos, mostrar informação */}
-                {pkg.totalSeats && pkg.totalSeats > 0 ? (
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-lg">
-                      <Users className="w-5 h-5 text-primary" />
-                      <span className="text-lg font-bold text-primary">
-                        {selectedSeats.length > 0 ? selectedSeats.length : 0}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        assento(s) selecionado(s)
-                      </span>
+                {/* Seleção por tipo de passageiro */}
+                {hasChildPrices ? (
+                  <div className="space-y-4">
+                    {/* Adultos */}
+                    <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-[#2a2a2a] rounded-lg">
+                      <div>
+                        <p className="font-medium text-[#1A2E40] dark:text-white">Adultos</p>
+                        <p className="text-sm text-[#6c757d] dark:text-[#adb5bd]">
+                          {formatCurrency(pkg.price)} por pessoa
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setNumAdults(Math.max(1, numAdults - 1))}
+                          className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors disabled:opacity-50"
+                          disabled={numAdults <= 1}
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <span className="text-xl font-bold text-[#1A2E40] dark:text-white w-8 text-center">
+                          {numAdults}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setNumAdults(Math.min(availableSeats - numChildren610 - numChildren1113, numAdults + 1))}
+                          className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors disabled:opacity-50"
+                          disabled={totalPassengersWithSeats >= availableSeats}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      Selecione os assentos no mapa abaixo
-                    </span>
+
+                    {/* Crianças 11-13 anos */}
+                    {pkg.priceChild1113 && pkg.priceChild1113 > 0 && (
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-[#2a2a2a] rounded-lg">
+                        <div>
+                          <p className="font-medium text-[#1A2E40] dark:text-white">Crianças (11-13 anos)</p>
+                          <p className="text-sm text-[#6c757d] dark:text-[#adb5bd]">
+                            {formatCurrency(pkg.priceChild1113)} por pessoa
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setNumChildren1113(Math.max(0, numChildren1113 - 1))}
+                            className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors disabled:opacity-50"
+                            disabled={numChildren1113 <= 0}
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+                          <span className="text-xl font-bold text-[#1A2E40] dark:text-white w-8 text-center">
+                            {numChildren1113}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setNumChildren1113(Math.min(availableSeats - numAdults - numChildren610, numChildren1113 + 1))}
+                            className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors disabled:opacity-50"
+                            disabled={totalPassengersWithSeats >= availableSeats}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Crianças 6-10 anos */}
+                    {pkg.priceChild610 && pkg.priceChild610 > 0 && (
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-[#2a2a2a] rounded-lg">
+                        <div>
+                          <p className="font-medium text-[#1A2E40] dark:text-white">Crianças (6-10 anos)</p>
+                          <p className="text-sm text-[#6c757d] dark:text-[#adb5bd]">
+                            {formatCurrency(pkg.priceChild610)} por pessoa
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setNumChildren610(Math.max(0, numChildren610 - 1))}
+                            className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors disabled:opacity-50"
+                            disabled={numChildren610 <= 0}
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+                          <span className="text-xl font-bold text-[#1A2E40] dark:text-white w-8 text-center">
+                            {numChildren610}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setNumChildren610(Math.min(availableSeats - numAdults - numChildren1113, numChildren610 + 1))}
+                            className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors disabled:opacity-50"
+                            disabled={totalPassengersWithSeats >= availableSeats}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Crianças 0-5 anos (colo) */}
+                    <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-[#2a2a2a] rounded-lg">
+                      <div>
+                        <p className="font-medium text-[#1A2E40] dark:text-white">Crianças (0-5 anos)</p>
+                        <p className="text-sm text-[#6c757d] dark:text-[#adb5bd]">
+                          Gratuito <span className="text-xs">(no colo)</span>
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setNumChildrenFree(Math.max(0, numChildrenFree - 1))}
+                          className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors disabled:opacity-50"
+                          disabled={numChildrenFree <= 0}
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <span className="text-xl font-bold text-[#1A2E40] dark:text-white w-8 text-center">
+                          {numChildrenFree}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setNumChildrenFree(numChildrenFree + 1)}
+                          className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Resumo de assentos necessários */}
+                    {pkg.totalSeats && pkg.totalSeats > 0 && (
+                      <div className="flex items-center gap-4 pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-lg">
+                          <Users className="w-5 h-5 text-primary" />
+                          <span className="text-lg font-bold text-primary">
+                            {totalPassengersWithSeats}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            assento(s) necessário(s)
+                          </span>
+                        </div>
+                        {selectedSeats.length > 0 && selectedSeats.length !== totalPassengersWithSeats && (
+                          <span className="text-sm text-orange-600 dark:text-orange-400">
+                            Selecione {totalPassengersWithSeats} assento(s) no mapa
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-4">
-                    <button
-                      type="button"
-                      onClick={() => setNumPassengers(Math.max(1, numPassengers - 1))}
-                      className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors disabled:opacity-50"
-                      disabled={numPassengers <= 1}
-                    >
-                      <Minus className="w-5 h-5" />
-                    </button>
-                    <span className="text-2xl font-bold text-[#1A2E40] dark:text-white w-12 text-center">
-                      {numPassengers}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setNumPassengers(Math.min(availableSeats, numPassengers + 1))}
-                      className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors disabled:opacity-50"
-                      disabled={numPassengers >= availableSeats}
-                    >
-                      <Plus className="w-5 h-5" />
-                    </button>
-                    <span className="text-sm text-[#6c757d] dark:text-[#adb5bd]">
-                      {availableSeats > 0 ? `${availableSeats} vagas disponíveis` : 'Verificar disponibilidade'}
-                    </span>
-                  </div>
+                  /* Seleção simples (sem preços de criança) */
+                  <>
+                    {pkg.totalSeats && pkg.totalSeats > 0 ? (
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-lg">
+                          <Users className="w-5 h-5 text-primary" />
+                          <span className="text-lg font-bold text-primary">
+                            {selectedSeats.length > 0 ? selectedSeats.length : 0}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            assento(s) selecionado(s)
+                          </span>
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          Selecione os assentos no mapa abaixo
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-4">
+                        <button
+                          type="button"
+                          onClick={() => setNumPassengers(Math.max(1, numPassengers - 1))}
+                          className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors disabled:opacity-50"
+                          disabled={numPassengers <= 1}
+                        >
+                          <Minus className="w-5 h-5" />
+                        </button>
+                        <span className="text-2xl font-bold text-[#1A2E40] dark:text-white w-12 text-center">
+                          {numPassengers}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setNumPassengers(Math.min(availableSeats, numPassengers + 1))}
+                          className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors disabled:opacity-50"
+                          disabled={numPassengers >= availableSeats}
+                        >
+                          <Plus className="w-5 h-5" />
+                        </button>
+                        <span className="text-sm text-[#6c757d] dark:text-[#adb5bd]">
+                          {availableSeats > 0 ? `${availableSeats} vagas disponíveis` : 'Verificar disponibilidade'}
+                        </span>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -488,14 +684,61 @@ export default function ReservaPage({ params }: ReservaPageProps) {
                   Resumo do Pedido
                 </h3>
                 <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[#6c757d] dark:text-[#adb5bd]">
-                      Pacote ({numPassengers}x)
-                    </span>
-                    <span className="text-[#1A2E40] dark:text-white">
-                      {formatCurrency(pkg.price)} cada
-                    </span>
-                  </div>
+                  {/* Breakdown por tipo de passageiro */}
+                  {hasChildPrices ? (
+                    <>
+                      {numAdults > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-[#6c757d] dark:text-[#adb5bd]">
+                            Adultos ({numAdults}x)
+                          </span>
+                          <span className="text-[#1A2E40] dark:text-white">
+                            {formatCurrency(pkg.price * numAdults)}
+                          </span>
+                        </div>
+                      )}
+                      {numChildren1113 > 0 && pkg.priceChild1113 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-[#6c757d] dark:text-[#adb5bd]">
+                            Crianças 11-13 anos ({numChildren1113}x)
+                          </span>
+                          <span className="text-[#1A2E40] dark:text-white">
+                            {formatCurrency(pkg.priceChild1113 * numChildren1113)}
+                          </span>
+                        </div>
+                      )}
+                      {numChildren610 > 0 && pkg.priceChild610 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-[#6c757d] dark:text-[#adb5bd]">
+                            Crianças 6-10 anos ({numChildren610}x)
+                          </span>
+                          <span className="text-[#1A2E40] dark:text-white">
+                            {formatCurrency(pkg.priceChild610 * numChildren610)}
+                          </span>
+                        </div>
+                      )}
+                      {numChildrenFree > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-[#6c757d] dark:text-[#adb5bd]">
+                            Crianças 0-5 anos ({numChildrenFree}x)
+                          </span>
+                          <span className="text-green-600 dark:text-green-400 font-medium">
+                            Grátis
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-[#6c757d] dark:text-[#adb5bd]">
+                        Pacote ({numPassengers}x)
+                      </span>
+                      <span className="text-[#1A2E40] dark:text-white">
+                        {formatCurrency(pkg.price)} cada
+                      </span>
+                    </div>
+                  )}
+                  
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
                     <div className="flex justify-between">
                       <span className="font-semibold text-[#1A2E40] dark:text-white">

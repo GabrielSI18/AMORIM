@@ -172,33 +172,33 @@ function NovoBusContent() {
 
   return (
     <DashboardShell title="Novo Ônibus">
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
           <Link
             href="/dashboard/frota"
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <p className="text-muted-foreground">Cadastre um novo veículo na frota</p>
+            <p className="text-gray-500 dark:text-[#A0A0A0]">Cadastre um novo veículo na frota</p>
           </div>
         </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Fotos */}
-        <div className="bg-card rounded-xl border border-border p-6">
-          <h2 className="font-semibold text-foreground mb-4">Fotos do Veículo</h2>
-          <p className="text-sm text-muted-foreground mb-4">
+        <div className="bg-white dark:bg-[#1E1E1E] rounded-xl border border-gray-200 dark:border-[#333] p-6">
+          <h2 className="font-semibold text-gray-900 dark:text-white mb-4">Fotos do Veículo</h2>
+          <p className="text-sm text-gray-500 dark:text-[#A0A0A0] mb-4">
             Adicione até 5 fotos do ônibus (interior e exterior)
           </p>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
             {/* Fotos existentes */}
             {photos.map((photo, index) => (
-              <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-border">
+              <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-[#333]">
                 <Image
                   src={photo}
                   alt={`Foto ${index + 1}`}
@@ -209,7 +209,7 @@ function NovoBusContent() {
                 <button
                   type="button"
                   onClick={() => removePhoto(index)}
-                  className="absolute top-1 right-1 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+                  className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -218,7 +218,7 @@ function NovoBusContent() {
 
             {/* Botão de adicionar arquivo */}
             {photos.length < 5 && (
-              <label className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center cursor-pointer transition-colors">
+              <label className="aspect-square rounded-lg border-2 border-dashed border-gray-300 dark:border-[#444] hover:border-primary/50 flex flex-col items-center justify-center cursor-pointer transition-colors">
                 <input
                   type="file"
                   accept="image/*"
@@ -228,11 +228,11 @@ function NovoBusContent() {
                   className="hidden"
                 />
                 {isUploading ? (
-                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                  <Loader2 className="w-6 h-6 animate-spin text-gray-500 dark:text-[#A0A0A0]" />
                 ) : (
                   <>
-                    <Upload className="w-5 h-5 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground mt-1">Arquivo</span>
+                    <Upload className="w-5 h-5 text-gray-500 dark:text-[#A0A0A0]" />
+                    <span className="text-xs text-gray-500 dark:text-[#A0A0A0] mt-1">Arquivo</span>
                   </>
                 )}
               </label>
@@ -243,10 +243,10 @@ function NovoBusContent() {
               <button
                 type="button"
                 onClick={() => setShowUrlInput(true)}
-                className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center transition-colors"
+                className="aspect-square rounded-lg border-2 border-dashed border-gray-300 dark:border-[#444] hover:border-primary/50 flex flex-col items-center justify-center transition-colors"
               >
-                <LinkIcon className="w-5 h-5 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground mt-1">URL</span>
+                <LinkIcon className="w-5 h-5 text-gray-500 dark:text-[#A0A0A0]" />
+                <span className="text-xs text-gray-500 dark:text-[#A0A0A0] mt-1">URL</span>
               </button>
             )}
           </div>
@@ -259,19 +259,19 @@ function NovoBusContent() {
                 value={photoUrl}
                 onChange={(e) => setPhotoUrl(e.target.value)}
                 placeholder="Cole a URL da imagem aqui..."
-                className="flex-1 px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="flex-1 px-4 py-2 border border-gray-200 dark:border-[#333] rounded-lg bg-white dark:bg-[#2a2a2a] focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               <button
                 type="button"
                 onClick={handleAddPhotoUrl}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
               >
                 Adicionar
               </button>
               <button
                 type="button"
                 onClick={() => { setShowUrlInput(false); setPhotoUrl(''); }}
-                className="px-3 py-2 text-muted-foreground hover:bg-muted rounded-lg"
+                className="px-3 py-2 text-gray-500 dark:text-[#A0A0A0] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] rounded-lg"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -280,12 +280,12 @@ function NovoBusContent() {
         </div>
 
         {/* Dados do Veículo */}
-        <div className="bg-card rounded-xl border border-border p-6 space-y-4">
-          <h2 className="font-semibold text-foreground">Dados do Veículo</h2>
+        <div className="bg-white dark:bg-[#1E1E1E] rounded-xl border border-gray-200 dark:border-[#333] p-6 space-y-4">
+          <h2 className="font-semibold text-gray-900 dark:text-white">Dados do Veículo</h2>
 
           {/* Modelo */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
+            <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
               Modelo *
             </label>
             <input
@@ -293,7 +293,7 @@ function NovoBusContent() {
               value={model}
               onChange={(e) => setModel(e.target.value)}
               placeholder="Ex: Marcopolo Paradiso 1800 DD"
-              className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full px-4 py-2 border border-gray-200 dark:border-[#333] rounded-lg bg-white dark:bg-[#2a2a2a] focus:outline-none focus:ring-2 focus:ring-primary/20"
               required
             />
           </div>
@@ -301,7 +301,7 @@ function NovoBusContent() {
           {/* Ano e Placa */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
+              <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
                 Ano *
               </label>
               <input
@@ -310,12 +310,12 @@ function NovoBusContent() {
                 onChange={(e) => setYear(e.target.value)}
                 min="1990"
                 max={new Date().getFullYear() + 1}
-                className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full px-4 py-2 border border-gray-200 dark:border-[#333] rounded-lg bg-white dark:bg-[#2a2a2a] focus:outline-none focus:ring-2 focus:ring-primary/20"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
+              <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
                 Placa *
               </label>
               <input
@@ -324,7 +324,7 @@ function NovoBusContent() {
                 onChange={(e) => setPlate(formatPlate(e.target.value))}
                 placeholder="ABC-1234"
                 maxLength={8}
-                className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 font-mono uppercase"
+                className="w-full px-4 py-2 border border-gray-200 dark:border-[#333] rounded-lg bg-white dark:bg-[#2a2a2a] focus:outline-none focus:ring-2 focus:ring-primary/20 font-mono uppercase"
                 required
               />
             </div>
@@ -333,7 +333,7 @@ function NovoBusContent() {
           {/* Assentos e Andares */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
+              <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
                 Quantidade de Assentos *
               </label>
               <input
@@ -342,18 +342,18 @@ function NovoBusContent() {
                 onChange={(e) => setSeats(e.target.value)}
                 min="1"
                 max="100"
-                className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full px-4 py-2 border border-gray-200 dark:border-[#333] rounded-lg bg-white dark:bg-[#2a2a2a] focus:outline-none focus:ring-2 focus:ring-primary/20"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
+              <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
                 Quantidade de Andares
               </label>
               <select
                 value={floors}
                 onChange={(e) => setFloors(e.target.value)}
-                className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full px-4 py-2 border border-gray-200 dark:border-[#333] rounded-lg bg-white dark:bg-[#2a2a2a] focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 <option value="1">1 andar</option>
                 <option value="2">2 andares (Double Decker)</option>
@@ -366,14 +366,14 @@ function NovoBusContent() {
         <div className="flex items-center gap-4">
           <Link
             href="/dashboard/frota"
-            className="flex-1 py-3 text-center border border-border rounded-lg hover:bg-muted transition-colors"
+            className="flex-1 py-3 text-center border border-gray-200 dark:border-[#333] rounded-lg hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors text-gray-700 dark:text-gray-300"
           >
             Cancelar
           </Link>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex-1 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <>

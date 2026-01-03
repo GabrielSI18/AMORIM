@@ -1,10 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Menu } from 'lucide-react'
-import { Sidebar } from './sidebar'
-import { UserMenu } from './user-menu'
-import { BottomNav } from './bottom-nav'
+import { useEffect } from 'react'
+import { useDashboardHeader } from './dashboard-layout-client'
 
 interface DashboardShellProps {
   children: React.ReactNode
@@ -14,44 +11,38 @@ interface DashboardShellProps {
   action?: React.ReactNode
 }
 
+/**
+ * DashboardShell - Wrapper para páginas do dashboard
+ * 
+ * Quando usado dentro do DashboardLayoutClient (via layout.tsx),
+ * apenas atualiza o título/action do header e renderiza o conteúdo.
+ * O sidebar e estrutura já estão no layout.
+ */
 export function DashboardShell({
   children,
   title,
-  userName,
-  userEmail,
   action,
 }: DashboardShellProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  return (
-    <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#121212] font-sans">
-      {/* Sidebar */}
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        userName={userName}
-        userEmail={userEmail}
-      />
-
-      {/* Top App Bar */}
-      <header className="flex items-center justify-between p-4 pb-2 sticky top-0 z-10 bg-[#f8f9fa] dark:bg-[#121212]">
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="flex items-center justify-center size-12 rounded-lg hover:bg-gray-200 dark:hover:bg-[#1E1E1E] transition-colors"
-        >
-          <Menu className="w-6 h-6 text-[#333333] dark:text-[#E0E0E0]" />
-        </button>
-        <h1 className="text-lg font-bold text-[#333333] dark:text-[#E0E0E0] tracking-tight">
-          {title}
-        </h1>
-        {action ? action : <UserMenu />}
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col gap-6 p-4 pb-24">{children}</main>
-
-      {/* Bottom Navigation */}
-      <BottomNav />
-    </div>
-  )
+  // Tenta usar o contexto do layout
+  let headerContext: ReturnType<typeof useDashboardHeader> | null = null
+  
+  try {
+    headerContext = useDashboardHeader()
+  } catch {
+    // Se não está dentro do layout, headerContext será null
+    // Isso não deveria acontecer agora, mas mantemos para compatibilidade
+  }
+  
+  // Atualiza o título e action quando monta/atualiza
+  useEffect(() => {
+    if (headerContext) {
+      headerContext.setTitle(title)
+      if (action) {
+        headerContext.setAction(action)
+      }
+    }
+  }, [title, action, headerContext])
+  
+  // Renderiza apenas o conteúdo - a estrutura está no layout
+  return <>{children}</>
 }

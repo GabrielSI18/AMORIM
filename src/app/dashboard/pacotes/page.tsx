@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Plus, Edit, Trash2, Eye, Package, MapPin, Calendar, Users, Bus, Star } from 'lucide-react'
 import { DashboardShell, AdminGuard } from '@/components/dashboard'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import Image from 'next/image'
 import type { Package as PackageType, Category, Destination } from '@/types'
 
@@ -39,6 +40,14 @@ function PackagesContent() {
   const [categories, setCategories] = useState<Category[]>([])
   const [destinations, setDestinations] = useState<Destination[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  
+  // Estado do modal de confirmação
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; packageId: string | null; packageName: string }>({
+    isOpen: false,
+    packageId: null,
+    packageName: '',
+  })
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -69,11 +78,16 @@ function PackagesContent() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja remover este pacote?')) return
+  const handleDelete = async (id: string, name: string) => {
+    setDeleteConfirm({ isOpen: true, packageId: id, packageName: name })
+  }
 
+  const confirmDelete = async () => {
+    if (!deleteConfirm.packageId) return
+    
+    setIsDeleting(true)
     try {
-      const res = await fetch(`/api/packages?id=${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/packages?id=${deleteConfirm.packageId}`, { method: 'DELETE' })
 
       if (res.ok) {
         toast.success('Pacote removido com sucesso')
@@ -84,6 +98,9 @@ function PackagesContent() {
     } catch (error) {
       console.error('Erro ao remover:', error)
       toast.error('Erro ao remover pacote')
+    } finally {
+      setIsDeleting(false)
+      setDeleteConfirm({ isOpen: false, packageId: null, packageName: '' })
     }
   }
 
@@ -271,7 +288,7 @@ function PackagesContent() {
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(pkg.id)}
+                      onClick={() => handleDelete(pkg.id, pkg.title)}
                       className="p-2 hover:bg-red-500/10 text-red-400 rounded-lg transition"
                       title="Remover"
                     >
@@ -284,6 +301,19 @@ function PackagesContent() {
           ))
         )}
       </div>
+      
+      {/* Modal de Confirmação de Exclusão */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false, packageId: null, packageName: '' })}
+        onConfirm={confirmDelete}
+        title="Remover pacote"
+        description={`Tem certeza que deseja remover o pacote "${deleteConfirm.packageName}"? Esta ação não pode ser desfeita.`}
+        confirmText="Remover"
+        cancelText="Cancelar"
+        variant="danger"
+        isLoading={isDeleting}
+      />
     </DashboardShell>
   )
 }
