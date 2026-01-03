@@ -39,7 +39,7 @@ export default function Home() {
   const isDarkMode = resolvedTheme === 'dark';
 
   return (
-    <div className="relative min-h-screen bg-[#f8f9fa] dark:bg-[#121212]">
+    <div className="relative min-h-screen bg-[#f8f9fa] dark:bg-[#121212] overflow-x-hidden">
       {/* Header Flutuante */}
       <header className="absolute top-0 left-0 right-0 z-50 p-4">
         <div className="flex items-center justify-between">
