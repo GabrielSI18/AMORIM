@@ -34,7 +34,15 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       );
     }
 
-    return NextResponse.json({ data: toCamelCase(pkg) });
+    // Transforma e mapeia destination_rel para destination
+    const transformed = toCamelCase(pkg);
+    const result = {
+      ...transformed,
+      destinationText: transformed.destination || null, // texto livre
+      destination: transformed.destinationRel || null,  // relação
+    };
+
+    return NextResponse.json({ data: result });
   } catch (error) {
     console.error('[API] GET /api/packages/[packageId] error:', error);
     return NextResponse.json(
@@ -134,7 +142,15 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       },
     });
 
-    return NextResponse.json({ data: toCamelCase(updatedPackage) });
+    // Transforma e mapeia destination_rel para destination
+    const transformed = toCamelCase(updatedPackage);
+    const result = {
+      ...transformed,
+      destinationText: transformed.destination || null, // texto livre
+      destination: transformed.destinationRel || null,  // relação
+    };
+
+    return NextResponse.json({ data: result });
   } catch (error) {
     console.error('[API] PUT /api/packages/[packageId] error:', error);
     return NextResponse.json(

@@ -32,7 +32,12 @@ async function getPackage(slug: string) {
 
   if (!pkg) return null;
 
-  return toCamelCase(pkg);
+  const transformed = toCamelCase(pkg);
+  return {
+    ...transformed,
+    destinationText: transformed.destination || null, // texto livre
+    destination: transformed.destinationRel || null,  // relação
+  };
 }
 
 export default async function PackagePage({ params }: PackagePageProps) {

@@ -71,10 +71,16 @@ export function PackageCard({ package: pkg, variant = 'default' }: PackageCardPr
 
           {/* Informações */}
           <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <MapPin className="h-4 w-4 text-primary" />
-              <span className="truncate">{pkg.destination?.city}, {pkg.destination?.state}</span>
-            </div>
+            {(pkg.destination?.city || pkg.destination?.state || pkg.destinationText) && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <MapPin className="h-4 w-4 text-primary" />
+                <span className="truncate">
+                  {pkg.destination?.city || pkg.destination?.state
+                    ? [pkg.destination?.city, pkg.destination?.state].filter(Boolean).join(', ')
+                    : pkg.destinationText}
+                </span>
+              </div>
+            )}
             <div className="flex items-center gap-2 text-muted-foreground">
               <Clock className="h-4 w-4 text-primary" />
               <span>{pkg.durationDays} {pkg.durationDays === 1 ? 'dia' : 'dias'}</span>

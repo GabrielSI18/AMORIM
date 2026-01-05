@@ -38,7 +38,16 @@ export async function GET(req: NextRequest) {
       orderBy: { created_at: 'desc' },
     });
 
-    return NextResponse.json({ data: toCamelCase(bookings) });
+    // Transforma e mapeia destination_rel para destination nos pacotes
+    const transformedBookings = toCamelCase(bookings).map((booking: any) => ({
+      ...booking,
+      package: booking.package ? {
+        ...booking.package,
+        destination: booking.package.destinationRel || null,
+      } : null,
+    }));
+
+    return NextResponse.json({ data: transformedBookings });
   } catch (error) {
     console.error('[API] GET /api/bookings error:', error);
     return NextResponse.json(
@@ -171,6 +180,16 @@ export async function POST(req: NextRequest) {
         },
       },
     });
+
+    // Transforma e mapeia destination_rel para destination
+    const transformedBooking = toCamelCase(booking);
+    const bookingResult = {
+      ...transformedBooking,
+      package: transformedBooking.package ? {
+        ...transformedBooking.package,
+        destination: transformedBooking.package.destinationRel || null,
+      } : null,
+    };
 
     // Se há afiliado válido, criar registro de indicação
     if (affiliate) {

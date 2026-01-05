@@ -337,15 +337,19 @@ export default function ContatoPage() {
                 </div>
               </div>
 
-              {/* Mapa ou Imagem */}
+              {/* Mapa Google */}
               <div className="bg-card border border-border rounded-2xl overflow-hidden">
-                <div className="aspect-video bg-muted flex items-center justify-center">
-                  <div className="text-center text-muted-foreground">
-                    <MapPin className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Mapa será exibido aqui</p>
-                    <p className="text-xs">Rua das Viagens, 123 - Centro, São Paulo/SP</p>
-                  </div>
-                </div>
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3750.0521651287722!2d-44.04496622401354!3d-19.964308339379283!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xa6be3cea9a86b7%3A0xcdd1422d7c37b086!2sR.%20Manaus%2C%2048%20-%20Amazonas%2C%20Contagem%20-%20MG%2C%2032240-080%2C%20Brasil!5e0!3m2!1spt-BR!2sus!4v1767646321062!5m2!1spt-BR!2sus"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0, aspectRatio: '16/9' }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Localização - R. Manaus, 48 - Amazonas, Contagem - MG"
+                  className="w-full aspect-video"
+                />
               </div>
             </motion.div>
           </div>

@@ -57,6 +57,7 @@ export interface Package {
   category?: Category
   destinationId: string
   destination?: Destination
+  destinationText?: string | null // Campo texto livre para destino
   
   // Detalhes
   price: number // em centavos

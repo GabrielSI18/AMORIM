@@ -18,6 +18,7 @@ export default function SignInPage() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isRedirecting, setIsRedirecting] = useState(false)
   const [error, setError] = useState('')
   const [usePhoneLogin, setUsePhoneLogin] = useState(false)
   
@@ -53,7 +54,11 @@ export default function SignInPage() {
 
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId })
-        window.location.href = '/dashboard'
+        setIsRedirecting(true)
+        // Aguardar um momento para a sessão ser propagada
+        await new Promise(resolve => setTimeout(resolve, 500))
+        router.push('/dashboard')
+        router.refresh()
       } else if (result.status === 'needs_second_factor') {
         // Verificar se o segundo fator é por email
         const factors = result.supportedSecondFactors || []
@@ -73,7 +78,10 @@ export default function SignInPage() {
         const sessionId = result.createdSessionId
         if (sessionId) {
           await setActive({ session: sessionId })
-          window.location.href = '/dashboard'
+          setIsRedirecting(true)
+          await new Promise(resolve => setTimeout(resolve, 500))
+          router.push('/dashboard')
+          router.refresh()
         } else {
           setError('Login incompleto. Status: ' + result.status)
         }
@@ -82,7 +90,9 @@ export default function SignInPage() {
       console.error('Sign-in error:', err)
       setError(err.errors?.[0]?.message || 'Erro ao fazer login')
     } finally {
-      setIsLoading(false)
+      if (!isRedirecting) {
+        setIsLoading(false)
+      }
     }
   }
 
@@ -101,7 +111,10 @@ export default function SignInPage() {
 
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId })
-        window.location.href = '/dashboard'
+        setIsRedirecting(true)
+        await new Promise(resolve => setTimeout(resolve, 500))
+        router.push('/dashboard')
+        router.refresh()
       } else {
         setError('Verificação incompleta. Tente novamente.')
       }
@@ -109,7 +122,9 @@ export default function SignInPage() {
       console.error('Verification error:', err)
       setError(err.errors?.[0]?.message || 'Código inválido')
     } finally {
-      setIsLoading(false)
+      if (!isRedirecting) {
+        setIsLoading(false)
+      }
     }
   }
 
@@ -147,6 +162,15 @@ export default function SignInPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F5F5F7] dark:bg-[#101622]">
+      {/* Tela de redirecionamento */}
+      {isRedirecting && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#F5F5F7] dark:bg-[#101622]">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
+          <p className="text-[#1A2E40] dark:text-white text-lg font-medium">Entrando...</p>
+          <p className="text-[#4F4F4F] dark:text-[#92a4c9] text-sm mt-1">Redirecionando para o dashboard</p>
+        </div>
+      )}
+
       {/* Header */}
       <header className="relative flex items-center justify-center p-4 border-b border-[#e0e0e0]/50 dark:border-[#324467] bg-white dark:bg-[#101622]">
         <Link

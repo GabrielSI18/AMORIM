@@ -72,7 +72,16 @@ export async function GET(req: NextRequest) {
       ],
     });
 
-    return NextResponse.json({ data: toCamelCase(packages) });
+    // Transforma e mapeia destination_rel para destination
+    // O campo 'destination' do banco (texto) vai para 'destinationText'
+    // O campo 'destination_rel' do banco (relação) vai para 'destination'
+    const transformedPackages = toCamelCase(packages).map((pkg: any) => ({
+      ...pkg,
+      destinationText: pkg.destination || null, // texto livre
+      destination: pkg.destinationRel || null,  // relação
+    }));
+
+    return NextResponse.json({ data: transformedPackages });
   } catch (error) {
     console.error('[API] GET /api/packages error:', error);
     return NextResponse.json(
@@ -214,7 +223,15 @@ export async function PUT(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ data: toCamelCase(package_) });
+    // Transforma e mapeia destination_rel para destination
+    const transformed = toCamelCase(package_);
+    const result = {
+      ...transformed,
+      destinationText: transformed.destination || null, // texto livre
+      destination: transformed.destinationRel || null,  // relação
+    };
+
+    return NextResponse.json({ data: result });
   } catch (error) {
     console.error('[API] PUT /api/packages error:', error);
     return NextResponse.json(

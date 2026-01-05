@@ -420,10 +420,12 @@ function PackagesContent() {
                 {/* Conteúdo */}
                 <div className="p-4">
                   {/* Destino */}
-                  {pkg.destination && (
+                  {(pkg.destination || pkg.destinationText) && (
                     <p className="flex items-center gap-1 text-primary text-sm font-medium mb-1">
                       <MapPin className="w-3.5 h-3.5" />
-                      {typeof pkg.destination === 'string' ? pkg.destination : pkg.destination.city}
+                      {pkg.destination?.city 
+                        ? `${pkg.destination.city}${pkg.destination.state ? `, ${pkg.destination.state}` : ''}`
+                        : pkg.destinationText}
                     </p>
                   )}
 
