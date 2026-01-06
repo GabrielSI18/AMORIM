@@ -214,26 +214,32 @@ function PackagesContent() {
               )}
 
               {/* Info */}
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 overflow-hidden">
                 <div className="flex items-start justify-between gap-2">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="font-semibold text-gray-900 dark:text-[#E0E0E0] truncate">
                       {pkg.title}
                     </p>
                     <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-[#A0A0A0]">
-                      {pkg.destination && (
+                      {(pkg.destination || (pkg as any).destinationText) && (
                         <span className="flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5" />
-                          {typeof pkg.destination === 'string' ? pkg.destination : pkg.destination.city}
+                          <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                          <span className="truncate">
+                            {pkg.destination?.city 
+                              ? `${pkg.destination.city}${pkg.destination.state ? `, ${pkg.destination.state}` : ''}`
+                              : (pkg as any).destinationText}
+                          </span>
                         </span>
                       )}
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-1 flex-shrink-0">
                         <Calendar className="w-3.5 h-3.5" />
                         {pkg.durationDays} dias
                       </span>
                     </div>
                   </div>
-                  {getStatusBadge(pkg.status)}
+                  <div className="flex-shrink-0">
+                    {getStatusBadge(pkg.status)}
+                  </div>
                 </div>
 
                 {/* Detalhes extras */}
