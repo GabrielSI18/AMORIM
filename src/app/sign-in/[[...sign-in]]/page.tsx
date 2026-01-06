@@ -59,6 +59,7 @@ export default function SignInPage() {
         await new Promise(resolve => setTimeout(resolve, 500))
         router.push('/dashboard')
         router.refresh()
+        return // Não desliga loading, mantém redirecionando
       } else if (result.status === 'needs_second_factor') {
         // Verificar se o segundo fator é por email
         const factors = result.supportedSecondFactors || []
@@ -71,8 +72,10 @@ export default function SignInPage() {
           })
           setVerificationEmail(emailFactor.safeIdentifier || identifier)
           setNeedsEmailVerification(true)
+          setIsLoading(false) // Desliga loading para mostrar formulário de código
         } else {
           setError('Método de verificação não suportado. Contate o suporte.')
+          setIsLoading(false)
         }
       } else {
         const sessionId = result.createdSessionId
@@ -82,17 +85,16 @@ export default function SignInPage() {
           await new Promise(resolve => setTimeout(resolve, 500))
           router.push('/dashboard')
           router.refresh()
+          return // Não desliga loading, mantém redirecionando
         } else {
           setError('Login incompleto. Status: ' + result.status)
+          setIsLoading(false)
         }
       }
     } catch (err: any) {
       console.error('Sign-in error:', err)
       setError(err.errors?.[0]?.message || 'Erro ao fazer login')
-    } finally {
-      if (!isRedirecting) {
-        setIsLoading(false)
-      }
+      setIsLoading(false)
     }
   }
 
@@ -115,16 +117,15 @@ export default function SignInPage() {
         await new Promise(resolve => setTimeout(resolve, 500))
         router.push('/dashboard')
         router.refresh()
+        return // Mantém loading/redirecionando
       } else {
         setError('Verificação incompleta. Tente novamente.')
+        setIsLoading(false)
       }
     } catch (err: any) {
       console.error('Verification error:', err)
       setError(err.errors?.[0]?.message || 'Código inválido')
-    } finally {
-      if (!isRedirecting) {
-        setIsLoading(false)
-      }
+      setIsLoading(false)
     }
   }
 
