@@ -19,19 +19,34 @@ const isPublicRoute = createRouteMatcher([
   '/api/webhooks(.*)',    // Webhooks (Clerk, etc)
   '/api/packages(.*)',    // API de pacotes (pública para listagem)
   '/api/fleet(.*)',       // API de frota (pública para listagem)
-  '/api/bookings',        // API de reservas (POST público)
+  '/api/bookings(.*)',    // API de reservas (público para criar e buscar por ID)
+  '/api/categories(.*)',  // API de categorias
+  '/api/destinations(.*)', // API de destinos
+  '/api/contacts(.*)',    // API de contatos
+  '/api/affiliates(.*)',  // API de afiliados
   '/api/test-env',        // Rota de teste de env
 ])
 
+// Rotas de autenticação (sign-in, sign-up)
+const isAuthRoute = createRouteMatcher([
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+])
+
 export default clerkMiddleware(async (auth, request) => {
+  const { userId } = await auth()
+  
+  // Se usuário está logado e tenta acessar página de auth, redirecionar para dashboard
+  if (userId && isAuthRoute(request)) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+  
   // Rotas públicas: não proteger
   if (isPublicRoute(request)) {
     return
   }
 
   // Rotas privadas: verificar autenticação
-  const { userId } = await auth()
-  
   if (!userId) {
     // Redirecionar para página de login customizada
     const signInUrl = new URL('/sign-in', request.url)
