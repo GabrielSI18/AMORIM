@@ -5,6 +5,9 @@ import Link from 'next/link'
 import { PlusCircle, Users, Handshake, Package, Calendar, DollarSign, TrendingUp } from 'lucide-react'
 import { DashboardShell } from '@/components/dashboard'
 
+// Forçar renderização dinâmica (usa headers/cookies)
+export const dynamic = 'force-dynamic'
+
 async function DashboardPageContent() {
   const user = await currentUser()
 
