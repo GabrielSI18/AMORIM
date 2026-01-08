@@ -20,6 +20,7 @@ import {
   Map,
   PanelLeftClose,
   PanelLeft,
+  Ticket,
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -36,6 +37,7 @@ interface SidebarProps {
 const menuItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', adminOnly: false },
   { href: '/dashboard/pacotes', icon: Bus, label: 'Pacotes de Viagem', adminOnly: true },
+  { href: '/dashboard/reservas', icon: Ticket, label: 'Reservas', adminOnly: true },
   { href: '/dashboard/frota', icon: Truck, label: 'Frota', adminOnly: true },
   { href: '/dashboard/clientes', icon: Users, label: 'Clientes', adminOnly: true },
   { href: '/dashboard/afiliados', icon: Handshake, label: 'Afiliados', adminOnly: true },

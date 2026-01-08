@@ -1,9 +1,34 @@
 import prisma from '@/lib/prisma'
 import { currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
-import { Users, Mail, Calendar, Search, Filter } from 'lucide-react'
+import { Users, Mail, Calendar, Search, Filter, Phone, Ticket } from 'lucide-react'
 import Image from 'next/image'
 import { PageHeader } from '@/components/dashboard'
+
+// Tipo unificado de cliente
+interface UnifiedClient {
+  id: string
+  name: string
+  email: string
+  phone?: string
+  imageUrl?: string
+  source: 'user' | 'booking' // De onde veio
+  bookingsCount: number
+  createdAt: Date
+  clerkId?: string
+}
+
+// Função para formatar telefone
+function formatPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, '')
+  if (digits.length === 11) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
+  }
+  if (digits.length === 10) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`
+  }
+  return phone
+}
 
 export default async function ClientesPage() {
   const user = await currentUser()
@@ -22,7 +47,7 @@ export default async function ClientesPage() {
   }
 
   // Buscar clientes (usuários com role USER)
-  const clients = await prisma.user.findMany({
+  const users = await prisma.user.findMany({
     where: { role: 'USER' } as any,
     orderBy: { created_at: 'desc' },
     include: {
@@ -32,14 +57,91 @@ export default async function ClientesPage() {
     } as any,
   }) as any[]
 
+  // Buscar reservas de clientes sem conta (user_id null)
+  const guestBookings = await prisma.booking.findMany({
+    where: { 
+      user_id: null,
+      status: { not: 'canceled' }
+    },
+    orderBy: { created_at: 'desc' },
+  }) as any[]
+
+  // Agrupar reservas por email do cliente (clientes guest)
+  const guestClientsMap = new Map<string, {
+    name: string
+    email: string
+    phone: string
+    bookingsCount: number
+    firstCreatedAt: Date
+  }>()
+
+  for (const booking of guestBookings) {
+    // Pular reservas sem email
+    if (!booking.customer_email) continue
+    
+    const existing = guestClientsMap.get(booking.customer_email)
+    if (existing) {
+      existing.bookingsCount++
+      // Manter a data mais antiga
+      if (new Date(booking.created_at) < existing.firstCreatedAt) {
+        existing.firstCreatedAt = new Date(booking.created_at)
+      }
+    } else {
+      guestClientsMap.set(booking.customer_email, {
+        name: booking.customer_name || 'Cliente',
+        email: booking.customer_email,
+        phone: booking.customer_phone || '',
+        bookingsCount: 1,
+        firstCreatedAt: new Date(booking.created_at),
+      })
+    }
+  }
+
+  // Emails de usuários cadastrados (para evitar duplicação)
+  const userEmails = new Set(users.map(u => u.email?.toLowerCase()).filter(Boolean))
+
+  // Criar lista unificada de clientes
+  const clients: UnifiedClient[] = []
+
+  // Adicionar usuários cadastrados
+  for (const u of users) {
+    clients.push({
+      id: u.id,
+      name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email,
+      email: u.email,
+      imageUrl: u.image_url,
+      source: 'user',
+      bookingsCount: u.bookings?.length || 0,
+      createdAt: new Date(u.created_at),
+      clerkId: u.clerk_id,
+    })
+  }
+
+  // Adicionar clientes de reserva (sem conta) que não são usuários cadastrados
+  for (const [email, guest] of guestClientsMap) {
+    if (!userEmails.has(email.toLowerCase())) {
+      clients.push({
+        id: `guest-${email}`,
+        name: guest.name,
+        email: guest.email,
+        phone: guest.phone,
+        source: 'booking',
+        bookingsCount: guest.bookingsCount,
+        createdAt: guest.firstCreatedAt,
+      })
+    }
+  }
+
+  // Ordenar por data de criação (mais recente primeiro)
+  clients.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+
   const totalClients = clients.length
   const thisMonth = clients.filter(c => {
     const now = new Date()
-    const createdAt = new Date(c.created_at)
-    return createdAt.getMonth() === now.getMonth() && 
-           createdAt.getFullYear() === now.getFullYear()
+    return c.createdAt.getMonth() === now.getMonth() && 
+           c.createdAt.getFullYear() === now.getFullYear()
   }).length
-  const withBookings = clients.filter(c => c.bookings.length > 0).length
+  const withBookings = clients.filter(c => c.bookingsCount > 0).length
 
   return (
     <>
@@ -108,9 +210,9 @@ export default async function ClientesPage() {
               >
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-gray-50 dark:bg-[#2A2A2A] border border-gray-200 dark:border-[#333] overflow-hidden flex-shrink-0">
-                    {client.image_url ? (
+                    {client.imageUrl ? (
                       <Image
-                        src={client.image_url}
+                        src={client.imageUrl}
                         alt={client.name || 'Avatar'}
                         width={48}
                         height={48}
@@ -118,28 +220,42 @@ export default async function ClientesPage() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-[#A0A0A0] text-lg font-medium">
-                        {client.first_name?.[0] || client.email[0].toUpperCase()}
+                        {client.name?.[0]?.toUpperCase() || client.email[0].toUpperCase()}
                       </div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 dark:text-[#E0E0E0] truncate">
-                      {client.first_name} {client.last_name}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-gray-900 dark:text-[#E0E0E0] truncate">
+                        {client.name}
+                      </p>
+                      {client.source === 'booking' && (
+                        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-xs bg-orange-500/10 text-orange-400">
+                          <Ticket className="w-3 h-3" />
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-gray-500 dark:text-[#A0A0A0] truncate">{client.email}</p>
                   </div>
                 </div>
                 
+                {client.phone && (
+                  <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-[#A0A0A0]">
+                    <Phone className="w-4 h-4" />
+                    {formatPhone(client.phone)}
+                  </div>
+                )}
+                
                 <div className="flex items-center justify-between text-sm">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    client.bookings.length > 0 
+                    client.bookingsCount > 0 
                       ? 'bg-green-500/10 text-green-400' 
                       : 'bg-gray-500/10 text-gray-400'
                   }`}>
-                    {client.bookings.length} reserva{client.bookings.length !== 1 ? 's' : ''}
+                    {client.bookingsCount} reserva{client.bookingsCount !== 1 ? 's' : ''}
                   </span>
                   <span className="text-gray-500 dark:text-[#A0A0A0]">
-                    {new Date(client.created_at).toLocaleDateString('pt-BR')}
+                    {client.createdAt.toLocaleDateString('pt-BR')}
                   </span>
                 </div>
                 
@@ -158,7 +274,8 @@ export default async function ClientesPage() {
               <thead className="bg-gray-50 dark:bg-[#2A2A2A] border-b border-gray-200 dark:border-[#333]">
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">Cliente</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">Email</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">Contato</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">Origem</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">Reservas</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">Cadastro</th>
                   <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">Ações</th>
@@ -167,7 +284,7 @@ export default async function ClientesPage() {
               <tbody className="divide-y divide-gray-200 dark:divide-[#333]">
                 {clients.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-[#A0A0A0]">
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-[#A0A0A0]">
                       Nenhum cliente cadastrado ainda.
                     </td>
                   </tr>
@@ -177,9 +294,9 @@ export default async function ClientesPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-[#2A2A2A] border border-gray-200 dark:border-[#333] overflow-hidden">
-                            {client.image_url ? (
+                            {client.imageUrl ? (
                               <Image
-                                src={client.image_url}
+                                src={client.imageUrl}
                                 alt={client.name || 'Avatar'}
                                 width={40}
                                 height={40}
@@ -187,35 +304,64 @@ export default async function ClientesPage() {
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-[#A0A0A0]">
-                                {client.first_name?.[0] || client.email[0].toUpperCase()}
+                                {client.name?.[0]?.toUpperCase() || client.email[0].toUpperCase()}
                               </div>
                             )}
                           </div>
                           <div>
                             <p className="font-medium text-gray-900 dark:text-[#E0E0E0]">
-                              {client.first_name} {client.last_name}
+                              {client.name}
                             </p>
-                            <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">ID: {client.clerk_id.slice(0, 12)}...</p>
+                            {client.clerkId && (
+                              <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">ID: {client.clerkId.slice(0, 12)}...</p>
+                            )}
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 text-gray-500 dark:text-[#A0A0A0]">
-                          <Mail className="w-4 h-4" />
-                          {client.email}
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-gray-500 dark:text-[#A0A0A0]">
+                            <Mail className="w-4 h-4" />
+                            <span className="text-sm">{client.email}</span>
+                          </div>
+                          {client.phone && (
+                            <div className="flex items-center gap-2 text-gray-500 dark:text-[#A0A0A0]">
+                              <Phone className="w-4 h-4" />
+                              <span className="text-sm">{formatPhone(client.phone)}</span>
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4">
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                          client.source === 'user' 
+                            ? 'bg-blue-500/10 text-blue-400' 
+                            : 'bg-orange-500/10 text-orange-400'
+                        }`}>
+                          {client.source === 'user' ? (
+                            <>
+                              <Users className="w-3 h-3" />
+                              Cadastrado
+                            </>
+                          ) : (
+                            <>
+                              <Ticket className="w-3 h-3" />
+                              Reserva
+                            </>
+                          )}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          client.bookings.length > 0 
+                          client.bookingsCount > 0 
                             ? 'bg-green-500/10 text-green-400' 
                             : 'bg-gray-500/10 text-gray-400'
                         }`}>
-                          {client.bookings.length} reserva{client.bookings.length !== 1 ? 's' : ''}
+                          {client.bookingsCount} reserva{client.bookingsCount !== 1 ? 's' : ''}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-gray-500 dark:text-[#A0A0A0]">
-                        {new Date(client.created_at).toLocaleDateString('pt-BR')}
+                        {client.createdAt.toLocaleDateString('pt-BR')}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">

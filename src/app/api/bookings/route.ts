@@ -11,14 +11,46 @@ import type { CreateBookingDto } from '@/types';
  */
 export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const packageId = searchParams.get('packageId');
+    const bookingId = searchParams.get('id');
+
+    // Buscar reserva específica por ID (permite sem auth para página de confirmação)
+    if (bookingId) {
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: {
+          package: {
+            include: {
+              destination_rel: true,
+              category: true,
+            },
+          },
+        },
+      });
+
+      if (!booking) {
+        return NextResponse.json({ error: 'Reserva não encontrada' }, { status: 404 });
+      }
+
+      const transformedBooking = toCamelCase(booking);
+      const bookingResult = {
+        ...transformedBooking,
+        package: transformedBooking.package ? {
+          ...transformedBooking.package,
+          destination: transformedBooking.package.destinationRel || null,
+        } : null,
+      };
+
+      return NextResponse.json({ data: bookingResult });
+    }
+
+    // Para listar todas as reservas, precisa de autenticação
     const { userId } = await auth();
     
     if (!userId) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
-
-    const { searchParams } = new URL(req.url);
-    const packageId = searchParams.get('packageId');
 
     const where: any = {};
     
@@ -72,7 +104,16 @@ export async function POST(req: NextRequest) {
       return rateLimitExceededResponse(rateLimitResult);
     }
 
-    const body: CreateBookingDto & { selectedSeats?: number[] } = await req.json();
+    const body: CreateBookingDto & { 
+      selectedSeats?: number[];
+      totalPrice?: number;
+      passengerDetails?: {
+        adults: number;
+        children_11_13: number;
+        children_6_10: number;
+        children_free: number;
+      };
+    } = await req.json();
 
     // Validação
     if (!body.packageId || !body.customerName || !body.customerEmail || !body.customerPhone || !body.numPassengers) {
@@ -144,8 +185,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Calcular valor total
-    const totalAmount = package_.price * body.numPassengers;
+    // Calcular valor total (usar do frontend se enviado, senão calcular)
+    let totalAmount = body.totalPrice;
+    if (!totalAmount) {
+      // Fallback: calcular baseado no preço padrão
+      totalAmount = package_.price * body.numPassengers;
+    }
 
     // Verificar se há código de afiliado
     let affiliate = null;
@@ -252,10 +297,36 @@ export async function PUT(req: NextRequest) {
     const data: any = {};
     if (status) data.status = status;
     if (paymentStatus) {
-      data.paymentStatus = paymentStatus;
-      if (paymentStatus === 'paid') data.paidAt = new Date();
+      data.payment_status = paymentStatus;
+      if (paymentStatus === 'paid') data.paid_at = new Date();
     }
     if (notes !== undefined) data.notes = notes;
+
+    // Buscar reserva atual para verificar se está sendo cancelada
+    const currentBooking = await prisma.booking.findUnique({
+      where: { id },
+      select: { 
+        status: true, 
+        num_passengers: true, 
+        package_id: true,
+        selected_seats: true,
+      },
+    });
+
+    if (!currentBooking) {
+      return NextResponse.json({ error: 'Reserva não encontrada' }, { status: 404 });
+    }
+
+    // Se está sendo cancelada (e não era cancelada antes), liberar vagas
+    if (status === 'canceled' && currentBooking.status !== 'canceled') {
+      await prisma.package.update({
+        where: { id: currentBooking.package_id },
+        data: {
+          available_seats: { increment: currentBooking.num_passengers },
+          bookings_count: { decrement: 1 },
+        },
+      });
+    }
 
     const booking = await prisma.booking.update({
       where: { id },

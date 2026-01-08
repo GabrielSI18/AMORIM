@@ -65,8 +65,8 @@ export default function RootLayout({
       localization={ptBR}
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
-      afterSignInUrl="/dashboard"
-      afterSignUpUrl="/dashboard"
+      signInFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/dashboard"
     >
       <html lang="pt-BR" suppressHydrationWarning>
         <head>

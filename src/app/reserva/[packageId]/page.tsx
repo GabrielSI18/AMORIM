@@ -17,6 +17,76 @@ interface ReservaPageProps {
   }>;
 }
 
+// Função para gerar mensagem de WhatsApp com detalhes da reserva
+interface WhatsAppMessageData {
+  bookingId: string;
+  packageTitle: string;
+  destination: string;
+  departureDate: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  numAdults: number;
+  numChildren1113: number;
+  numChildren610: number;
+  numChildrenFree: number;
+  selectedSeats: number[];
+  totalPrice: number;
+  hasChildPrices: boolean;
+  numPassengers: number;
+}
+
+function generateWhatsAppMessage(data: WhatsAppMessageData): string {
+  const formatCurrency = (valueInCents: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(valueInCents / 100);
+  };
+
+  let passengersDetails = '';
+  if (data.hasChildPrices) {
+    const parts = [];
+    if (data.numAdults > 0) parts.push(`${data.numAdults} adulto(s)`);
+    if (data.numChildren1113 > 0) parts.push(`${data.numChildren1113} criança(s) 11-13 anos`);
+    if (data.numChildren610 > 0) parts.push(`${data.numChildren610} criança(s) 6-10 anos`);
+    if (data.numChildrenFree > 0) parts.push(`${data.numChildrenFree} criança(s) 0-5 anos (colo)`);
+    passengersDetails = parts.join(', ');
+  } else {
+    passengersDetails = `${data.numPassengers} passageiro(s)`;
+  }
+
+  const seatsInfo = data.selectedSeats.length > 0 
+    ? `Assentos: ${data.selectedSeats.sort((a, b) => a - b).join(', ')}` 
+    : 'Assentos: A definir';
+
+  const message = `🚌 *NOVA RESERVA - AMORIM TURISMO*
+
+📦 *Pacote:* ${data.packageTitle}
+📍 *Destino:* ${data.destination || 'A confirmar'}
+📅 *Data de Saída:* ${data.departureDate}
+
+👤 *DADOS DO CLIENTE*
+Nome: ${data.customerName}
+E-mail: ${data.customerEmail}
+Telefone: ${data.customerPhone}
+
+👥 *PASSAGEIROS*
+${passengersDetails}
+${seatsInfo}
+
+💰 *VALOR TOTAL:* ${formatCurrency(data.totalPrice)}
+
+📝 *ID da Reserva:* ${data.bookingId}
+
+⚠️ *Status:* Aguardando confirmação de pagamento
+
+---
+_Mensagem gerada automaticamente pelo sistema de reservas._`;
+
+  return message;
+}
+
 export default function ReservaPage({ params }: ReservaPageProps) {
   const router = useRouter();
   const { user, isLoaded } = useUser();
@@ -201,23 +271,23 @@ export default function ReservaPage({ params }: ReservaPageProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          package_id: pkg.id,
-          customer_name: customerName,
-          customer_email: customerEmail,
-          customer_phone: customerPhone.replace(/\D/g, ''),
-          customer_cpf: customerCpf.replace(/\D/g, ''),
-          num_passengers: numPassengers,
-          customer_notes: customerNotes,
-          selected_seats: selectedSeats.length > 0 ? selectedSeats : null,
-          affiliate_code: affiliateCode, // Código do afiliado
+          packageId: pkg.id,
+          customerName: customerName,
+          customerEmail: customerEmail,
+          customerPhone: customerPhone.replace(/\D/g, ''),
+          customerCpf: customerCpf.replace(/\D/g, ''),
+          numPassengers: numPassengers,
+          customerNotes: customerNotes,
+          selectedSeats: selectedSeats.length > 0 ? selectedSeats : null,
+          affiliateCode: affiliateCode, // Código do afiliado
           // Detalhes dos tipos de passageiros
-          passenger_details: hasChildPrices ? {
+          passengerDetails: hasChildPrices ? {
             adults: numAdults,
             children_11_13: numChildren1113,
             children_6_10: numChildren610,
             children_free: numChildrenFree,
           } : null,
-          total_price: totalPrice, // Enviar o total calculado
+          totalPrice: totalPrice, // Enviar o total calculado
         }),
       });
 
@@ -231,6 +301,32 @@ export default function ReservaPage({ params }: ReservaPageProps) {
       if (affiliateCode) {
         clearAffiliateCode();
       }
+
+      // Gerar mensagem de WhatsApp com detalhes da reserva
+      const whatsappMessage = generateWhatsAppMessage({
+        bookingId: data.data.id,
+        packageTitle: pkg.title,
+        destination: typeof pkg.destination === 'string' 
+          ? pkg.destination 
+          : (pkg.destination as any)?.name || (pkg as any).destinationRel?.name || '',
+        departureDate: pkg.departureDate ? formatDate(String(pkg.departureDate)) : 'A definir',
+        customerName,
+        customerEmail,
+        customerPhone,
+        numAdults,
+        numChildren1113,
+        numChildren610,
+        numChildrenFree,
+        selectedSeats,
+        totalPrice,
+        hasChildPrices,
+        numPassengers,
+      });
+
+      // Abrir WhatsApp em nova aba
+      const whatsappNumber = '5531982544924';
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+      window.open(whatsappUrl, '_blank');
 
       toast.success('Reserva criada com sucesso!');
       router.push(`/reserva/${packageId}/confirmacao?bookingId=${data.data.id}`);

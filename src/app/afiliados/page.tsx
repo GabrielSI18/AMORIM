@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 import { Header } from '@/components/ui/header';
 import { 
   DollarSign, 
@@ -38,12 +39,27 @@ export default function AfiliadosPage() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // TODO: Implementar chamada à API
-    setTimeout(() => {
-      alert('Cadastro enviado! Você receberá um email em breve.');
+    try {
+      const res = await fetch('/api/affiliates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success('Cadastro enviado com sucesso! Você receberá um email em até 24h.');
+        setFormData({ name: '', email: '', phone: '', cpf: '' });
+      } else {
+        toast.error(data.error || 'Erro ao enviar cadastro');
+      }
+    } catch (error) {
+      console.error('Erro ao enviar cadastro:', error);
+      toast.error('Erro ao enviar cadastro. Tente novamente.');
+    } finally {
       setIsSubmitting(false);
-      setFormData({ name: '', email: '', phone: '', cpf: '' });
-    }, 1500);
+    }
   };
 
   const benefits = [
@@ -734,7 +750,7 @@ export default function AfiliadosPage() {
 
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             <motion.a
-              href="https://wa.me/5511999999999"
+              href="https://wa.me/5531988862079"
               target="_blank"
               rel="noopener noreferrer"
               initial={{ opacity: 0, y: 20 }}
@@ -749,7 +765,7 @@ export default function AfiliadosPage() {
                 </svg>
               </div>
               <h3 className="font-semibold text-lg mb-2">WhatsApp</h3>
-              <p className="text-muted-foreground text-sm">(11) 99999-9999</p>
+              <p className="text-muted-foreground text-sm">(31) 98886-2079</p>
               <p className="text-xs text-muted-foreground mt-2">Resposta rápida!</p>
             </motion.a>
 
@@ -772,7 +788,7 @@ export default function AfiliadosPage() {
             </motion.a>
 
             <motion.a
-              href="tel:+551199999999"
+              href="tel:+5531999732079"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -785,7 +801,7 @@ export default function AfiliadosPage() {
                 </svg>
               </div>
               <h3 className="font-semibold text-lg mb-2">Telefone</h3>
-              <p className="text-muted-foreground text-sm">(11) 9999-9999</p>
+              <p className="text-muted-foreground text-sm">(31) 99973-2079</p>
               <p className="text-xs text-muted-foreground mt-2">Seg a Sex, 9h às 18h</p>
             </motion.a>
           </div>

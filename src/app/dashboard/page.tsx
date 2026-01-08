@@ -221,7 +221,7 @@ async function DashboardPageContent() {
         </Link>
 
         <Link
-          href="/dashboard/relatorios"
+          href="/dashboard/reservas"
           className="flex flex-col gap-3 rounded-xl bg-white dark:bg-[#1E1E1E] p-4 shadow-sm hover:bg-gray-50 dark:hover:bg-[#252525] transition-colors"
         >
           <div className="flex items-center gap-3">
