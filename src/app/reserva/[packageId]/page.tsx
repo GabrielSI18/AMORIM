@@ -174,7 +174,7 @@ export default function ReservaPage({ params }: ReservaPageProps) {
   }, [numAdults, numChildren610, numChildren1113]);
 
   // Verificar se há preços de crianças configurados
-  const hasChildPrices = pkg ? ((pkg.priceChild610 && pkg.priceChild610 > 0) || (pkg.priceChild1113 && pkg.priceChild1113 > 0)) : false;
+  const hasChildPrices: boolean = pkg ? Boolean((pkg.priceChild610 && pkg.priceChild610 > 0) || (pkg.priceChild1113 && pkg.priceChild1113 > 0)) : false;
 
   const handleSeatSelectionChange = (seats: number[]) => {
     setSelectedSeats(seats);
