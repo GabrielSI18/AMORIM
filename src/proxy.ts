@@ -34,22 +34,13 @@ const isAuthRoute = createRouteMatcher([
 ])
 
 export default clerkMiddleware(async (auth, request) => {
-  const { userId } = await auth()
-  
-  // Rotas de auth: se já logado, redirecionar para dashboard
-  if (isAuthRoute(request)) {
-    if (userId) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
-    return // Deixar acessar página de login
-  }
-  
-  // Rotas públicas: deixar passar
+  // Rotas públicas: deixar passar sem interferência
   if (isPublicRoute(request)) {
     return
   }
 
   // Rotas privadas: se não logado, redirecionar para sign-in customizado
+  const { userId } = await auth()
   if (!userId) {
     const signInUrl = new URL('/sign-in', request.url)
     signInUrl.searchParams.set('redirect_url', request.url)
