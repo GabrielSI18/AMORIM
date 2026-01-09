@@ -63,16 +63,30 @@ export default function SignInPage() {
       } else if (result.status === 'needs_second_factor') {
         // Verificar se o segundo fator é por email
         const factors = result.supportedSecondFactors || []
-        const emailFactor = factors.find((f: any) => f.strategy === 'email_code') as any
+        console.log('Second factors available:', factors)
         
-        if (emailFactor) {
-          // Preparar verificação por email
-          await signIn.prepareSecondFactor({
-            strategy: 'email_code',
-          })
-          setVerificationEmail(emailFactor.safeIdentifier || identifier)
-          setNeedsEmailVerification(true)
-          setIsLoading(false) // Desliga loading para mostrar formulário de código
+        // Tentar encontrar email_code ou phone_code
+        const emailFactor = factors.find((f: any) => 
+          f.strategy === 'email_code' || f.strategy === 'totp'
+        ) as any
+        
+        console.log('Email factor found:', emailFactor)
+        
+        if (emailFactor || factors.length > 0) {
+          try {
+            // Preparar verificação por email
+            await signIn.prepareSecondFactor({
+              strategy: 'email_code',
+            })
+            setVerificationEmail(emailFactor?.safeIdentifier || identifier)
+            setNeedsEmailVerification(true)
+            setIsLoading(false) // Desliga loading para mostrar formulário de código
+          } catch (prepareError: any) {
+            console.error('Error preparing second factor:', prepareError)
+            // Se falhar com email_code, pode ser que o usuário não tenha email verification
+            setError('Erro ao preparar verificação. Tente novamente.')
+            setIsLoading(false)
+          }
         } else {
           setError('Método de verificação não suportado. Contate o suporte.')
           setIsLoading(false)
