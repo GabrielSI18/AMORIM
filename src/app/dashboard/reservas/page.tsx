@@ -467,8 +467,8 @@ _Amorim Turismo_`
 
       {/* Modal de Detalhes */}
       {selectedBooking && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white dark:bg-[#1E1E1E] rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50">
+          <div className="bg-white dark:bg-[#1E1E1E] rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white dark:bg-[#1E1E1E] border-b border-gray-200 dark:border-[#333] p-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Detalhes da Reserva
@@ -481,16 +481,16 @@ _Amorim Turismo_`
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-5">
               {/* Info do Pacote */}
               <div className="space-y-2">
                 <h3 className="text-sm font-medium text-gray-500 dark:text-[#A0A0A0]">Pacote</h3>
-                <p className="font-semibold text-gray-900 dark:text-white">
+                <p className="font-semibold text-gray-900 dark:text-white break-words">
                   {selectedBooking.package?.title}
                 </p>
                 {(selectedBooking.package?.destination?.name || selectedBooking.package?.destinationRel?.name) && (
                   <p className="text-sm text-gray-500 dark:text-[#A0A0A0] flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
+                    <MapPin className="w-4 h-4 flex-shrink-0" />
                     {selectedBooking.package?.destination?.name || selectedBooking.package?.destinationRel?.name}
                   </p>
                 )}
@@ -499,14 +499,14 @@ _Amorim Turismo_`
               {/* Info do Cliente */}
               <div className="space-y-2">
                 <h3 className="text-sm font-medium text-gray-500 dark:text-[#A0A0A0]">Cliente</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Nome</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{selectedBooking.customerName}</p>
+                    <p className="font-medium text-gray-900 dark:text-white break-words">{selectedBooking.customerName}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">E-mail</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{selectedBooking.customerEmail}</p>
+                    <p className="font-medium text-gray-900 dark:text-white break-all text-sm">{selectedBooking.customerEmail}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Telefone</p>
@@ -524,7 +524,7 @@ _Amorim Turismo_`
               {/* Info da Reserva */}
               <div className="space-y-2">
                 <h3 className="text-sm font-medium text-gray-500 dark:text-[#A0A0A0]">Reserva</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Passageiros</p>
                     <p className="font-medium text-gray-900 dark:text-white">{selectedBooking.numPassengers}</p>
@@ -555,14 +555,14 @@ _Amorim Turismo_`
               )}
 
               {/* Status Atual */}
-              <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-[#252525] rounded-lg">
-                <div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-gray-50 dark:bg-[#252525] rounded-lg">
+                <div className="flex-1">
                   <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Status da Reserva</p>
                   <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium border ${statusConfig[selectedBooking.status]?.color}`}>
                     {statusConfig[selectedBooking.status]?.label}
                   </span>
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">Status do Pagamento</p>
                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium ${paymentStatusConfig[selectedBooking.paymentStatus]?.color}`}>
                     {paymentStatusConfig[selectedBooking.paymentStatus]?.label}
@@ -571,16 +571,17 @@ _Amorim Turismo_`
               </div>
 
               {/* Ações */}
-              <div className="border-t border-gray-200 dark:border-[#333] pt-6 space-y-3">
+              <div className="border-t border-gray-200 dark:border-[#333] pt-4 space-y-3">
                 <h3 className="text-sm font-medium text-gray-500 dark:text-[#A0A0A0]">Ações</h3>
                 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   {selectedBooking.status === 'pending' && (
                     <>
                       <Button
                         onClick={() => handleUpdateStatus(selectedBooking.id, 'confirmed')}
                         disabled={isUpdating}
-                        className="flex-1"
+                        className="w-full sm:flex-1"
+                        size="md"
                       >
                         {isUpdating ? (
                           <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -593,7 +594,8 @@ _Amorim Turismo_`
                         variant="outline"
                         onClick={() => handleUpdateStatus(selectedBooking.id, 'canceled')}
                         disabled={isUpdating}
-                        className="flex-1"
+                        className="w-full sm:flex-1"
+                        size="md"
                       >
                         <XCircle className="w-4 h-4 mr-2" />
                         Cancelar
@@ -606,7 +608,8 @@ _Amorim Turismo_`
                       <Button
                         onClick={() => handleUpdateStatus(selectedBooking.id, 'paid', 'paid')}
                         disabled={isUpdating}
-                        className="flex-1"
+                        className="w-full sm:flex-1"
+                        size="md"
                       >
                         {isUpdating ? (
                           <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -619,7 +622,8 @@ _Amorim Turismo_`
                         variant="outline"
                         onClick={() => handleUpdateStatus(selectedBooking.id, 'canceled')}
                         disabled={isUpdating}
-                        className="flex-1"
+                        className="w-full sm:flex-1"
+                        size="md"
                       >
                         <XCircle className="w-4 h-4 mr-2" />
                         Cancelar
@@ -630,10 +634,11 @@ _Amorim Turismo_`
                   <Button
                     variant="outline"
                     onClick={() => handleOpenWhatsApp(selectedBooking)}
-                    className="flex-1"
+                    className="w-full sm:flex-1"
+                    size="md"
                   >
                     <MessageCircle className="w-4 h-4 mr-2" />
-                    Contatar via WhatsApp
+                    WhatsApp
                   </Button>
                 </div>
               </div>
