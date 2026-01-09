@@ -34,18 +34,27 @@ const isAuthRoute = createRouteMatcher([
 ])
 
 export default clerkMiddleware(async (auth, request) => {
-  // Rotas públicas: não fazer nada, deixar passar
-  if (isPublicRoute(request)) {
-    // Verificar se usuário logado está tentando acessar página de auth
-    const { userId } = await auth()
-    if (userId && isAuthRoute(request)) {
+  const { userId } = await auth()
+  
+  // Rotas de auth: se já logado, redirecionar para dashboard
+  if (isAuthRoute(request)) {
+    if (userId) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
+    return // Deixar acessar página de login
+  }
+  
+  // Rotas públicas: deixar passar
+  if (isPublicRoute(request)) {
     return
   }
 
-  // Rotas privadas: proteger com Clerk
-  await auth.protect()
+  // Rotas privadas: se não logado, redirecionar para sign-in customizado
+  if (!userId) {
+    const signInUrl = new URL('/sign-in', request.url)
+    signInUrl.searchParams.set('redirect_url', request.url)
+    return NextResponse.redirect(signInUrl)
+  }
 })
 
 export const config = {
