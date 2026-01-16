@@ -379,7 +379,8 @@ _Amorim Turismo_`
                 return (
                   <div
                     key={booking.id}
-                    className="p-4 hover:bg-gray-50 dark:hover:bg-[#252525] transition-colors"
+                    onClick={() => setSelectedBooking(booking)}
+                    className="p-4 hover:bg-gray-50 dark:hover:bg-[#252525] transition-colors cursor-pointer"
                   >
                     <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                       {/* Info Principal */}
@@ -439,20 +440,13 @@ _Amorim Turismo_`
                           </p>
                         </div>
                         
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={() => handleOpenWhatsApp(booking)}
                             className="p-2 hover:bg-green-500/10 rounded-lg transition-colors"
                             title="Contatar via WhatsApp"
                           >
                             <MessageCircle className="w-5 h-5 text-green-500" />
-                          </button>
-                          <button
-                            onClick={() => setSelectedBooking(booking)}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-[#333] rounded-lg transition-colors"
-                            title="Ver detalhes"
-                          >
-                            <Eye className="w-5 h-5 text-gray-500" />
                           </button>
                         </div>
                       </div>
