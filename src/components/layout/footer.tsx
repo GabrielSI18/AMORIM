@@ -51,6 +51,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/frota" className="text-sm text-muted-foreground hover:text-foreground transition">
+                  Nossa Frota
+                </Link>
+              </li>
+              <li>
                 <Link href="/afiliados" className="text-sm text-muted-foreground hover:text-foreground transition">
                   Seja um Afiliado
                 </Link>
@@ -108,7 +113,7 @@ export function Footer() {
               </li>
               <li className="flex items-start gap-3">
                 <Mail className="w-4 h-4 text-muted-foreground mt-0.5" />
-                <p className="text-sm text-muted-foreground">contato@amorimturismo.com.br</p>
+                <p className="text-sm text-muted-foreground">amorimturismo@ymai.com</p>
               </li>
               <li className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />

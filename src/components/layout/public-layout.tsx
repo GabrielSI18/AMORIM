@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Search, Home as HomeIcon, Briefcase, Ticket, User, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
+import { GlobalSearch } from '@/components/ui/global-search'
 
 interface PublicLayoutProps {
   children: React.ReactNode
@@ -14,10 +15,23 @@ interface PublicLayoutProps {
 export function PublicLayout({ children, currentPage }: PublicLayoutProps) {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   // Evitar flash de tema incorreto
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  // Atalho de teclado para abrir busca (Ctrl+K ou Cmd+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setIsSearchOpen(true)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
   }, [])
 
   const toggleTheme = () => {
@@ -66,7 +80,11 @@ export function PublicLayout({ children, currentPage }: PublicLayoutProps) {
               >
                 {mounted && (isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />)}
               </button>
-              <button className="flex items-center justify-center rounded-full h-10 w-10 text-[#6c757d] dark:text-[#adb5bd] hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
+              <button 
+                onClick={() => setIsSearchOpen(true)}
+                className="flex items-center justify-center rounded-full h-10 w-10 text-[#6c757d] dark:text-[#adb5bd] hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                title="Buscar (Ctrl+K)"
+              >
                 <Search className="w-5 h-5" />
               </button>
               <Link 
@@ -105,6 +123,7 @@ export function PublicLayout({ children, currentPage }: PublicLayoutProps) {
               <h4 className="font-semibold mb-4 text-[#212529] dark:text-[#f8f9fa]">Links Rápidos</h4>
               <ul className="space-y-2 text-sm text-[#6c757d] dark:text-[#adb5bd]">
                 <li><Link href="/pacotes" className="hover:text-[#004a80] transition">Pacotes de Viagem</Link></li>
+                <li><Link href="/frota" className="hover:text-[#004a80] transition">Nossa Frota</Link></li>
                 <li><Link href="/afiliados" className="hover:text-[#004a80] transition">Seja um Afiliado</Link></li>
                 <li><Link href="/sobre" className="hover:text-[#004a80] transition">Sobre Nós</Link></li>
               </ul>
@@ -122,7 +141,7 @@ export function PublicLayout({ children, currentPage }: PublicLayoutProps) {
               <h4 className="font-semibold mb-4 text-[#212529] dark:text-[#f8f9fa]">Contato</h4>
               <ul className="space-y-2 text-sm text-[#6c757d] dark:text-[#adb5bd]">
                 <li>(31) 99973-2079 / (31) 98886-2079</li>
-                <li>contato@amorimturismo.com.br</li>
+                <li>amorimturismo@ymai.com</li>
                 <li>Rua Manaus, 48 - Bairro Amazonas, Contagem - MG</li>
               </ul>
             </div>
@@ -164,6 +183,9 @@ export function PublicLayout({ children, currentPage }: PublicLayoutProps) {
           <p className={`text-xs ${currentPage === 'perfil' ? 'font-bold' : 'font-medium'}`}>Perfil</p>
         </Link>
       </nav>
+
+      {/* Global Search Modal */}
+      <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </div>
   )
 }

@@ -210,7 +210,7 @@ export default function TermosPage() {
               </ul>
               <p>
                 Você pode solicitar acesso, correção ou exclusão de seus dados a 
-                qualquer momento através do e-mail contato@amorimturismo.com.br.
+                qualquer momento através do e-mail amorimturismo@ymai.com.
               </p>
             </div>
           </div>
@@ -248,7 +248,7 @@ export default function TermosPage() {
               </p>
               <p>
                 <strong className="text-[#212529] dark:text-[#f8f9fa]">9.3 Contato:</strong> Para dúvidas 
-                sobre estes termos, entre em contato pelo e-mail contato@amorimturismo.com.br.
+                sobre estes termos, entre em contato pelo e-mail amorimturismo@ymai.com.
               </p>
             </div>
           </div>

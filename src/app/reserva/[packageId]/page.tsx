@@ -324,7 +324,7 @@ export default function ReservaPage({ params }: ReservaPageProps) {
       });
 
       // Abrir WhatsApp em nova aba
-      const whatsappNumber = '5531982544924';
+      const whatsappNumber = '5531999732079';
       const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
       window.open(whatsappUrl, '_blank');
 

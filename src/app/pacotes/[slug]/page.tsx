@@ -189,24 +189,19 @@ export default async function PackagePage({ params }: PackagePageProps) {
                 <div className="flex flex-col items-center text-center gap-2">
                   <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-primary">
-                      <path d="M12 20h.01"></path>
-                      <path d="M2 8.82a15 15 0 0 1 20 0"></path>
-                      <path d="M5 12.859a10 10 0 0 1 14 0"></path>
-                      <path d="M8.5 16.429a5 5 0 0 1 7 0"></path>
+                      <rect width="20" height="15" x="2" y="3" rx="2"></rect>
+                      <polyline points="17 21 12 16 7 21"></polyline>
                     </svg>
                   </div>
-                  <span className="text-sm font-medium">Wi-Fi gratuito</span>
+                  <span className="text-sm font-medium">TV e Entretenimento</span>
                 </div>
                 <div className="flex flex-col items-center text-center gap-2">
                   <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-primary">
-                      <path d="M10 2v2"></path>
-                      <path d="M14 2v2"></path>
-                      <path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"></path>
-                      <path d="M6 2v2"></path>
+                      <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"></path>
                     </svg>
                   </div>
-                  <span className="text-sm font-medium">Café e água</span>
+                  <span className="text-sm font-medium">Água à bordo</span>
                 </div>
                 <div className="flex flex-col items-center text-center gap-2">
                   <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center">
@@ -218,6 +213,17 @@ export default async function PackagePage({ params }: PackagePageProps) {
                     </svg>
                   </div>
                   <span className="text-sm font-medium">Poltronas reclináveis</span>
+                </div>
+                <div className="flex flex-col items-center text-center gap-2">
+                  <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-primary">
+                      <rect width="10" height="18" x="7" y="3" rx="2"></rect>
+                      <path d="M12 18h.01"></path>
+                      <path d="M7 7h10"></path>
+                      <path d="M22 11v2"></path>
+                    </svg>
+                  </div>
+                  <span className="text-sm font-medium">Carregador USB</span>
                 </div>
               </div>
             </section>

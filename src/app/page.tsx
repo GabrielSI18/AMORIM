@@ -8,15 +8,29 @@ import { PackageGrid } from '@/components/packages';
 import type { Package } from '@/types';
 import { Bus, Shield, Clock, Star, MapPin, Phone, Mail, Search, Home as HomeIcon, Briefcase, Ticket, User, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { GlobalSearch } from '@/components/ui/global-search';
 
 export default function Home() {
   const [featuredPackages, setFeaturedPackages] = useState<Package[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  // Atalho de teclado para abrir busca (Ctrl+K ou Cmd+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   useEffect(() => {
@@ -63,7 +77,11 @@ export default function Home() {
             >
               {mounted && (isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />)}
             </button>
-            <button className="flex items-center justify-center rounded-full h-10 w-10 text-white hover:bg-white/20 transition-colors">
+            <button 
+              onClick={() => setIsSearchOpen(true)}
+              className="flex items-center justify-center rounded-full h-10 w-10 text-white hover:bg-white/20 transition-colors"
+              title="Buscar (Ctrl+K)"
+            >
               <Search className="w-5 h-5" />
             </button>
           </div>
@@ -274,7 +292,7 @@ export default function Home() {
                 <Mail className="h-6 w-6" />
                 <div>
                   <p className="font-semibold">E-mail</p>
-                  <p className="opacity-90">contato@amorimturismo.com.br</p>
+                  <p className="opacity-90">amorimturismo@ymai.com</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -327,7 +345,7 @@ export default function Home() {
               <h4 className="font-semibold mb-4 text-[#212529] dark:text-[#f8f9fa]">Contato</h4>
               <ul className="space-y-2 text-sm text-[#6c757d] dark:text-[#adb5bd]">
                 <li>(31) 99973-2079 / (31) 98886-2079</li>
-                <li>contato@amorimturismo.com.br</li>
+                <li>amorimturismo@ymai.com</li>
                 <li>Rua Manaus, 48 - Bairro Amazonas, Contagem - MG</li>
               </ul>
             </div>
@@ -357,6 +375,9 @@ export default function Home() {
           <p className="text-xs font-medium">Perfil</p>
         </Link>
       </nav>
+
+      {/* Global Search Modal */}
+      <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </div>
   );
 }

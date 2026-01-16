@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useTheme } from 'next-themes'
 import { Bus, Users, Layers, Calendar, ChevronLeft, ChevronRight, X, Search, Home as HomeIcon, Briefcase, Ticket, User, Moon, Sun } from 'lucide-react'
+import { GlobalSearch } from '@/components/ui/global-search'
 
 interface BusData {
   id: string
@@ -25,9 +26,22 @@ export default function FrotaPage() {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  // Atalho de teclado para abrir busca (Ctrl+K ou Cmd+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setIsSearchOpen(true)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
   }, [])
 
   useEffect(() => {
@@ -105,7 +119,11 @@ export default function FrotaPage() {
             >
               {mounted && (isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />)}
             </button>
-            <button className="flex items-center justify-center rounded-full h-10 w-10 text-white hover:bg-white/20 transition-colors">
+            <button 
+              onClick={() => setIsSearchOpen(true)}
+              className="flex items-center justify-center rounded-full h-10 w-10 text-white hover:bg-white/20 transition-colors"
+              title="Buscar (Ctrl+K)"
+            >
               <Search className="w-5 h-5" />
             </button>
           </div>
@@ -362,6 +380,9 @@ export default function FrotaPage() {
           <p className="text-xs font-medium">Perfil</p>
         </Link>
       </nav>
+
+      {/* Global Search Modal */}
+      <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </div>
   )
 }

@@ -750,7 +750,7 @@ export default function AfiliadosPage() {
 
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             <motion.a
-              href="https://wa.me/5531988862079"
+              href="https://wa.me/5531999732079"
               target="_blank"
               rel="noopener noreferrer"
               initial={{ opacity: 0, y: 20 }}

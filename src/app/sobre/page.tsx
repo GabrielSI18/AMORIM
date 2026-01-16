@@ -139,7 +139,7 @@ export default function SobrePage() {
               </div>
               <h3 className="text-lg font-semibold text-[#212529] dark:text-[#f8f9fa] mb-2">Email</h3>
               <p className="text-[#6c757d] dark:text-[#adb5bd] text-sm">
-                contato@amorimturismo.com.br
+                amorimturismo@ymai.com
               </p>
             </div>
           </div>

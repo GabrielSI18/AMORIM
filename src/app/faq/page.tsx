@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ChevronDown, HelpCircle, Search } from 'lucide-react'
 import { PublicLayout } from '@/components/layout'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const faqs = [
   {
@@ -160,19 +161,30 @@ export default function FAQPage() {
                             <span className="text-[#212529] dark:text-[#f8f9fa] font-medium pr-4">
                               {item.question}
                             </span>
-                            <ChevronDown 
-                              className={`w-5 h-5 text-[#6c757d] flex-shrink-0 transition-transform ${
-                                isOpen ? 'rotate-180' : ''
-                              }`} 
-                            />
+                            <motion.div
+                              animate={{ rotate: isOpen ? 180 : 0 }}
+                              transition={{ duration: 0.3, ease: "easeInOut" }}
+                            >
+                              <ChevronDown className="w-5 h-5 text-[#6c757d] flex-shrink-0" />
+                            </motion.div>
                           </button>
-                          {isOpen && (
-                            <div className="px-4 pb-4">
-                              <p className="text-[#6c757d] dark:text-[#adb5bd] leading-relaxed">
-                                {item.answer}
-                              </p>
-                            </div>
-                          )}
+                          <AnimatePresence initial={false}>
+                            {isOpen && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.3, ease: "easeInOut" }}
+                                className="overflow-hidden"
+                              >
+                                <div className="px-4 pb-4">
+                                  <p className="text-[#6c757d] dark:text-[#adb5bd] leading-relaxed">
+                                    {item.answer}
+                                  </p>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       )
                     })}
@@ -195,13 +207,13 @@ export default function FAQPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="mailto:contato@amorimturismo.com.br"
+              href="mailto:amorimturismo@ymai.com"
               className="px-6 py-3 bg-[#004a80] text-white rounded-lg font-medium hover:bg-[#003a66] transition"
             >
               Enviar Email
             </a>
             <a
-              href="https://wa.me/5531999999999"
+              href="https://wa.me/5531999732079"
               target="_blank"
               rel="noopener noreferrer"
               className="px-6 py-3 bg-white dark:bg-[#1e1e1e] text-[#212529] dark:text-[#f8f9fa] border border-gray-200 dark:border-gray-700 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition"

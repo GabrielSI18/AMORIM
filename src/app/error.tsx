@@ -87,7 +87,7 @@ export default function Error({ error, reset }: ErrorProps) {
         <p className="text-sm text-muted-foreground mt-8">
           Precisa de ajuda?{' '}
           <a 
-            href="mailto:suporte@exemplo.com" 
+            href="mailto:amorimturismo@ymai.com" 
             className="text-primary hover:underline"
           >
             Entre em contato
