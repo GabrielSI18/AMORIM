@@ -750,7 +750,7 @@ export default function AfiliadosPage() {
 
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             <motion.a
-              href="https://wa.me/5531999732079"
+              href="https://wa.me/5531988862079"
               target="_blank"
               rel="noopener noreferrer"
               initial={{ opacity: 0, y: 20 }}
@@ -788,7 +788,7 @@ export default function AfiliadosPage() {
             </motion.a>
 
             <motion.a
-              href="tel:+5531999732079"
+              href="tel:+5531988862079"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -801,7 +801,7 @@ export default function AfiliadosPage() {
                 </svg>
               </div>
               <h3 className="font-semibold text-lg mb-2">Telefone</h3>
-              <p className="text-muted-foreground text-sm">(31) 99973-2079</p>
+              <p className="text-muted-foreground text-sm">(31) 98886-2079</p>
               <p className="text-xs text-muted-foreground mt-2">Seg a Sex, 9h às 18h</p>
             </motion.a>
           </div>

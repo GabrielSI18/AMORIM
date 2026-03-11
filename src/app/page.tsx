@@ -285,7 +285,7 @@ export default function Home() {
                 <Phone className="h-6 w-6" />
                 <div>
                   <p className="font-semibold">Telefone</p>
-                  <p className="opacity-90">(31) 99973-2079</p>
+                  <p className="opacity-90">(31) 98886-2079</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -344,7 +344,7 @@ export default function Home() {
             <div>
               <h4 className="font-semibold mb-4 text-[#212529] dark:text-[#f8f9fa]">Contato</h4>
               <ul className="space-y-2 text-sm text-[#6c757d] dark:text-[#adb5bd]">
-                <li>(31) 99973-2079 / (31) 98886-2079</li>
+                <li>(31) 98886-2079</li>
                 <li>amorimturismo@ymai.com</li>
                 <li>Rua Manaus, 48 - Bairro Amazonas, Contagem - MG</li>
               </ul>

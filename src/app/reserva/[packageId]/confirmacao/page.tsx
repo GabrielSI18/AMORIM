@@ -117,7 +117,7 @@ export default function ConfirmacaoPage({ params }: ConfirmacaoPageProps) {
   };
 
   const openWhatsApp = () => {
-    const phone = '5531999732079';
+    const phone = '5531988862079';
     const message = `Olá! Acabei de fazer uma reserva no site.
 
 📦 *Código da Reserva:* ${bookingId}
@@ -363,9 +363,9 @@ Gostaria de mais informações sobre os próximos passos.`;
           >
             <p className="mb-2">Dúvidas? Entre em contato:</p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a href="tel:+5531999732079" className="flex items-center gap-1 hover:text-primary transition-colors">
+              <a href="tel:+5531988862079" className="flex items-center gap-1 hover:text-primary transition-colors">
                 <Phone className="w-4 h-4" />
-                (31) 99973-2079
+                (31) 98886-2079
               </a>
               <a href="mailto:amorimturismo@ymai.com" className="flex items-center gap-1 hover:text-primary transition-colors">
                 <Mail className="w-4 h-4" />

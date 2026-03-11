@@ -213,7 +213,7 @@ export default function FAQPage() {
               Enviar Email
             </a>
             <a
-              href="https://wa.me/5531999732079"
+              href="https://wa.me/5531988862079"
               target="_blank"
               rel="noopener noreferrer"
               className="px-6 py-3 bg-white dark:bg-[#1e1e1e] text-[#212529] dark:text-[#f8f9fa] border border-gray-200 dark:border-gray-700 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition"

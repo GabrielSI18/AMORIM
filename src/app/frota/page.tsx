@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useTheme } from 'next-themes'
-import { Bus, Users, Layers, Calendar, ChevronLeft, ChevronRight, X, Search, Home as HomeIcon, Briefcase, Ticket, User, Moon, Sun } from 'lucide-react'
+import { Bus, Users, Layers, ChevronLeft, ChevronRight, X, Search, Home as HomeIcon, Briefcase, Ticket, User, Moon, Sun } from 'lucide-react'
 import { GlobalSearch } from '@/components/ui/global-search'
 
 interface BusData {
@@ -242,13 +242,7 @@ export default function FrotaPage() {
                         <p className="text-xs text-gray-500 dark:text-gray-400">{bus.floors === 1 ? 'Andar' : 'Andares'}</p>
                       </div>
                       
-                      <div className="text-center">
-                        <div className="flex items-center justify-center w-10 h-10 mx-auto mb-2 rounded-full bg-[#004a80]/10 dark:bg-[#004a80]/30">
-                          <Calendar className="w-5 h-5 text-[#004a80]" />
-                        </div>
-                        <p className="text-lg font-bold text-[#1A2E40] dark:text-white">{bus.year}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Ano</p>
-                      </div>
+
                     </div>
                   </div>
                 </motion.div>
