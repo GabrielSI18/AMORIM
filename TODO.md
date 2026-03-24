@@ -7,28 +7,30 @@
 
 ## 🚀 Infra — Fazer ANTES de tudo (Deploy + Produção)
 
-### [ ] Task INFRA-1: Subir projeto e domínio na Vercel
+### [ ] Task INFRA-1: Subir projeto e domínio no Cloudflare Pages
 **Prioridade:** CRÍTICO | **Estimativa:** M
 
 **O que fazer:**
-1. Acessar [vercel.com](https://vercel.com) e fazer login
-2. **Importar projeto:** New Project → Import Git Repository → selecionar `GabrielSI18/AMORIM`
-3. Configurar **variáveis de ambiente de produção** (copiar do `.env.local` e ajustar):
-   - `DATABASE_URL` e `DIRECT_URL` (Neon — já funcionando)
+1. Acessar [dash.cloudflare.com](https://dash.cloudflare.com) → Workers & Pages → Create application → Pages
+2. **Conectar repositório:** selecionar `GabrielSI18/AMORIM`
+3. **Framework preset:** Next.js — usar `@opennextjs/cloudflare` (já configurado no projeto)
+4. Configurar **variáveis de ambiente de produção** (Environment Variables):
+   - `DATABASE_URL` (Neon — já funcionando)
    - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` e `CLERK_SECRET_KEY` (chaves de **produção** do Clerk)
    - `CLERK_WEBHOOK_SECRET` (gerar após configurar webhook)
    - `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME` (Cloudflare R2)
    - `NEXT_PUBLIC_URL` = `https://amorimturismo.com.br` (ou o domínio real)
-4. Deploy inicial — confirmar build sem erros
-5. **Adicionar domínio:** Vercel → projeto → Settings → Domains → adicionar domínio
-6. No Registro.br, confirmar que os nameservers já são da Vercel (`dns1-4.p09.nsone.net`) ✅ (já estão)
-7. Aguardar propagação DNS (pode levar até 24h, geralmente < 1h)
-8. Confirmar HTTPS automático ativado (Vercel faz isso sozinho)
+   - `CLOUDFLARE=1` (ativa o adapter Neon HTTP para Edge runtime)
+5. Deploy inicial — confirmar build sem erros
+6. **Adicionar domínio customizado:** Pages → projeto → Custom domains → adicionar domínio
+7. Atualizar nameservers no Registro.br para apontar para o Cloudflare (via painel DNS do Cloudflare)
+8. Aguardar propagação DNS e ativação do HTTPS automático
 
 **Aceite:**
 - Site abre em `https://amorimturismo.com.br` (ou domínio correto)
-- Build na Vercel passa sem erros
+- Build no Cloudflare Pages passa sem erros
 - HTTPS funcionando
+- `CLOUDFLARE=1` setado nas env vars de produção
 
 ---
 
