@@ -66,6 +66,7 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.17.3",
     "@react-email/preview-server": "^5.0.5",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
