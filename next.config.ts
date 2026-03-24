@@ -3,7 +3,14 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
-  turbopack: false,
+  webpack: (config) => {
+    // Exclui @vercel/og do bundle (não usamos OG images, mas o Next inclui por padrão)
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'next/dist/compiled/@vercel/og': false,
+    }
+    return config
+  },
   images: {
     remotePatterns: [
       {
