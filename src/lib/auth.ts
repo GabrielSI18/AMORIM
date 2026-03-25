@@ -31,19 +31,43 @@ export async function getAuthUser(): Promise<AuthResult> {
   const isAdminEmail = email === ADMIN_EMAIL
 
   // Buscar ou criar usuário no banco
-  const dbUser = await prisma.user.upsert({
+  // Tenta por clerk_id primeiro; se não existir, verifica se email já existe (ex: transição dev→prod)
+  let dbUser = await prisma.user.findUnique({
     where: { clerk_id: clerkId },
-    update: {},
-    create: {
-      clerk_id: clerkId,
-      email,
-      first_name: user?.firstName,
-      last_name: user?.lastName,
-      image_url: user?.imageUrl,
-      role: isAdminEmail ? 'SUPER_ADMIN' : 'USER',
-    } as any,
     select: { id: true, role: true } as any,
   }) as any
+
+  if (!dbUser) {
+    const existingByEmail = await prisma.user.findUnique({
+      where: { email },
+    })
+
+    if (existingByEmail) {
+      dbUser = await prisma.user.update({
+        where: { email },
+        data: {
+          clerk_id: clerkId,
+          first_name: user?.firstName,
+          last_name: user?.lastName,
+          image_url: user?.imageUrl,
+          role: isAdminEmail ? 'SUPER_ADMIN' : existingByEmail.role,
+        },
+        select: { id: true, role: true } as any,
+      }) as any
+    } else {
+      dbUser = await prisma.user.create({
+        data: {
+          clerk_id: clerkId,
+          email,
+          first_name: user?.firstName,
+          last_name: user?.lastName,
+          image_url: user?.imageUrl,
+          role: isAdminEmail ? 'SUPER_ADMIN' : 'USER',
+        } as any,
+        select: { id: true, role: true } as any,
+      }) as any
+    }
+  }
 
   const role = dbUser.role as UserRole
   const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN'

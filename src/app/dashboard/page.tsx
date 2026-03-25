@@ -21,20 +21,47 @@ async function DashboardPageContent() {
   const userEmail = user.emailAddresses[0]?.emailAddress || ''
   const isAdminEmail = userEmail === ADMIN_EMAIL
   
-  // Buscar ou criar usuario no banco (usando any para evitar erros de tipo durante regeneração do Prisma)
-  const dbUser = await prisma.user.upsert({
+  // Buscar ou criar usuario no banco
+  // Tenta por clerk_id primeiro; se não existir, verifica se email já existe (ex: transição dev→prod)
+  let dbUser = await prisma.user.findUnique({
     where: { clerk_id: user.id },
-    update: {},
-    create: {
-      clerk_id: user.id,
-      email: userEmail,
-      first_name: user.firstName,
-      last_name: user.lastName,
-      image_url: user.imageUrl,
-      role: isAdminEmail ? 'SUPER_ADMIN' : 'USER',
-    } as any,
     select: { role: true, first_name: true, id: true } as any,
   }) as any
+
+  if (!dbUser) {
+    // Clerk ID não encontrado — verificar se o email já existe (usuário antigo com outro clerk_id)
+    const existingByEmail = await prisma.user.findUnique({
+      where: { email: userEmail },
+    })
+
+    if (existingByEmail) {
+      // Atualizar o clerk_id do usuário existente para o novo
+      dbUser = await prisma.user.update({
+        where: { email: userEmail },
+        data: {
+          clerk_id: user.id,
+          first_name: user.firstName,
+          last_name: user.lastName,
+          image_url: user.imageUrl,
+          role: isAdminEmail ? 'SUPER_ADMIN' : existingByEmail.role,
+        },
+        select: { role: true, first_name: true, id: true } as any,
+      }) as any
+    } else {
+      // Usuário totalmente novo
+      dbUser = await prisma.user.create({
+        data: {
+          clerk_id: user.id,
+          email: userEmail,
+          first_name: user.firstName,
+          last_name: user.lastName,
+          image_url: user.imageUrl,
+          role: isAdminEmail ? 'SUPER_ADMIN' : 'USER',
+        } as any,
+        select: { role: true, first_name: true, id: true } as any,
+      }) as any
+    }
+  }
 
   const isAdmin = dbUser?.role === 'ADMIN' || dbUser?.role === 'SUPER_ADMIN'
 

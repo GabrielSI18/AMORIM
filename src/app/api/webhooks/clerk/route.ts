@@ -80,24 +80,42 @@ async function handleUserCreated(data: any) {
     throw new Error('Email não encontrado')
   }
 
-  const user = await prisma.user.create({
-    data: {
-      clerk_id: id,
-      email,
-      first_name: first_name || null,
-      last_name: last_name || null,
-      name: `${first_name || ''} ${last_name || ''}`.trim() || null,
-      image_url: image_url || null,
-    },
-  })
+  // Verificar se já existe um usuário com esse email (ex: transição dev→prod)
+  const existingByEmail = await prisma.user.findUnique({ where: { email } })
 
-  console.log('✅ Usuário criado no banco:', user.email)
+  let user
+  if (existingByEmail) {
+    // Atualizar clerk_id para o novo (produção)
+    user = await prisma.user.update({
+      where: { email },
+      data: {
+        clerk_id: id,
+        first_name: first_name || null,
+        last_name: last_name || null,
+        name: `${first_name || ''} ${last_name || ''}`.trim() || null,
+        image_url: image_url || null,
+      },
+    })
+    console.log('✅ Usuário existente atualizado com novo clerk_id:', user.email)
+  } else {
+    user = await prisma.user.create({
+      data: {
+        clerk_id: id,
+        email,
+        first_name: first_name || null,
+        last_name: last_name || null,
+        name: `${first_name || ''} ${last_name || ''}`.trim() || null,
+        image_url: image_url || null,
+      },
+    })
+    console.log('✅ Usuário criado no banco:', user.email)
 
-  // Enviar email de boas-vindas
-  await sendWelcomeEmail({
-    to: email,
-    userName: first_name || 'Usuário',
-  })
+    // Enviar email de boas-vindas apenas para novos
+    await sendWelcomeEmail({
+      to: email,
+      userName: first_name || 'Usuário',
+    })
+  }
 }
 
 // Handler: Atualizar usuário
