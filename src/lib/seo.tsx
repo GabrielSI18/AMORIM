@@ -138,7 +138,7 @@ export function getWebsiteSchema() {
     '@type': 'WebSite',
     name: SITE_NAME,
     url: BASE_URL,
-    description: 'Projeto base SaaS moderno',
+    description: 'Amorim Turismo - Viaje com conforto e segurança. Pacotes turísticos e fretamento de ônibus.',
     potentialAction: {
       '@type': 'SearchAction',
       target: `${BASE_URL}/search?q={search_term_string}`,

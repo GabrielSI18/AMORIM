@@ -33,41 +33,30 @@
 
 ## Sprint 1 — P0 (Urgente)
 
-### [ ] Task 0: Criar modelo SiteConfig (fundação)
-**Prioridade:** P0 | **Estimativa:** G
+### [x] Task 0: Criar modelo SiteConfig (fundação) ✅
+**Prioridade:** P0 | **Estimativa:** G | **Concluída em:** 2026-03-25
 
-**O que fazer:**
-1. Adicionar modelo `SiteConfig` em `prisma/schema.prisma` (singleton):
-   - `phone_primary`, `phone_secondary`, `whatsapp_number`
-   - `email`, `address_street`, `address_city`, `address_state`
-   - `instagram_url`, `facebook_url`, `meta_pixel_id`
-   - `site_name`, `site_description`
-2. Criar migration e seed com dados atuais da Amorim
-3. Criar API Route `src/app/api/site-config/route.ts` (GET público, PUT admin)
-4. Criar page admin `src/app/dashboard/configuracoes/page.tsx`
-5. Criar helper `src/lib/site-config.ts` com `getSiteConfig()` (cache/revalidação)
-6. Substituir todos os números/emails/endereços hardcoded (~12 arquivos)
-7. Atualizar footer.tsx e public-layout.tsx para consumir do config
-
-**Arquivos impactados:** schema.prisma, ~12 páginas, footer, public-layout, seo.tsx, email-templates.tsx
-
-**Aceite:**
-- Painel admin permite editar telefone/email/redes
-- Mudar dados no admin reflete em todo o site sem redeploy
-- Zero dados de contato hardcoded no código
+**Resultado:**
+- Modelo `SiteConfig` singleton no Prisma (id='default')
+- Tabela criada via `db push` e seeded com dados reais da Amorim
+- API Route `/api/site-config` (GET público, PUT admin com `requireAdmin()`)
+- Helper `getSiteConfig()` em `src/lib/site-config.ts` com `unstable_cache` (5min + tag)
+- Hook `useSiteConfig()` em `src/hooks/use-site-config.ts` com cache em memória
+- Substituídos ~12 arquivos: footer, public-layout, contato, faq, afiliados, reserva, confirmação
+- seo.tsx corrigido (era template "Exaltius"/"base2025")
+- Falta: página admin `dashboard/configuracoes` para edição visual
 
 ---
 
-### [ ] Task 1: WhatsApp centralizado via SiteConfig
-**Prioridade:** P0 | **Estimativa:** M (depende Task 0)
+### [x] Task 1: WhatsApp centralizado via SiteConfig ✅
+**Prioridade:** P0 | **Estimativa:** M | **Concluída em:** 2026-03-25
 
-**O que fazer:**
-1. Após SiteConfig existir, trocar constantes `whatsappNumber`, `phone`, links `wa.me/` e `tel:` pelo valor do config
-2. Arquivos: reserva/page.tsx, confirmacao/page.tsx, contato/page.tsx, faq/page.tsx, afiliados/page.tsx, politicas/page.tsx, sobre/page.tsx, page.tsx
-
-**Aceite:**
-- Qualquer clique em WhatsApp abre conversa com o número do SiteConfig
-- Sem número hardcoded em nenhuma tela
+**Resultado:**
+- Todos os links WhatsApp/tel/mailto agora consomem do SiteConfig
+- Hook `useSiteConfig()` com fallback embutido (nunca quebra)
+- Arquivos atualizados: reserva, confirmação, contato, faq, afiliados, public-layout, footer
+- error.tsx mantido estático (error boundary não deve fazer API calls)
+- Número centralizado: (31) 98886-2079 / 5531988862079
 
 ---
 
