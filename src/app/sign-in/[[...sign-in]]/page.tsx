@@ -22,9 +22,10 @@ export default function SignInPage() {
   const [error, setError] = useState('')
   const [usePhoneLogin, setUsePhoneLogin] = useState(false)
   
-  // Estado para verificação de email (segundo fator)
-  const [needsEmailVerification, setNeedsEmailVerification] = useState(false)
-  const [emailCode, setEmailCode] = useState('')
+  // Estado para verificação (segundo fator)
+  const [needsSecondFactor, setNeedsSecondFactor] = useState(false)
+  const [secondFactorStrategy, setSecondFactorStrategy] = useState<'totp' | 'email_code'>('totp')
+  const [verificationCode, setVerificationCode] = useState('')
   const [verificationEmail, setVerificationEmail] = useState('')
 
   useEffect(() => {
@@ -61,29 +62,27 @@ export default function SignInPage() {
         router.refresh()
         return // Não desliga loading, mantém redirecionando
       } else if (result.status === 'needs_second_factor') {
-        // Verificar se o segundo fator é por email
         const factors = result.supportedSecondFactors || []
         console.log('Second factors available:', factors)
         
-        // Tentar encontrar email_code ou phone_code
-        const emailFactor = factors.find((f: any) => 
-          f.strategy === 'email_code' || f.strategy === 'totp'
-        ) as any
+        // Priorizar TOTP (authenticator app), depois email_code
+        const totpFactor = factors.find((f: any) => f.strategy === 'totp')
+        const emailFactor = factors.find((f: any) => f.strategy === 'email_code') as any
         
-        console.log('Email factor found:', emailFactor)
-        
-        if (emailFactor || factors.length > 0) {
+        if (totpFactor) {
+          // TOTP não precisa de prepare, só exibir o campo de código
+          setSecondFactorStrategy('totp')
+          setNeedsSecondFactor(true)
+          setIsLoading(false)
+        } else if (emailFactor) {
           try {
-            // Preparar verificação por email
-            await signIn.prepareSecondFactor({
-              strategy: 'email_code',
-            })
-            setVerificationEmail(emailFactor?.safeIdentifier || identifier)
-            setNeedsEmailVerification(true)
-            setIsLoading(false) // Desliga loading para mostrar formulário de código
+            await signIn.prepareSecondFactor({ strategy: 'email_code' })
+            setSecondFactorStrategy('email_code')
+            setVerificationEmail(emailFactor.safeIdentifier || identifier)
+            setNeedsSecondFactor(true)
+            setIsLoading(false)
           } catch (prepareError: any) {
             console.error('Error preparing second factor:', prepareError)
-            // Se falhar com email_code, pode ser que o usuário não tenha email verification
             setError('Erro ao preparar verificação. Tente novamente.')
             setIsLoading(false)
           }
@@ -112,7 +111,7 @@ export default function SignInPage() {
     }
   }
 
-  const handleVerifyEmail = async (e: React.FormEvent) => {
+  const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!signIn) return
     
@@ -121,8 +120,8 @@ export default function SignInPage() {
 
     try {
       const result = await signIn.attemptSecondFactor({
-        strategy: 'email_code',
-        code: emailCode,
+        strategy: secondFactorStrategy,
+        code: verificationCode,
       })
 
       if (result.status === 'complete') {
@@ -144,7 +143,7 @@ export default function SignInPage() {
   }
 
   const handleResendCode = async () => {
-    if (!signIn) return
+    if (!signIn || secondFactorStrategy !== 'email_code') return
     
     try {
       await signIn.prepareSecondFactor({
@@ -217,19 +216,23 @@ export default function SignInPage() {
           {/* Headline */}
           <div className="w-full text-center">
             <h1 className="text-[#1A2E40] dark:text-white text-3xl font-bold tracking-tight">
-              {needsEmailVerification ? 'Verifique seu e-mail' : 'Bem-vindo de volta!'}
+              {needsSecondFactor 
+                ? (secondFactorStrategy === 'totp' ? 'Autenticação em 2 etapas' : 'Verifique seu e-mail')
+                : 'Bem-vindo de volta!'}
             </h1>
             <p className="text-[#4F4F4F] dark:text-[#92a4c9] text-base font-normal leading-normal pt-2">
-              {needsEmailVerification 
-                ? `Enviamos um código para ${verificationEmail}`
+              {needsSecondFactor 
+                ? (secondFactorStrategy === 'totp' 
+                    ? 'Digite o código do seu aplicativo autenticador'
+                    : `Enviamos um código para ${verificationEmail}`)
                 : 'Acesse sua conta para continuar'}
             </p>
           </div>
 
-        {/* Formulário de verificação de email */}
-        {needsEmailVerification ? (
-          <form onSubmit={handleVerifyEmail} className="w-full flex flex-col gap-4">
-            {/* Ícone de email */}
+        {/* Formulário de verificação (TOTP ou email) */}
+        {needsSecondFactor ? (
+          <form onSubmit={handleVerifyCode} className="w-full flex flex-col gap-4">
+            {/* Ícone */}
             <div className="flex justify-center py-4">
               <div className="w-16 h-16 rounded-full bg-[#003c71]/10 dark:bg-[#2563eb]/20 flex items-center justify-center">
                 <Mail className="w-8 h-8 text-[#003c71] dark:text-[#2563eb]" />
@@ -239,12 +242,12 @@ export default function SignInPage() {
             {/* Campo de código */}
             <label className="flex flex-col w-full">
               <p className="text-[#333333] dark:text-white text-sm font-medium leading-normal pb-2">
-                Código de verificação
+                {secondFactorStrategy === 'totp' ? 'Código do autenticador' : 'Código de verificação'}
               </p>
               <input
                 type="text"
-                value={emailCode}
-                onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="000000"
                 maxLength={6}
                 className="w-full h-14 px-4 rounded-lg border border-[#e0e0e0] dark:border-[#324467] bg-white dark:bg-[#192233] text-[#333333] dark:text-white placeholder:text-[#969696] dark:placeholder:text-[#92a4c9] focus:outline-none focus:border-[#003c71] dark:focus:border-[#0A3A66] focus:ring-2 focus:ring-[#003c71]/20 dark:focus:ring-[#0A3A66]/50 transition-all text-center text-2xl tracking-[0.5em] font-mono"
@@ -261,32 +264,34 @@ export default function SignInPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading || emailCode.length < 6}
+              disabled={isLoading || verificationCode.length < 6}
               className="w-full h-14 rounded-lg bg-[#003c71] dark:bg-[#2563eb] text-white font-bold text-base shadow-sm hover:bg-[#003c71]/90 dark:hover:bg-[#1d4ed8] focus:outline-none focus:ring-2 focus:ring-[#003c71] dark:focus:ring-[#2563eb] focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Verificando...' : 'Verificar'}
             </button>
 
-            {/* Resend code */}
-            <div className="w-full text-center">
-              <p className="text-[#969696] dark:text-[#92a4c9] text-sm">
-                Não recebeu o código?{' '}
-                <button
-                  type="button"
-                  onClick={handleResendCode}
-                  className="font-bold text-[#003c71] dark:text-[#0A3A66] hover:underline"
-                >
-                  Reenviar
-                </button>
-              </p>
-            </div>
+            {/* Resend code (somente para email_code) */}
+            {secondFactorStrategy === 'email_code' && (
+              <div className="w-full text-center">
+                <p className="text-[#969696] dark:text-[#92a4c9] text-sm">
+                  Não recebeu o código?{' '}
+                  <button
+                    type="button"
+                    onClick={handleResendCode}
+                    className="font-bold text-[#003c71] dark:text-[#0A3A66] hover:underline"
+                  >
+                    Reenviar
+                  </button>
+                </p>
+              </div>
+            )}
 
             {/* Back button */}
             <button
               type="button"
               onClick={() => {
-                setNeedsEmailVerification(false)
-                setEmailCode('')
+                setNeedsSecondFactor(false)
+                setVerificationCode('')
                 setError('')
               }}
               className="w-full text-center text-[#969696] dark:text-[#92a4c9] text-sm hover:text-[#333333] dark:hover:text-white transition-colors"
@@ -377,17 +382,9 @@ export default function SignInPage() {
 
           {/* Password Field */}
           <label className="flex flex-col w-full">
-            <div className="flex justify-between items-center pb-2">
-              <p className="text-[#333333] dark:text-white text-sm font-medium leading-normal">
-                Senha
-              </p>
-              <a
-                href="/forgot-password"
-                className="text-[#003c71] dark:text-[#0A3A66] text-sm font-medium hover:underline"
-              >
-                Esqueci minha senha
-              </a>
-            </div>
+            <p className="text-[#333333] dark:text-white text-sm font-medium leading-normal pb-2">
+              Senha
+            </p>
             <div className="flex w-full items-stretch">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -409,6 +406,12 @@ export default function SignInPage() {
                 )}
               </button>
             </div>
+            <a
+              href="/forgot-password"
+              className="text-[#003c71] dark:text-[#0A3A66] text-sm font-medium hover:underline mt-2 self-end"
+            >
+              Esqueci minha senha
+            </a>
           </label>
 
           {/* Error Message */}
