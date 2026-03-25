@@ -39,7 +39,7 @@ export async function PUT(req: Request) {
   })
 
   // Revalidar cache do site-config
-  revalidateTag('site-config')
+  revalidateTag('site-config', 'default')
 
   return NextResponse.json(config)
 }
