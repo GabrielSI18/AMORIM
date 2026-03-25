@@ -7,57 +7,27 @@
 
 ## 🚀 Infra — Fazer ANTES de tudo (Deploy + Produção)
 
-### [ ] Task INFRA-1: Subir projeto e domínio no Cloudflare Pages
-**Prioridade:** CRÍTICO | **Estimativa:** M
+### [x] Task INFRA-1: Subir projeto e domínio na Vercel ✅
+**Prioridade:** CRÍTICO | **Estimativa:** M | **Concluída em:** 2026-03-25
 
-**O que fazer:**
-1. Acessar [dash.cloudflare.com](https://dash.cloudflare.com) → Workers & Pages → Create application → Pages
-2. **Conectar repositório:** selecionar `GabrielSI18/AMORIM`
-3. **Framework preset:** Next.js — usar `@opennextjs/cloudflare` (já configurado no projeto)
-4. Configurar **variáveis de ambiente de produção** (Environment Variables):
-   - `DATABASE_URL` (Neon — já funcionando)
-   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` e `CLERK_SECRET_KEY` (chaves de **produção** do Clerk)
-   - `CLERK_WEBHOOK_SECRET` (gerar após configurar webhook)
-   - `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME` (Cloudflare R2)
-   - `NEXT_PUBLIC_URL` = `https://amorimturismo.com.br` (ou o domínio real)
-   - `CLOUDFLARE=1` (ativa o adapter Neon HTTP para Edge runtime)
-5. Deploy inicial — confirmar build sem erros
-6. **Adicionar domínio customizado:** Pages → projeto → Custom domains → adicionar domínio
-7. Atualizar nameservers no Registro.br para apontar para o Cloudflare (via painel DNS do Cloudflare)
-8. Aguardar propagação DNS e ativação do HTTPS automático
-
-**Aceite:**
-- Site abre em `https://amorimturismo.com.br` (ou domínio correto)
-- Build no Cloudflare Pages passa sem erros
+**Resultado:**
+- Deploy via Vercel CLI (`npx vercel --prod --yes`) — sem Git integration (conta GitHub diferente)
+- Domínio `amorimturismo.com.br` aliased na Vercel
+- `vercel.json` com `prisma generate && next build`
+- Env vars configuradas no dashboard da Vercel
 - HTTPS funcionando
-- `CLOUDFLARE=1` setado nas env vars de produção
 
 ---
 
-### [ ] Task INFRA-2: Passar Clerk de Development para Produção
-**Prioridade:** CRÍTICO | **Estimativa:** M (depois da INFRA-1)
+### [x] Task INFRA-2: Passar Clerk de Development para Produção ✅
+**Prioridade:** CRÍTICO | **Estimativa:** M | **Concluída em:** 2026-03-25
 
-**O que fazer:**
-1. Acessar [dashboard.clerk.com](https://dashboard.clerk.com)
-2. Na aplicação atual, ir em **"Switch to Production"** (botão no topo)
-3. Clerk vai pedir para configurar **registros DNS** no domínio — irá mostrar os registros CNAME/TXT necessários
-4. Adicionar esses registros no painel da **Vercel → Settings → Domains** (ou DNS do projeto)
-   - Geralmente são registros do tipo: `CNAME` para `clerk.amorimturismo.com.br` apontando para o endpoint do Clerk
-5. Aguardar validação (Clerk confirma automaticamente quando detecta os registros)
-6. Após validar, o Clerk gera as **chaves de produção** (`pk_live_...` e `sk_live_...`)
-7. Atualizar variáveis de ambiente na Vercel com as novas chaves de produção
-8. Configurar **Webhook no Clerk** (produção):
-   - URL: `https://amorimturismo.com.br/api/webhooks/clerk`
-   - Eventos: `user.created`, `user.updated`, `user.deleted`
-   - Copiar o `Signing Secret` e atualizar `CLERK_WEBHOOK_SECRET` na Vercel
-9. Testar login/cadastro em produção
-10. Verificar se usuários estão sendo sincronizados com o banco (Neon)
-
-**Aceite:**
-- Login e cadastro funcionam no domínio de produção
-- Webhook sincroniza usuários com o banco
-- Sem erros de domínio não autorizado no Clerk
-- Chaves `pk_live_` e `sk_live_` nas env vars da Vercel (não mais `pk_test_`)
+**Resultado:**
+- Clerk em modo produção com chaves `pk_live_` e `sk_live_`
+- DNS CNAME `clerk.amorimturismo.com.br` configurado
+- Login e cadastro funcionando em produção
+- Corrigido conflito unique constraint (email) na transição dev→prod
+- Webhook Clerk configurado para produção
 
 ---
 

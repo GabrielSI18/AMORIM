@@ -22,6 +22,7 @@ import {
   Check
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useSiteConfig } from '@/hooks/use-site-config';
 
 interface BookingDetails {
   id: string;
@@ -55,6 +56,7 @@ interface ConfirmacaoPageProps {
 export default function ConfirmacaoPage({ params }: ConfirmacaoPageProps) {
   const searchParams = useSearchParams();
   const bookingId = searchParams.get('bookingId');
+  const config = useSiteConfig();
   
   const [booking, setBooking] = useState<BookingDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -117,7 +119,6 @@ export default function ConfirmacaoPage({ params }: ConfirmacaoPageProps) {
   };
 
   const openWhatsApp = () => {
-    const phone = '5531988862079';
     const message = `Olá! Acabei de fazer uma reserva no site.
 
 📦 *Código da Reserva:* ${bookingId}
@@ -125,7 +126,7 @@ ${booking ? `📍 *Pacote:* ${booking.package?.title}` : ''}
 
 Gostaria de mais informações sobre os próximos passos.`;
 
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+    window.open(`https://wa.me/${config.whatsapp_number}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   if (isLoading) {
@@ -363,13 +364,13 @@ Gostaria de mais informações sobre os próximos passos.`;
           >
             <p className="mb-2">Dúvidas? Entre em contato:</p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a href="tel:+5531988862079" className="flex items-center gap-1 hover:text-primary transition-colors">
+              <a href={`tel:+${config.whatsapp_number}`} className="flex items-center gap-1 hover:text-primary transition-colors">
                 <Phone className="w-4 h-4" />
-                (31) 98886-2079
+                {config.phone_primary}
               </a>
-              <a href="mailto:amorimturismo@ymai.com" className="flex items-center gap-1 hover:text-primary transition-colors">
+              <a href={`mailto:${config.email}`} className="flex items-center gap-1 hover:text-primary transition-colors">
                 <Mail className="w-4 h-4" />
-                amorimturismo@ymai.com
+                {config.email}
               </a>
             </div>
           </motion.div>

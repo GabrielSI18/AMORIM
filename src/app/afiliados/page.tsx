@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Header } from '@/components/ui/header';
+import { useSiteConfig } from '@/hooks/use-site-config';
 import { 
   DollarSign, 
   Users, 
@@ -34,6 +35,7 @@ export default function AfiliadosPage() {
     cpf: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const config = useSiteConfig();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -750,7 +752,7 @@ export default function AfiliadosPage() {
 
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             <motion.a
-              href="https://wa.me/5531988862079"
+              href={`https://wa.me/${config.whatsapp_number}`}
               target="_blank"
               rel="noopener noreferrer"
               initial={{ opacity: 0, y: 20 }}
@@ -765,12 +767,12 @@ export default function AfiliadosPage() {
                 </svg>
               </div>
               <h3 className="font-semibold text-lg mb-2">WhatsApp</h3>
-              <p className="text-muted-foreground text-sm">(31) 98886-2079</p>
+              <p className="text-muted-foreground text-sm">{config.phone_primary}</p>
               <p className="text-xs text-muted-foreground mt-2">Resposta rápida!</p>
             </motion.a>
 
             <motion.a
-              href="mailto:afiliados@amorimturismo.com.br"
+              href={`mailto:${config.email_affiliates}`}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -783,12 +785,12 @@ export default function AfiliadosPage() {
                 </svg>
               </div>
               <h3 className="font-semibold text-lg mb-2">E-mail</h3>
-              <p className="text-muted-foreground text-sm">afiliados@amorimturismo.com.br</p>
+              <p className="text-muted-foreground text-sm">{config.email_affiliates}</p>
               <p className="text-xs text-muted-foreground mt-2">Respondemos em até 24h</p>
             </motion.a>
 
             <motion.a
-              href="tel:+5531988862079"
+              href={`tel:+${config.whatsapp_number}`}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -801,7 +803,7 @@ export default function AfiliadosPage() {
                 </svg>
               </div>
               <h3 className="font-semibold text-lg mb-2">Telefone</h3>
-              <p className="text-muted-foreground text-sm">(31) 98886-2079</p>
+              <p className="text-muted-foreground text-sm">{config.phone_primary}</p>
               <p className="text-xs text-muted-foreground mt-2">Seg a Sex, 9h às 18h</p>
             </motion.a>
           </div>

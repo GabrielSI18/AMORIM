@@ -1,8 +1,10 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Facebook, Instagram, Phone, Mail, MapPin } from 'lucide-react'
+import { getSiteConfig, formatAddress } from '@/lib/site-config'
 
-export function Footer() {
+export async function Footer() {
+  const config = await getSiteConfig()
   const currentYear = new Date().getFullYear()
 
   return (
@@ -22,22 +24,26 @@ export function Footer() {
               Viaje com conforto e segurança. Descubra destinos incríveis com nossos pacotes exclusivos de turismo rodoviário.
             </p>
             <div className="flex items-center gap-3">
-              <a 
-                href="https://facebook.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors"
-              >
-                <Facebook className="w-4 h-4" />
-              </a>
-              <a 
-                href="https://instagram.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors"
-              >
-                <Instagram className="w-4 h-4" />
-              </a>
+              {config.facebook_url && (
+                <a 
+                  href={config.facebook_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 flex items-center justify-center rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors"
+                >
+                  <Facebook className="w-4 h-4" />
+                </a>
+              )}
+              {config.instagram_url && (
+                <a 
+                  href={config.instagram_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 flex items-center justify-center rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors"
+                >
+                  <Instagram className="w-4 h-4" />
+                </a>
+              )}
             </div>
           </div>
 
@@ -107,19 +113,18 @@ export function Footer() {
               <li className="flex items-start gap-3">
                 <Phone className="w-4 h-4 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm text-muted-foreground">(31) 98886-2079</p>
+                  <p className="text-sm text-muted-foreground">{config.phone_primary}</p>
                   <p className="text-xs text-muted-foreground">WhatsApp disponível</p>
                 </div>
               </li>
               <li className="flex items-start gap-3">
                 <Mail className="w-4 h-4 text-muted-foreground mt-0.5" />
-                <p className="text-sm text-muted-foreground">amorimturismo@ymai.com</p>
+                <p className="text-sm text-muted-foreground">{config.email}</p>
               </li>
               <li className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
                 <p className="text-sm text-muted-foreground">
-                  São Paulo - SP<br />
-                  Brasil
+                  {formatAddress(config)}
                 </p>
               </li>
             </ul>

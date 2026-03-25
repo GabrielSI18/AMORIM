@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { ChevronDown, HelpCircle, Search } from 'lucide-react'
 import { PublicLayout } from '@/components/layout'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useSiteConfig } from '@/hooks/use-site-config'
 
 const faqs = [
   {
@@ -88,6 +89,7 @@ const faqs = [
 export default function FAQPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [openItems, setOpenItems] = useState<string[]>([])
+  const config = useSiteConfig()
 
   const toggleItem = (id: string) => {
     setOpenItems(prev => 
@@ -207,13 +209,13 @@ export default function FAQPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="mailto:amorimturismo@ymai.com"
+              href={`mailto:${config.email}`}
               className="px-6 py-3 bg-[#004a80] text-white rounded-lg font-medium hover:bg-[#003a66] transition"
             >
               Enviar Email
             </a>
             <a
-              href="https://wa.me/5531988862079"
+              href={`https://wa.me/${config.whatsapp_number}`}
               target="_blank"
               rel="noopener noreferrer"
               className="px-6 py-3 bg-white dark:bg-[#1e1e1e] text-[#212529] dark:text-[#f8f9fa] border border-gray-200 dark:border-gray-700 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition"

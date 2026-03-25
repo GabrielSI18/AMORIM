@@ -443,3 +443,44 @@ model Bus {
   @@index([is_active])
   @@map("buses")
 }
+
+// SiteConfig Model - Configurações gerais do site (singleton)
+model SiteConfig {
+  id                String   @id @default("default")
+  
+  // Nome e descrição
+  site_name         String   @default("Amorim Turismo") @map("site_name")
+  site_description  String?  @map("site_description")
+  
+  // Telefones
+  phone_primary     String   @map("phone_primary") // Telefone principal
+  phone_secondary   String?  @map("phone_secondary") // Telefone secundário
+  whatsapp_number   String   @map("whatsapp_number") // Número WhatsApp (formato: 5531988862079)
+  
+  // Email
+  email             String // Email de contato principal
+  email_affiliates  String?  @map("email_affiliates") // Email para afiliados
+  
+  // Endereço
+  address_street    String?  @map("address_street") // "Rua Manaus, 48 - Bairro Amazonas"
+  address_city      String?  @map("address_city") // "Contagem"
+  address_state     String?  @map("address_state") // "MG"
+  address_zip       String?  @map("address_zip") // "32240-080"
+  
+  // Redes sociais
+  instagram_url     String?  @map("instagram_url")
+  facebook_url      String?  @map("facebook_url")
+  
+  // Google Maps
+  maps_embed_url    String?  @map("maps_embed_url") @db.Text
+  maps_link         String?  @map("maps_link")
+  
+  // Meta/SEO
+  meta_pixel_id     String?  @map("meta_pixel_id")
+  
+  // Timestamps
+  created_at        DateTime @default(now()) @map("created_at")
+  updated_at        DateTime @updatedAt @map("updated_at")
+  
+  @@map("site_config")
+}

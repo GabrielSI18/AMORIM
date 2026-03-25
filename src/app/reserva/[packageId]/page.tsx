@@ -8,6 +8,7 @@ import { useUser } from '@clerk/nextjs';
 import { ArrowLeft, Calendar, MapPin, Users, Clock, Bus, Minus, Plus, CreditCard, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { BusSeatMap, BusInfo } from '@/components/packages/bus-seat-map';
+import { useSiteConfig } from '@/hooks/use-site-config';
 import { getAffiliateCode, clearAffiliateCode } from '@/hooks/use-affiliate-tracking';
 import type { Package } from '@/types';
 
@@ -90,6 +91,7 @@ _Mensagem gerada automaticamente pelo sistema de reservas._`;
 export default function ReservaPage({ params }: ReservaPageProps) {
   const router = useRouter();
   const { user, isLoaded } = useUser();
+  const config = useSiteConfig();
   const [packageId, setPackageId] = useState<string>('');
   const [pkg, setPkg] = useState<Package | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -324,8 +326,7 @@ export default function ReservaPage({ params }: ReservaPageProps) {
       });
 
       // Abrir WhatsApp em nova aba
-      const whatsappNumber = '5531988862079';
-      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+      const whatsappUrl = `https://wa.me/${config.whatsapp_number}?text=${encodeURIComponent(whatsappMessage)}`;
       window.open(whatsappUrl, '_blank');
 
       toast.success('Reserva criada com sucesso!');

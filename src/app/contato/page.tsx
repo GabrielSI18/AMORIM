@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { PublicLayout } from '@/components/layout';
+import { useSiteConfig } from '@/hooks/use-site-config';
 import { 
   Send, 
   MapPin, 
@@ -24,6 +25,7 @@ export default function ContatoPage() {
     message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const siteConfig = useSiteConfig();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -67,36 +69,36 @@ export default function ContatoPage() {
     {
       icon: Phone,
       title: 'Telefone',
-      value: '(31) 98886-2079',
+      value: siteConfig.phone_primary,
       description: 'Seg a Sex, 9h às 18h',
-      href: 'tel:+5531988862079',
+      href: `tel:+${siteConfig.whatsapp_number}`,
       color: 'text-green-500',
       bgColor: 'bg-green-500/10',
     },
     {
       icon: MessageCircle,
       title: 'WhatsApp',
-      value: '(31) 98886-2079',
+      value: siteConfig.phone_primary,
       description: 'Resposta rápida!',
-      href: 'https://wa.me/5531988862079',
+      href: `https://wa.me/${siteConfig.whatsapp_number}`,
       color: 'text-green-500',
       bgColor: 'bg-green-500/10',
     },
     {
       icon: Mail,
       title: 'E-mail',
-      value: 'amorimturismo@ymai.com',
+      value: siteConfig.email,
       description: 'Respondemos em até 24h',
-      href: 'mailto:amorimturismo@ymai.com',
+      href: `mailto:${siteConfig.email}`,
       color: 'text-primary',
       bgColor: 'bg-primary/10',
     },
     {
       icon: MapPin,
       title: 'Endereço',
-      value: 'Rua Manaus, 48 - Bairro Amazonas',
-      description: 'Contagem - MG',
-      href: 'https://maps.google.com/?q=Rua+Manaus+48+Amazonas+Contagem+MG',
+      value: siteConfig.address_street,
+      description: `${siteConfig.address_city} - ${siteConfig.address_state}`,
+      href: siteConfig.maps_link || `https://maps.google.com/?q=${encodeURIComponent(siteConfig.address_street + ' ' + siteConfig.address_city)}`,
       color: 'text-accent',
       bgColor: 'bg-accent/10',
     },
@@ -340,7 +342,7 @@ export default function ContatoPage() {
               {/* Mapa Google */}
               <div className="bg-card border border-border rounded-2xl overflow-hidden">
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3750.0521651287722!2d-44.04496622401354!3d-19.964308339379283!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xa6be3cea9a86b7%3A0xcdd1422d7c37b086!2sR.%20Manaus%2C%2048%20-%20Amazonas%2C%20Contagem%20-%20MG%2C%2032240-080%2C%20Brasil!5e0!3m2!1spt-BR!2sus!4v1767646321062!5m2!1spt-BR!2sus"
+                  src={siteConfig.maps_embed_url || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3750.0521651287722!2d-44.04496622401354!3d-19.964308339379283!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xa6be3cea9a86b7%3A0xcdd1422d7c37b086!2sR.%20Manaus%2C%2048%20-%20Amazonas%2C%20Contagem%20-%20MG%2C%2032240-080%2C%20Brasil!5e0!3m2!1spt-BR!2sus!4v1767646321062!5m2!1spt-BR!2sus"}
                   width="100%"
                   height="100%"
                   style={{ border: 0, aspectRatio: '16/9' }}

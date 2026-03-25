@@ -109,23 +109,22 @@ export function getOrganizationSchema() {
     name: SITE_NAME,
     url: BASE_URL,
     logo: `${BASE_URL}/logo.png`,
-    description: 'Projeto base SaaS moderno com stack completa',
+    description: 'Amorim Turismo - Viaje com conforto e segurança. Pacotes turísticos saindo de Contagem e BH para os melhores destinos do Brasil.',
     foundingDate: '2025',
     founders: [
       {
         '@type': 'Person',
-        name: 'Exaltius',
+        name: 'Amorim Turismo',
       },
     ],
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer service',
-      email: 'suporte@base2025.com',
+      email: 'amorimturismo@ymai.com',
+      telephone: '+5531988862079',
     },
     sameAs: [
       // Adicionar redes sociais quando disponíveis
-      // 'https://twitter.com/base2025',
-      // 'https://github.com/base2025',
     ],
   };
 }

@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { Search, Home as HomeIcon, Briefcase, Ticket, User, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { GlobalSearch } from '@/components/ui/global-search'
+import { useSiteConfig } from '@/hooks/use-site-config'
 
 interface PublicLayoutProps {
   children: React.ReactNode
@@ -16,6 +17,7 @@ export function PublicLayout({ children, currentPage }: PublicLayoutProps) {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const siteConfig = useSiteConfig()
 
   // Evitar flash de tema incorreto
   useEffect(() => {
@@ -140,9 +142,9 @@ export function PublicLayout({ children, currentPage }: PublicLayoutProps) {
             <div>
               <h4 className="font-semibold mb-4 text-[#212529] dark:text-[#f8f9fa]">Contato</h4>
               <ul className="space-y-2 text-sm text-[#6c757d] dark:text-[#adb5bd]">
-                <li>(31) 98886-2079</li>
-                <li>amorimturismo@ymai.com</li>
-                <li>Rua Manaus, 48 - Bairro Amazonas, Contagem - MG</li>
+                <li>{siteConfig.phone_primary}</li>
+                <li>{siteConfig.email}</li>
+                <li>{`${siteConfig.address_street}, ${siteConfig.address_city} - ${siteConfig.address_state}`}</li>
               </ul>
             </div>
           </div>
