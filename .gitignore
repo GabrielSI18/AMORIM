@@ -49,3 +49,4 @@ src/proxy.ts
 next-env.d.ts
 
 /src/generated/prisma
+.env.vercel.tmp
