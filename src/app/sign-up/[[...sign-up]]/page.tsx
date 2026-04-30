@@ -2,14 +2,21 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useSignUp } from '@clerk/nextjs'
-import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, ArrowLeft, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
+// Full reload depois do login: garante que cookies de sessão sejam
+// propagados ao server e o middleware Clerk libere `/dashboard`.
+function hardRedirectToDashboard() {
+  if (typeof window !== 'undefined') {
+    window.location.replace('/dashboard')
+  }
+}
+
 export default function SignUpPage() {
   const { signUp, setActive } = useSignUp()
-  const router = useRouter()
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   
@@ -114,7 +121,9 @@ export default function SignUpPage() {
 
       if (completeSignUp.status === 'complete') {
         await setActive({ session: completeSignUp.createdSessionId })
-        router.push('/dashboard')
+        await new Promise(resolve => setTimeout(resolve, 300))
+        hardRedirectToDashboard()
+        return // Mantém loading enquanto o reload acontece
       }
     } catch (err: any) {
       setError(err.errors?.[0]?.message || 'Código inválido')
@@ -216,12 +225,12 @@ export default function SignUpPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#F5F5F7] dark:bg-[#101622]">
       <header className="relative flex items-center justify-center p-4 border-b border-[#e0e0e0]/50 dark:border-[#324467] bg-white dark:bg-[#101622]">
-        <button
-          onClick={() => router.push('/sign-in')}
+        <Link
+          href="/sign-in"
           className="absolute left-4 text-[#1A2E40] dark:text-white flex size-10 items-center justify-center hover:bg-[#1A2E40]/10 dark:hover:bg-white/10 rounded-full transition-colors"
         >
           <ArrowLeft className="w-6 h-6" />
-        </button>
+        </Link>
         <Image
           src="/amorim-logo.png"
           alt="Amorim Turismo"

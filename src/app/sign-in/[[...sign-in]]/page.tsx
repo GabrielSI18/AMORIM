@@ -4,13 +4,22 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSignIn } from '@clerk/nextjs'
-import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, ArrowLeft, Moon, Sun, Mail } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
+// Força um navigate "duro" para o dashboard.
+// Em Next.js 16, `router.push` + `router.refresh` durante login pode
+// deixar a tela de loading travada porque o componente atual não desmonta
+// até o RSC terminar — full reload garante que cookies de sessão sejam
+// propagados ao server e o middleware libere `/dashboard` corretamente.
+function hardRedirectToDashboard() {
+  if (typeof window !== 'undefined') {
+    window.location.replace('/dashboard')
+  }
+}
+
 export default function SignInPage() {
   const { signIn, setActive } = useSignIn()
-  const router = useRouter()
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   
@@ -56,11 +65,10 @@ export default function SignInPage() {
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId })
         setIsRedirecting(true)
-        // Aguardar um momento para a sessão ser propagada
-        await new Promise(resolve => setTimeout(resolve, 500))
-        router.push('/dashboard')
-        router.refresh()
-        return // Não desliga loading, mantém redirecionando
+        // Pequeno delay para a sessão ser propagada antes do reload.
+        await new Promise(resolve => setTimeout(resolve, 300))
+        hardRedirectToDashboard()
+        return // Mantém loading enquanto o reload acontece
       } else if (result.status === 'needs_second_factor') {
         const factors = result.supportedSecondFactors || []
         console.log('Second factors available:', factors)
@@ -95,10 +103,9 @@ export default function SignInPage() {
         if (sessionId) {
           await setActive({ session: sessionId })
           setIsRedirecting(true)
-          await new Promise(resolve => setTimeout(resolve, 500))
-          router.push('/dashboard')
-          router.refresh()
-          return // Não desliga loading, mantém redirecionando
+          await new Promise(resolve => setTimeout(resolve, 300))
+          hardRedirectToDashboard()
+          return // Mantém loading enquanto o reload acontece
         } else {
           setError('Login incompleto. Status: ' + result.status)
           setIsLoading(false)
@@ -127,10 +134,9 @@ export default function SignInPage() {
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId })
         setIsRedirecting(true)
-        await new Promise(resolve => setTimeout(resolve, 500))
-        router.push('/dashboard')
-        router.refresh()
-        return // Mantém loading/redirecionando
+        await new Promise(resolve => setTimeout(resolve, 300))
+        hardRedirectToDashboard()
+        return // Mantém loading enquanto o reload acontece
       } else {
         setError('Verificação incompleta. Tente novamente.')
         setIsLoading(false)
