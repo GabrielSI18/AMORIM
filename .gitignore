@@ -41,9 +41,6 @@ yarn-error.log*
 # vercel
 .vercel
 
-# arquivo legado (substituido por middleware.ts)
-src/proxy.ts
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts
