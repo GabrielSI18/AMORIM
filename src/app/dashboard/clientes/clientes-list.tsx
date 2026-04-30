@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
-import { CLIENTES_REFRESH_EVENT } from './clientes-actions'
+import { CLIENTES_REFRESH_EVENT, ClientesActions } from './clientes-actions'
 import {
   Users,
   Mail,
@@ -152,7 +152,12 @@ export function ClientesList() {
   }, [sortBy, sortOrder])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 sm:px-6 py-2">
+      {/* Ações: Novo Cliente + Importar CSV */}
+      <div className="flex items-center justify-end">
+        <ClientesActions />
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatsCard

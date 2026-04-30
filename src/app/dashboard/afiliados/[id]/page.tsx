@@ -192,7 +192,7 @@ function AffiliateDetailsContent() {
 
   if (loading) {
     return (
-      <div className="container-custom py-8 space-y-8">
+      <div className="px-4 sm:px-6 py-6 space-y-6">
         <Skeleton className="h-8 w-48" />
         <div className="grid gap-6 md:grid-cols-2">
           <Skeleton className="h-64" />
@@ -212,19 +212,19 @@ function AffiliateDetailsContent() {
   const paidReferrals = affiliate.referrals.filter(r => r.commission_status.toLowerCase() === 'paid');
 
   return (
-    <div className="container-custom py-8 space-y-8">
+    <div className="px-4 sm:px-6 py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 flex-wrap">
         <Button variant="ghost" onClick={() => router.push('/dashboard/afiliados')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Button>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">{affiliate.name}</h1>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-2xl sm:text-3xl font-bold truncate">{affiliate.name}</h1>
             {getStatusBadge(affiliate.status)}
           </div>
-          <p className="text-muted-foreground">Detalhes do afiliado</p>
+          <p className="text-muted-foreground text-sm">Detalhes do afiliado</p>
         </div>
       </div>
 

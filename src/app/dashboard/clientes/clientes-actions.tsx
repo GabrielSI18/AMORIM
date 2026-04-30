@@ -196,33 +196,44 @@ function NovoClienteModal({ onClose, onSuccess }: { onClose: () => void; onSucce
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    e.stopPropagation()
+    console.log('[NovoClienteModal] handleSubmit', { name: form.name, email: form.email })
+
     if (!form.name.trim() || !form.email.trim()) {
       toast.error('Nome e e-mail são obrigatórios')
       return
     }
     setSubmitting(true)
     try {
+      const payload = {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.replace(/\D/g, '') || undefined,
+        cpf: form.cpf.replace(/\D/g, '') || undefined,
+        notes: form.notes.trim() || undefined,
+      }
+      console.log('[NovoClienteModal] POST /api/clients', payload)
       const res = await fetch('/api/clients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name.trim(),
-          email: form.email.trim(),
-          phone: form.phone.replace(/\D/g, '') || undefined,
-          cpf: form.cpf.replace(/\D/g, '') || undefined,
-          notes: form.notes.trim() || undefined,
-        }),
+        body: JSON.stringify(payload),
       })
-      const data = await res.json()
+      console.log('[NovoClienteModal] response status', res.status)
+      const data = await res.json().catch((parseErr) => {
+        console.error('[NovoClienteModal] parse error', parseErr)
+        return { error: 'Resposta inválida do servidor' }
+      })
+      console.log('[NovoClienteModal] response body', data)
+
       if (!res.ok) {
-        toast.error(data.error || 'Erro ao criar cliente')
+        toast.error(data.error || `Erro ${res.status} ao criar cliente`)
         return
       }
       toast.success(data.updated ? 'Cliente atualizado com sucesso' : 'Cliente criado com sucesso')
       onSuccess()
     } catch (err) {
-      console.error(err)
-      toast.error('Erro ao criar cliente')
+      console.error('[NovoClienteModal] fetch error', err)
+      toast.error(err instanceof Error ? `Erro: ${err.message}` : 'Erro ao criar cliente')
     } finally {
       setSubmitting(false)
     }

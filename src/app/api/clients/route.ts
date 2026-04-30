@@ -47,13 +47,20 @@ function splitName(fullName: string): { first: string; last: string } {
  * Se já existir cliente com mesmo email/cpf, atualiza com novos dados.
  */
 export async function POST(req: NextRequest) {
+  console.log('[API] POST /api/clients — start')
   const guard = await requireAdmin()
-  if (!guard.ok) return guard.response
+  if (!guard.ok) {
+    console.log('[API] POST /api/clients — admin guard rejected')
+    return guard.response
+  }
 
   try {
     const body = await req.json()
+    console.log('[API] POST /api/clients — body received', { name: body?.name, email: body?.email })
+
     const validation = createClientSchema.safeParse(body)
     if (!validation.success) {
+      console.log('[API] POST /api/clients — validation failed', validation.error.issues)
       return NextResponse.json(
         { error: validation.error.issues[0]?.message || 'Dados inválidos' },
         { status: 400 },
@@ -69,6 +76,7 @@ export async function POST(req: NextRequest) {
       (cpf ? await prisma.user.findUnique({ where: { cpf } }) : null)
 
     if (existing) {
+      console.log('[API] POST /api/clients — updating existing user', existing.id)
       const updated = await prisma.user.update({
         where: { id: existing.id },
         data: {
@@ -83,6 +91,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ data: updated, updated: true })
     }
 
+    console.log('[API] POST /api/clients — creating new user', email)
     const created = await prisma.user.create({
       data: {
         email,
@@ -96,6 +105,7 @@ export async function POST(req: NextRequest) {
         source: 'manual',
       },
     })
+    console.log('[API] POST /api/clients — created', created.id)
 
     return NextResponse.json({ data: created, updated: false }, { status: 201 })
   } catch (error: unknown) {

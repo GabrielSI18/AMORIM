@@ -2,7 +2,6 @@ import prisma from '@/lib/prisma'
 import { currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { PageHeader } from '@/components/dashboard'
-import { ClientesActions } from './clientes-actions'
 import { ClientesList } from './clientes-list'
 
 export default async function ClientesPage() {
@@ -19,7 +18,7 @@ export default async function ClientesPage() {
 
   return (
     <>
-      <PageHeader title="Clientes" action={<ClientesActions />} />
+      <PageHeader title="Clientes" />
       <ClientesList />
     </>
   )
