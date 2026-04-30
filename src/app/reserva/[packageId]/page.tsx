@@ -5,12 +5,36 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
-import { ArrowLeft, Calendar, MapPin, Users, Clock, Bus, Minus, Plus, CreditCard, Loader2 } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Users, Clock, Bus, Minus, Plus, CreditCard, Loader2, User as UserIcon, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { BusSeatMap, BusInfo } from '@/components/packages/bus-seat-map';
 import { useSiteConfig } from '@/hooks/use-site-config';
 import { getAffiliateCode, clearAffiliateCode } from '@/hooks/use-affiliate-tracking';
 import type { Package } from '@/types';
+
+interface PassengerFormData {
+  fullName: string;
+  cpf: string;
+  birthDate: string; // ISO YYYY-MM-DD
+  phone: string;
+  sex: '' | 'M' | 'F' | 'O';
+  rg: string;
+  emergencyContactName: string;
+  emergencyContactPhone: string;
+}
+
+function emptyPassenger(): PassengerFormData {
+  return {
+    fullName: '',
+    cpf: '',
+    birthDate: '',
+    phone: '',
+    sex: '',
+    rg: '',
+    emergencyContactName: '',
+    emergencyContactPhone: '',
+  };
+}
 
 interface ReservaPageProps {
   params: Promise<{
@@ -115,6 +139,9 @@ export default function ReservaPage({ params }: ReservaPageProps) {
   const [busInfo, setBusInfo] = useState<BusInfo | null>(null);
   const [loadingSeats, setLoadingSeats] = useState(false);
 
+  // Passengers state (um formulário por passageiro pagante)
+  const [passengers, setPassengers] = useState<PassengerFormData[]>([emptyPassenger()]);
+
   useEffect(() => {
     params.then(p => setPackageId(p.packageId));
   }, [params]);
@@ -175,6 +202,18 @@ export default function ReservaPage({ params }: ReservaPageProps) {
     setNumPassengers(totalWithSeats);
   }, [numAdults, numChildren610, numChildren1113]);
 
+  // Sincronizar tamanho do array de passageiros com numPassengers (preserva dados já preenchidos)
+  useEffect(() => {
+    setPassengers((prev) => {
+      const target = Math.max(1, numPassengers);
+      if (prev.length === target) return prev;
+      if (prev.length < target) {
+        return [...prev, ...Array.from({ length: target - prev.length }, emptyPassenger)];
+      }
+      return prev.slice(0, target);
+    });
+  }, [numPassengers]);
+
   // Verificar se há preços de crianças configurados
   const hasChildPrices: boolean = pkg ? Boolean((pkg.priceChild610 && pkg.priceChild610 > 0) || (pkg.priceChild1113 && pkg.priceChild1113 > 0)) : false;
 
@@ -230,9 +269,32 @@ export default function ReservaPage({ params }: ReservaPageProps) {
     });
   };
 
+  const updatePassenger = (index: number, field: keyof PassengerFormData, value: string) => {
+    setPassengers((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  const copyResponsibleToFirstPassenger = () => {
+    setPassengers((prev) => {
+      if (prev.length === 0) return prev;
+      const next = [...prev];
+      next[0] = {
+        ...next[0],
+        fullName: customerName,
+        cpf: customerCpf,
+        phone: customerPhone,
+      };
+      return next;
+    });
+    toast.success('Dados do responsável copiados para o passageiro 1');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!pkg) return;
 
     // Validações
@@ -248,17 +310,48 @@ export default function ReservaPage({ params }: ReservaPageProps) {
       toast.error('Informe seu telefone');
       return;
     }
-    
+
     // Validar seleção de assentos se o pacote tem assentos
     if (pkg.totalSeats && pkg.totalSeats > 0 && selectedSeats.length === 0) {
       toast.error('Selecione os assentos desejados no mapa do ônibus');
       return;
     }
-    
+
     // Validar quantidade de assentos selecionados (se tem preços de criança)
     if (hasChildPrices && pkg.totalSeats && pkg.totalSeats > 0) {
       if (selectedSeats.length !== totalPassengersWithSeats) {
         toast.error(`Selecione exatamente ${totalPassengersWithSeats} assento(s) no mapa`);
+        return;
+      }
+    }
+
+    // Validar passageiros (todos os pagantes precisam dos campos obrigatórios)
+    if (passengers.length !== numPassengers) {
+      toast.error(`Cadastre exatamente ${numPassengers} passageiro(s)`);
+      return;
+    }
+    for (let i = 0; i < passengers.length; i++) {
+      const p = passengers[i];
+      if (!p.fullName.trim()) {
+        toast.error(`Passageiro ${i + 1}: informe o nome completo`);
+        return;
+      }
+      const cpfDigits = p.cpf.replace(/\D/g, '');
+      if (cpfDigits.length !== 11) {
+        toast.error(`Passageiro ${i + 1}: CPF deve ter 11 dígitos`);
+        return;
+      }
+      if (!p.birthDate) {
+        toast.error(`Passageiro ${i + 1}: informe a data de nascimento`);
+        return;
+      }
+      if (Number.isNaN(Date.parse(p.birthDate)) || new Date(p.birthDate) > new Date()) {
+        toast.error(`Passageiro ${i + 1}: data de nascimento inválida`);
+        return;
+      }
+      const phoneDigits = p.phone.replace(/\D/g, '');
+      if (phoneDigits.length !== 10 && phoneDigits.length !== 11) {
+        toast.error(`Passageiro ${i + 1}: telefone inválido`);
         return;
       }
     }
@@ -269,6 +362,20 @@ export default function ReservaPage({ params }: ReservaPageProps) {
       // Obter código de afiliado salvo (se houver)
       const affiliateCode = getAffiliateCode();
       
+      const sortedSeats = [...selectedSeats].sort((a, b) => a - b);
+      const passengersPayload = passengers.map((p, idx) => ({
+        fullName: p.fullName.trim(),
+        cpf: p.cpf.replace(/\D/g, ''),
+        birthDate: p.birthDate,
+        phone: p.phone.replace(/\D/g, ''),
+        sex: p.sex || undefined,
+        rg: p.rg.trim() || undefined,
+        emergencyContactName: p.emergencyContactName.trim() || undefined,
+        emergencyContactPhone: p.emergencyContactPhone.replace(/\D/g, '') || undefined,
+        isResponsible: idx === 0,
+        seatNumber: sortedSeats[idx] ?? null,
+      }));
+
       const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -290,6 +397,7 @@ export default function ReservaPage({ params }: ReservaPageProps) {
             children_free: numChildrenFree,
           } : null,
           totalPrice: totalPrice, // Enviar o total calculado
+          passengers: passengersPayload,
         }),
       });
 
@@ -708,6 +816,164 @@ export default function ReservaPage({ params }: ReservaPageProps) {
                 </div>
               </div>
 
+              {/* Cadastro dos Passageiros */}
+              <div className="bg-white dark:bg-[#1e1e1e] rounded-xl p-6 border border-gray-200 dark:border-gray-800">
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                  <h2 className="text-lg font-semibold text-[#1A2E40] dark:text-white flex items-center gap-2">
+                    <UserIcon className="w-5 h-5" />
+                    Cadastro dos Passageiros
+                  </h2>
+                  <span className="text-sm text-[#6c757d] dark:text-[#adb5bd]">
+                    {passengers.length} de {numPassengers} preenchido(s)
+                  </span>
+                </div>
+                <p className="text-sm text-[#6c757d] dark:text-[#adb5bd] mb-4">
+                  Preencha os dados de cada passageiro pagante. Crianças de colo (0-5 anos) não precisam ser cadastradas aqui.
+                </p>
+
+                <div className="space-y-6">
+                  {passengers.map((p, idx) => (
+                    <div
+                      key={idx}
+                      className="rounded-xl border border-gray-200 dark:border-gray-700 p-4"
+                    >
+                      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                        <h3 className="font-semibold text-[#1A2E40] dark:text-white flex items-center gap-2">
+                          Passageiro {idx + 1}
+                          {idx === 0 && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                              Responsável
+                            </span>
+                          )}
+                          {selectedSeats.length > idx && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium">
+                              Assento {[...selectedSeats].sort((a, b) => a - b)[idx]}
+                            </span>
+                          )}
+                        </h3>
+                        {idx === 0 && (
+                          <button
+                            type="button"
+                            onClick={copyResponsibleToFirstPassenger}
+                            className="text-xs flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-white/5 text-[#1A2E40] dark:text-white"
+                          >
+                            <Copy className="w-3 h-3" />
+                            Usar dados do responsável
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-[#4F4F4F] dark:text-[#adb5bd] mb-1">
+                            Nome Completo *
+                          </label>
+                          <input
+                            type="text"
+                            value={p.fullName}
+                            onChange={(e) => updatePassenger(idx, 'fullName', e.target.value)}
+                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-[#1A2E40] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#004a80] focus:border-transparent"
+                            placeholder="Nome completo do passageiro"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#4F4F4F] dark:text-[#adb5bd] mb-1">
+                            CPF *
+                          </label>
+                          <input
+                            type="text"
+                            value={p.cpf}
+                            onChange={(e) => updatePassenger(idx, 'cpf', formatCPF(e.target.value))}
+                            inputMode="numeric"
+                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-[#1A2E40] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#004a80] focus:border-transparent"
+                            placeholder="000.000.000-00"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#4F4F4F] dark:text-[#adb5bd] mb-1">
+                            Data de Nascimento *
+                          </label>
+                          <input
+                            type="date"
+                            value={p.birthDate}
+                            onChange={(e) => updatePassenger(idx, 'birthDate', e.target.value)}
+                            max={new Date().toISOString().slice(0, 10)}
+                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-[#1A2E40] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#004a80] focus:border-transparent"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#4F4F4F] dark:text-[#adb5bd] mb-1">
+                            Telefone *
+                          </label>
+                          <input
+                            type="tel"
+                            value={p.phone}
+                            onChange={(e) => updatePassenger(idx, 'phone', formatPhone(e.target.value))}
+                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-[#1A2E40] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#004a80] focus:border-transparent"
+                            placeholder="(00) 00000-0000"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#4F4F4F] dark:text-[#adb5bd] mb-1">
+                            Sexo
+                          </label>
+                          <select
+                            value={p.sex}
+                            onChange={(e) => updatePassenger(idx, 'sex', e.target.value)}
+                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-[#1A2E40] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#004a80] focus:border-transparent"
+                          >
+                            <option value="">Não informar</option>
+                            <option value="M">Masculino</option>
+                            <option value="F">Feminino</option>
+                            <option value="O">Outro</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#4F4F4F] dark:text-[#adb5bd] mb-1">
+                            RG
+                          </label>
+                          <input
+                            type="text"
+                            value={p.rg}
+                            onChange={(e) => updatePassenger(idx, 'rg', e.target.value)}
+                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-[#1A2E40] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#004a80] focus:border-transparent"
+                            placeholder="00.000.000-0"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#4F4F4F] dark:text-[#adb5bd] mb-1">
+                            Contato de Emergência
+                          </label>
+                          <input
+                            type="text"
+                            value={p.emergencyContactName}
+                            onChange={(e) => updatePassenger(idx, 'emergencyContactName', e.target.value)}
+                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-[#1A2E40] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#004a80] focus:border-transparent"
+                            placeholder="Nome de alguém para acionar em emergência"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#4F4F4F] dark:text-[#adb5bd] mb-1">
+                            Telefone de Emergência
+                          </label>
+                          <input
+                            type="tel"
+                            value={p.emergencyContactPhone}
+                            onChange={(e) => updatePassenger(idx, 'emergencyContactPhone', formatPhone(e.target.value))}
+                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-[#1A2E40] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#004a80] focus:border-transparent"
+                            placeholder="(00) 00000-0000"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Botão Mobile */}
               <div className="lg:hidden">
                 <button
@@ -733,7 +999,7 @@ export default function ReservaPage({ params }: ReservaPageProps) {
 
           {/* Resumo do Pedido - Desktop */}
           <div className="hidden lg:block">
-            <div className="sticky top-24 space-y-4">
+            <div className="sticky top-24 space-y-4 max-h-[calc(100vh-8rem)] overflow-y-auto pr-1">
               {/* Card do Pacote */}
               <div className="bg-white dark:bg-[#1e1e1e] rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
                 <div className="relative h-40">

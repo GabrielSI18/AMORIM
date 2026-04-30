@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
-import { 
+import {
   Ticket,
-  Search, 
+  Search,
   Filter,
   Phone,
   Mail,
@@ -22,7 +22,8 @@ import {
   Calendar,
   DollarSign,
   Bus,
-  MessageCircle
+  MessageCircle,
+  Download
 } from 'lucide-react'
 import { DashboardShell, AdminGuard } from '@/components/dashboard'
 import { Button } from '@/components/ui/button'
@@ -75,6 +76,20 @@ function formatCpf(cpf: string): string {
   return cpf
 }
 
+interface Passenger {
+  id: string
+  fullName: string
+  cpf: string
+  birthDate: string
+  phone: string
+  sex?: string | null
+  rg?: string | null
+  emergencyContactName?: string | null
+  emergencyContactPhone?: string | null
+  isResponsible: boolean
+  seatNumber?: number | null
+}
+
 interface Booking {
   id: string
   packageId: string
@@ -106,6 +121,83 @@ interface Booking {
   customerNotes?: string
   createdAt: string
   updatedAt: string
+  passengers?: Passenger[]
+}
+
+function formatDate(dateString?: string | null): string {
+  if (!dateString) return '-'
+  const d = new Date(dateString)
+  if (Number.isNaN(d.getTime())) return '-'
+  return d.toLocaleDateString('pt-BR')
+}
+
+function csvEscape(value: unknown): string {
+  if (value === null || value === undefined) return ''
+  const str = String(value)
+  if (/[",\n;]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`
+  }
+  return str
+}
+
+function buildPassengersCsv(bookings: Booking[]): string {
+  const headers = [
+    'Reserva',
+    'Pacote',
+    'Status',
+    'Responsável',
+    'Nome',
+    'CPF',
+    'Nascimento',
+    'Telefone',
+    'Sexo',
+    'RG',
+    'Contato Emergência',
+    'Telefone Emergência',
+    'Assento',
+  ]
+  const rows: string[] = [headers.join(',')]
+
+  for (const booking of bookings) {
+    const list = booking.passengers || []
+    if (list.length === 0) continue
+    for (const p of list) {
+      rows.push(
+        [
+          booking.id,
+          booking.package?.title || '',
+          booking.status,
+          p.isResponsible ? 'Sim' : 'Não',
+          p.fullName,
+          formatCpf(p.cpf),
+          formatDate(p.birthDate),
+          formatPhone(p.phone),
+          p.sex || '',
+          p.rg || '',
+          p.emergencyContactName || '',
+          p.emergencyContactPhone ? formatPhone(p.emergencyContactPhone) : '',
+          p.seatNumber ?? '',
+        ]
+          .map(csvEscape)
+          .join(','),
+      )
+    }
+  }
+
+  return rows.join('\n')
+}
+
+function downloadCsv(filename: string, csv: string) {
+  // Prefixa BOM para o Excel reconhecer UTF-8
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
 }
 
 interface Stats {
@@ -248,18 +340,42 @@ _Amorim Turismo_`
     return matchesSearch && matchesStatus
   })
 
+  const handleExportPassengers = () => {
+    const source = filteredBookings.length > 0 ? filteredBookings : bookings
+    const totalPassengers = source.reduce((sum, b) => sum + (b.passengers?.length || 0), 0)
+    if (totalPassengers === 0) {
+      toast.error('Nenhum passageiro cadastrado nas reservas filtradas')
+      return
+    }
+    const csv = buildPassengersCsv(source)
+    const ts = new Date().toISOString().slice(0, 10)
+    downloadCsv(`passageiros-${ts}.csv`, csv)
+    toast.success(`Exportados ${totalPassengers} passageiro(s)`)
+  }
+
   return (
-    <DashboardShell 
+    <DashboardShell
       title="Reservas"
       action={
-        <Button 
-          variant="ghost" 
-          size="sm"
-          onClick={loadBookings}
-          disabled={isLoading}
-        >
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportPassengers}
+            disabled={isLoading || bookings.length === 0}
+          >
+            <Download className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Exportar Passageiros</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={loadBookings}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
       }
     >
       <div className="space-y-6">
@@ -537,6 +653,91 @@ _Amorim Turismo_`
                   )}
                 </div>
               </div>
+
+              {/* Lista de Passageiros */}
+              {selectedBooking.passengers && selectedBooking.passengers.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-[#A0A0A0]">
+                      Passageiros ({selectedBooking.passengers.length})
+                    </h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const csv = buildPassengersCsv([selectedBooking])
+                        downloadCsv(`passageiros-reserva-${selectedBooking.id}.csv`, csv)
+                        toast.success('CSV exportado')
+                      }}
+                    >
+                      <Download className="w-3 h-3 mr-1" />
+                      Exportar CSV
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {selectedBooking.passengers.map((p, idx) => (
+                      <div
+                        key={p.id}
+                        className="rounded-lg border border-gray-200 dark:border-[#333] p-3"
+                      >
+                        <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+                          <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2 flex-wrap">
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-[#252525] text-gray-600 dark:text-[#A0A0A0]">
+                              #{idx + 1}
+                            </span>
+                            <span className="break-words">{p.fullName}</span>
+                            {p.isResponsible && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                                Responsável
+                              </span>
+                            )}
+                            {p.seatNumber && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium">
+                                Assento {p.seatNumber}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <span className="text-gray-500 dark:text-[#A0A0A0]">CPF: </span>
+                            <span className="text-gray-900 dark:text-white">{formatCpf(p.cpf)}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500 dark:text-[#A0A0A0]">Nasc.: </span>
+                            <span className="text-gray-900 dark:text-white">{formatDate(p.birthDate)}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500 dark:text-[#A0A0A0]">Telefone: </span>
+                            <span className="text-gray-900 dark:text-white">{formatPhone(p.phone)}</span>
+                          </div>
+                          {p.sex && (
+                            <div>
+                              <span className="text-gray-500 dark:text-[#A0A0A0]">Sexo: </span>
+                              <span className="text-gray-900 dark:text-white">{p.sex}</span>
+                            </div>
+                          )}
+                          {p.rg && (
+                            <div>
+                              <span className="text-gray-500 dark:text-[#A0A0A0]">RG: </span>
+                              <span className="text-gray-900 dark:text-white">{p.rg}</span>
+                            </div>
+                          )}
+                          {p.emergencyContactName && (
+                            <div className="sm:col-span-2">
+                              <span className="text-gray-500 dark:text-[#A0A0A0]">Emergência: </span>
+                              <span className="text-gray-900 dark:text-white">
+                                {p.emergencyContactName}
+                                {p.emergencyContactPhone && ` — ${formatPhone(p.emergencyContactPhone)}`}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Observações do Cliente */}
               {selectedBooking.customerNotes && (

@@ -22,25 +22,30 @@ enum UserRole {
   SUPER_ADMIN
 }
 
-// User Model - Sincronizado com Clerk via Webhook
+// User Model - Sincronizado com Clerk via Webhook (clerk_id) ou cadastro manual (clerk_id null)
 model User {
   id                 String            @id @default(cuid())
-  clerk_id           String            @unique @map("clerk_id") // ID do usuário no Clerk
+  clerk_id           String?           @unique @map("clerk_id") // ID do usuário no Clerk (null para cadastros manuais)
   email              String            @unique
   name               String?
   image_url          String?           @map("image_url") // Avatar do usuário
   first_name         String?           @map("first_name")
   last_name          String?           @map("last_name")
+  phone              String?           // Telefone do cliente (criado/atualizado manualmente)
+  cpf                String?           @unique // CPF (único quando preenchido)
+  notes              String?           @db.Text // Notas internas do admin sobre o cliente
+  source             String            @default("clerk") // "clerk" | "manual" | "import" (origem do cadastro)
   role               UserRole          @default(USER) // Role do usuário
   stripe_customer_id String?           @unique @map("stripe_customer_id") // ID do Customer no Stripe
   created_at         DateTime          @default(now()) @map("created_at")
   updated_at         DateTime          @updatedAt @map("updated_at")
-  
+
   // Relacionamentos
   subscriptions      Subscription[]
   addon_purchases    AddonPurchase[]   @relation("UserAddonPurchases")
   bookings           Booking[]
-  
+
+  @@index([source])
   @@map("users")
 }
 
@@ -312,16 +317,50 @@ model Booking {
   // Notas internas
   notes             String?  @db.Text // Observações da equipe
   customer_notes    String?  @map("customer_notes") @db.Text // Observações do cliente
-  
+
   // Timestamps
   created_at        DateTime @default(now()) @map("created_at")
   updated_at        DateTime @updatedAt @map("updated_at")
-  
+
+  // Relacionamentos
+  passengers        Passenger[]
+
   @@index([package_id])
   @@index([user_id])
   @@index([status])
   @@index([payment_status])
   @@map("bookings")
+}
+
+// Passenger Model - Passageiros vinculados a uma reserva
+model Passenger {
+  id                       String    @id @default(cuid())
+  booking_id               String    @map("booking_id")
+  booking                  Booking   @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+
+  // Dados obrigatórios
+  full_name                String    @map("full_name")
+  cpf                      String
+  birth_date               DateTime  @map("birth_date")
+  phone                    String
+
+  // Dados opcionais
+  sex                      String?   // "M", "F", "O"
+  rg                       String?
+  emergency_contact_name   String?   @map("emergency_contact_name")
+  emergency_contact_phone  String?   @map("emergency_contact_phone")
+
+  // Flags / metadados
+  is_responsible           Boolean   @default(false) @map("is_responsible")
+  seat_number              Int?      @map("seat_number")
+
+  // Timestamps
+  created_at               DateTime  @default(now()) @map("created_at")
+  updated_at               DateTime  @updatedAt @map("updated_at")
+
+  @@index([booking_id])
+  @@index([cpf])
+  @@map("passengers")
 }
 
 // Affiliate Model - Sistema de afiliados
@@ -394,26 +433,38 @@ model AffiliateReferral {
 // Contact Model - Mensagens de contato do formulário
 model Contact {
   id           String    @id @default(cuid())
-  
+
+  // Tipo do contato — discrimina geral vs fretamento (charter)
+  type         String    @default("general") // "general" | "charter"
+
   // Dados do contato
   name         String    // Nome completo
   email        String    // E-mail
   phone        String?   // Telefone (opcional)
   subject      String?   // Assunto selecionado
   message      String    // Mensagem
-  
+
+  // Campos específicos de fretamento (preenchidos quando type === 'charter')
+  origin           String?   // Cidade de origem
+  destination      String?   // Cidade de destino
+  departure_date   DateTime? @map("departure_date") // Data de ida
+  return_date      DateTime? @map("return_date")    // Data de volta (opcional)
+  passengers_count Int?      @map("passengers_count") // Qtd de passageiros
+  event_type       String?   @map("event_type")     // Tipo de evento (ex: corporativo, casamento)
+
   // Gerenciamento pelo admin
   status       String    @default("pending") // "pending", "in_progress", "resolved", "archived"
   priority     String    @default("normal") // "low", "normal", "high", "urgent"
   assigned_to  String?   @map("assigned_to") // ID do admin responsável (opcional)
   notes        String?   // Notas internas do admin
-  
+
   // Timestamps
   read_at      DateTime? @map("read_at") // Quando foi lido pelo admin
   resolved_at  DateTime? @map("resolved_at") // Quando foi resolvido
   created_at   DateTime  @default(now()) @map("created_at")
   updated_at   DateTime  @updatedAt @map("updated_at")
-  
+
+  @@index([type])
   @@index([status])
   @@index([priority])
   @@index([created_at])

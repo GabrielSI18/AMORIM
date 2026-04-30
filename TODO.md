@@ -60,40 +60,26 @@
 
 ---
 
-### [ ] Task 2: Cadastro completo de passageiros na reserva
-**Prioridade:** P0 | **Estimativa:** G
+### [x] Task 2: Cadastro completo de passageiros na reserva ✅
+**Prioridade:** P0 | **Estimativa:** G | **Concluída em:** 2026-04-30
 
-**O que fazer:**
-1. Criar modelo `Passenger` no Prisma:
-   - `id`, `booking_id` (FK), `full_name` (obrig), `cpf` (obrig), `birth_date` (obrig)
-   - `phone` (obrig), `sex` (opcional), `rg` (opcional)
-   - `emergency_contact_name` (opcional), `emergency_contact_phone` (opcional)
-   - `is_responsible` (boolean), `seat_number` (opcional)
-2. Criar migration
-3. Refatorar `src/app/reserva/[packageId]/page.tsx`: N formulários (um por passageiro)
-4. Adicionar validação Zod em `src/lib/validations.ts` (`passengerSchema`)
-5. Atualizar API `src/app/api/bookings/route.ts` para receber array de passageiros
-6. Atualizar admin — visualização de booking mostra lista de passageiros
-7. Botão "Exportar Passageiros" (CSV) na view admin
-
-**Aceite:**
-- Não finaliza reserva sem todos os passageiros preenchidos (nome, CPF, nascimento, telefone)
-- Admin vê/exporta lista completa
+**Resultado:**
+- Modelo `Passenger` no Prisma com FK para `Booking` (cascade delete) — campos obrigatórios `full_name`, `cpf`, `birth_date`, `phone` + opcionais `sex`, `rg`, `emergency_contact_*`, `is_responsible`, `seat_number`
+- Tabela criada via `db push` (mesmo padrão do Task 0)
+- `passengerSchema` + `passengersSchema` em `src/lib/validations.ts` com `cpfSchema`/`phoneSchema`/`birthDateSchema` reutilizáveis
+- API `src/app/api/bookings/route.ts` POST valida array, exige `length === numPassengers` e cria passageiros aninhados via Prisma; GET inclui `passengers` ordenados por criação
+- Página `src/app/reserva/[packageId]/page.tsx`: nova seção "Cadastro dos Passageiros" com N cards sincronizados a `numPassengers`, botão "Usar dados do responsável" no Passageiro 1, badges de Responsável + Assento, validação client-side antes do submit
+- Admin (`src/app/dashboard/reservas/page.tsx`): cards de cada passageiro no modal + botão de export CSV individual e botão "Exportar Passageiros" na header (UTF-8 com BOM, escape adequado)
 
 ---
 
-### [ ] Task 3: Corrigir sidebar da reserva
-**Prioridade:** P0 | **Estimativa:** P
+### [x] Task 3: Corrigir sidebar da reserva ✅
+**Prioridade:** P0 | **Estimativa:** P | **Concluída em:** 2026-04-30
 
-**O que fazer:**
-1. Em `src/app/reserva/[packageId]/page.tsx`, ajustar sidebar:
-   - `sticky top-24` + `max-h-[calc(100vh-8rem)] overflow-y-auto`
-2. Testar em viewport pequeno (768px height) e grande
-3. Garantir que mobile continua com botão fixo no bottom
-
-**Aceite:**
-- Sidebar não desencaixa, não sobrepõe conteúdo
-- Rola internamente se conteúdo maior que viewport
+**Resultado:**
+- Sidebar (`lg:block`) em `src/app/reserva/[packageId]/page.tsx` agora tem `sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-1` — rola internamente quando conteúdo passa da viewport e mantém posição "encaixada" abaixo do header sticky (top-0 ~4rem)
+- Mobile (`lg:hidden`) preservado: botão inline no fim do form, sem overlap
+- Type-check passou (0 erros)
 
 ---
 
@@ -137,35 +123,27 @@
 
 ---
 
-### [ ] Task 6: Remover placa e ano da frota (UI pública)
-**Prioridade:** P1 | **Estimativa:** P
+### [x] Task 6: Remover placa e ano da frota (UI pública) ✅
+**Prioridade:** P1 | **Estimativa:** P | **Concluída em:** 2026-04-30
 
-**O que fazer:**
-1. Confirmar que `plate` e `year` não aparecem em nenhuma tela pública (ano já removido)
-2. Verificar modal de fotos, detalhes, etc
-3. Manter plate/year visíveis no admin
-4. Ajustar API `/api/fleet` para não enviar plate/year ao frontend público (select)
-
-**Aceite:**
-- Nenhuma tela pública mostra placa ou ano
-- Admin continua vendo/editando
+**Resultado:**
+- API `/api/fleet` (GET) e `/api/fleet/[busId]` (GET) agora detectam admin via Clerk + role no banco. Para não-admin, aplicam `select` que omite `plate` e `year` (`publicBusSelect`)
+- API `/api/packages/[packageId]/seats` (público) — `bus.select` agora não inclui `plate` nem `year`
+- Interfaces `BusInfo` (em `src/components/packages/bus-seat-map.tsx`) e `BusData` (em `src/app/frota/page.tsx`) marcam `plate?` e `year?` como opcionais para refletir o payload público
+- Admin continua recebendo todos os campos: `dashboard/frota/*` e `dashboard/pacotes/*` exibem placa/ano normalmente (auth com cookie do Clerk faz isAdmin=true na API)
+- Verificado que UI pública (`/frota`, `/reserva`, modais de fotos, etc) já não renderizava nem placa nem ano — agora também não recebe via JSON
 
 ---
 
-### [ ] Task 7: Contato — formulário de Fretamento
-**Prioridade:** P1 | **Estimativa:** G
+### [x] Task 7: Contato — formulário de Fretamento ✅
+**Prioridade:** P1 | **Estimativa:** G | **Concluída em:** 2026-04-30
 
-**O que fazer:**
-1. Criar página `src/app/fretamento/page.tsx`:
-   - Campos: origem, destino, data ida, data volta (opc), qtd passageiros, tipo evento, observações, nome, telefone, email
-2. Adicionar "Fretamento de ônibus" nos assuntos do `src/app/contato/page.tsx`
-3. Atualizar modelo `Contact` no Prisma: campo `type` (general/charter)
-4. CTA WhatsApp como alternativa (mensagem pré-formatada)
-5. No admin, filtrar contatos por tag "Fretamento"
-
-**Aceite:**
-- Formulário salva no banco, admin vê com tag "Fretamento"
-- WhatsApp abre com dados preenchidos
+**Resultado:**
+- Modelo `Contact` no Prisma com novo campo `type` (default `general`) + colunas opcionais para charter: `origin`, `destination`, `departure_date`, `return_date`, `passengers_count`, `event_type`. Aplicado via `db push`. Index em `type`.
+- API `/api/contacts` com `discriminatedUnion` (zod) por `type`: charter exige origem, destino, data de ida e quantidade de passageiros. Charter é salvo com `priority = 'high'` por default. GET aceita filtro `?type=charter|general` e busca também em origin/destination.
+- Página pública `src/app/fretamento/page.tsx`: hero com CTAs (WhatsApp + form), grid de tipos de fretamento (corporativo/casamento/religioso/formatura/escolar/excursões), formulário completo com validação client-side + botão alternativo "Enviar pelo WhatsApp" que abre `wa.me` com mensagem pré-formatada (origem, destino, datas, passageiros, tipo de evento, observações).
+- `src/app/contato/page.tsx`: "Fretamento de ônibus" adicionado aos assuntos. Quando selecionado, mostra banner sugerindo o formulário dedicado em `/fretamento`.
+- `src/app/dashboard/contatos/page.tsx`: novo filtro de tipo (Todos/Geral/Fretamento), badge "Fretamento" com ícone nos cards, linha resumo com origem→destino + datas + passageiros, e seção dedicada "Detalhes do Fretamento" no modal com todos os campos extras.
 
 ---
 
@@ -187,51 +165,40 @@
 
 ## Sprint 3 — P2 (Média)
 
-### [ ] Task 9: Clientes — botão "Novo Cliente"
-**Prioridade:** P2 | **Estimativa:** M
+### [x] Task 9: Clientes — botão "Novo Cliente" + Importar CSV (Task 11) ✅
+**Prioridade:** P2 | **Estimativa:** M | **Concluída em:** 2026-04-30
+**Nota:** Task 11 (importar CSV) executada no mesmo bloco — o cliente Amorim controla viagens em caderno hoje e precisa migrar a base existente.
 
-**O que fazer:**
-1. Botão "Novo Cliente" em `src/app/dashboard/clientes/page.tsx`
-2. Modal ou page `src/app/dashboard/clientes/novo/page.tsx` (nome, email, telefone, CPF, notas)
-3. API Route `src/app/api/clients/route.ts` (POST)
-4. Reaproveitar modelo `User` com `source: manual`
-
-**Aceite:**
-- Criação manual funciona e aparece na listagem
-
----
-
-### [ ] Task 10: Clientes — corrigir busca + UX
-**Prioridade:** P2 | **Estimativa:** M
-
-**O que fazer:**
-1. Converter lista para client component (ou extrair)
-2. API `/api/clients?search=TERMO` buscando por nome, email, telefone, CPF
-3. Paginação (offset/limit) na API e frontend
-4. Highlight do termo buscado
-5. Ordenação por nome, data, qtd bookings
-
-**Aceite:**
-- Busca funciona por nome/telefone/CPF/email
-- Paginação e ordenação funcional
-- Responsivo no mobile
+**Resultado:**
+- Modelo `User` no Prisma estendido: `clerk_id String?` (nulo p/ cadastros manuais), novos campos `phone`, `cpf @unique`, `notes @db.Text`, `source` (clerk/manual/import) com index. Aplicado via `db push --accept-data-loss` (cpf coluna nova, sem conflitos).
+- `src/app/api/clients/route.ts` (POST): criação manual com `requireAdmin`, validação Zod (cpfOpcional/email/phone), dedup por email/cpf — existente é atualizado, novo é criado com `source: 'manual'`.
+- `src/app/api/clients/import/route.ts` (POST): importação em massa via array de objetos (até 5000 linhas). Valida linha-a-linha, dedup por email/cpf, retorna `{summary: {total, created, updated, skipped}, errors: [{row, email, message}]}`. Linhas inválidas não bloqueiam o lote.
+- `src/app/dashboard/clientes/clientes-actions.tsx` (Client Component): botões "Novo Cliente" e "Importar CSV" expostos via `PageHeader.action`. Modal de criação com nome/email/telefone/CPF/notas e máscaras. Modal de importação com instruções, link de download de template CSV, parser CSV inline (suporta `,` `;` `\t`, aspas escapadas, BOM UTF-8), preview das primeiras 10 linhas, mapeamento tolerante de cabeçalho (name/nome, email/e-mail, phone/telefone/celular, cpf, notes/observações), e relatório final com contadores + lista de erros.
+- Após sucesso, `router.refresh()` re-executa o Server Component da listagem.
 
 ---
 
-### [ ] Task 11: Clientes — importar CSV/XLSX
-**Prioridade:** P2 | **Estimativa:** G
+### [x] Task 10: Clientes — corrigir busca + UX ✅
+**Prioridade:** P2 | **Estimativa:** M | **Concluída em:** 2026-04-30
 
-**O que fazer:**
-1. Botão "Importar" ao lado de "Novo Cliente"
-2. Upload + parser CSV (`papaparse`) e XLSX (`sheetjs`)
-3. Preview com mapeamento de colunas
-4. Validação: CPF, telefone, email. Erros por linha
-5. Dedup por CPF (existir → atualizar; não → criar)
-6. Template CSV para download
+**Resultado:**
+- `GET /api/clients` (admin) com `search`, `page`, `limit` (max 100), `sortBy` (name/date/bookings), `sortOrder` (asc/desc), `source` (all/user/booking). Validação Zod via `querySchema`. Retorna `{data, pagination, stats}`.
+- Lista unificada (Users com role USER + bookings guest agrupados por email) feita em memória após carregar as duas fontes — adequado para o volume esperado (centenas a baixos milhares). Busca compara texto normalizado (sem acentos) para nome/email; já se a query tem dígitos, compara só dígitos para telefone/CPF.
+- `src/app/dashboard/clientes/page.tsx` virou shell mínimo (auth + page header). Listagem extraída para `clientes-list.tsx` (Client Component) com debounce 400ms na busca, headers da tabela clicáveis para ordenar, dropdown de sort/source, paginação (Anterior/Próxima + indicador "1/N"), cards no mobile e tabela no desktop.
+- Highlight do termo via `<mark>` com `bg-yellow-200/dark:bg-yellow-500/40` em todos os campos exibidos (nome, email, telefone, CPF).
+- Comunicação Actions ↔ List via custom event (`clientes:refresh`) — quando criação/import sucedem, dispara o evento e a List re-fetcha sem precisar de wrapper.
+- Type-check e lint 100% limpos.
 
-**Aceite:**
-- Importa clientes com relatório de erros
-- Template disponível para download
+---
+
+### [x] Task 11: Clientes — importar CSV ✅ (executada com Task 9)
+**Prioridade:** P2 | **Estimativa:** G | **Concluída em:** 2026-04-30
+
+**Resultado:**
+- Implementação consolidada com a Task 9 — ver detalhes lá.
+- Suporte a CSV (parser inline, sem dep adicional). XLSX **não** foi implementado (fora do escopo do que o cliente precisa hoje).
+- Validação por linha (nome, email, CPF opcional com 11 dígitos), dedup por email/CPF, atualização de existentes, relatório de erros, template para download.
+- Caso XLSX seja necessário no futuro, adicionar `sheetjs` e converter a planilha para o mesmo array que a importação CSV consome.
 
 ---
 

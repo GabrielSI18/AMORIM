@@ -169,3 +169,66 @@ export const searchSchema = paginationSchema.extend({
 });
 
 export type SearchInput = z.infer<typeof searchSchema>;
+
+// ============================================
+// Schemas de Booking / Passenger
+// ============================================
+
+/** CPF: aceita string com 11 dígitos (com ou sem máscara) */
+export const cpfSchema = z
+  .string()
+  .trim()
+  .transform((v) => v.replace(/\D/g, ''))
+  .refine((v) => v.length === 11, 'CPF deve ter 11 dígitos');
+
+/** Telefone: aceita string com 10 ou 11 dígitos (com ou sem máscara) */
+export const phoneSchema = z
+  .string()
+  .trim()
+  .transform((v) => v.replace(/\D/g, ''))
+  .refine((v) => v.length === 10 || v.length === 11, 'Telefone inválido');
+
+/** Telefone opcional */
+export const optionalPhoneSchema = z
+  .string()
+  .trim()
+  .transform((v) => v.replace(/\D/g, ''))
+  .refine((v) => v === '' || v.length === 10 || v.length === 11, 'Telefone inválido')
+  .optional();
+
+/** Data de nascimento: ISO date string, não pode ser no futuro */
+export const birthDateSchema = z
+  .string()
+  .min(1, 'Data de nascimento é obrigatória')
+  .refine((v) => !Number.isNaN(Date.parse(v)), 'Data inválida')
+  .refine((v) => new Date(v) <= new Date(), 'Data de nascimento não pode ser no futuro');
+
+/** Passageiro individual da reserva */
+export const passengerSchema = z.object({
+  fullName: z.string().trim().min(3, 'Nome completo é obrigatório'),
+  cpf: cpfSchema,
+  birthDate: birthDateSchema,
+  phone: phoneSchema,
+  sex: z.enum(['M', 'F', 'O']).optional(),
+  rg: z.string().trim().max(20).optional().or(z.literal('')),
+  emergencyContactName: z.string().trim().max(100).optional().or(z.literal('')),
+  emergencyContactPhone: z
+    .string()
+    .trim()
+    .transform((v) => v.replace(/\D/g, ''))
+    .refine((v) => v === '' || v.length === 10 || v.length === 11, 'Telefone inválido')
+    .optional(),
+  isResponsible: z.boolean().optional().default(false),
+  seatNumber: z.number().int().positive().optional().nullable(),
+});
+
+export type PassengerInput = z.infer<typeof passengerSchema>;
+
+/** Array de passageiros (mínimo 1) */
+export const passengersSchema = z
+  .array(passengerSchema)
+  .min(1, 'Informe pelo menos um passageiro')
+  .refine(
+    (list) => list.filter((p) => p.isResponsible).length <= 1,
+    'Apenas um passageiro pode ser marcado como responsável',
+  );

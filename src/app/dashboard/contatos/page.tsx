@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { 
-  MessageSquare, 
-  Search, 
+import {
+  MessageSquare,
+  Search,
   Filter,
   Phone,
   Mail,
@@ -18,7 +18,11 @@ import {
   ChevronDown,
   RefreshCw,
   Eye,
-  X
+  X,
+  Bus,
+  MapPin,
+  Calendar,
+  Users,
 } from 'lucide-react'
 import { DashboardShell, AdminGuard } from '@/components/dashboard'
 
@@ -43,11 +47,18 @@ function formatRelativeDate(dateString: string): string {
 
 interface Contact {
   id: string
+  type: 'general' | 'charter'
   name: string
   email: string
   phone: string | null
   subject: string | null
   message: string
+  origin: string | null
+  destination: string | null
+  departure_date: string | null
+  return_date: string | null
+  passengers_count: number | null
+  event_type: string | null
   status: 'pending' | 'in_progress' | 'resolved' | 'archived'
   priority: 'low' | 'normal' | 'high' | 'urgent'
   notes: string | null
@@ -55,6 +66,18 @@ interface Contact {
   resolved_at: string | null
   created_at: string
   updated_at: string
+}
+
+const typeConfig: Record<Contact['type'], { label: string; color: string }> = {
+  general: { label: 'Geral', color: 'bg-gray-500/10 text-gray-500 border-gray-500/30' },
+  charter: { label: 'Fretamento', color: 'bg-primary/10 text-primary border-primary/30' },
+}
+
+function formatDateBr(dateString: string | null) {
+  if (!dateString) return null
+  const d = new Date(dateString)
+  if (Number.isNaN(d.getTime())) return null
+  return d.toLocaleDateString('pt-BR')
 }
 
 interface Stats {
@@ -94,6 +117,7 @@ function ContatosContent() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [priorityFilter, setPriorityFilter] = useState('all')
+  const [typeFilter, setTypeFilter] = useState<'all' | 'general' | 'charter'>('all')
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
   const [isUpdating, setIsUpdating] = useState(false)
 
@@ -103,6 +127,7 @@ function ContatosContent() {
       if (search) params.append('search', search)
       if (statusFilter !== 'all') params.append('status', statusFilter)
       if (priorityFilter !== 'all') params.append('priority', priorityFilter)
+      if (typeFilter !== 'all') params.append('type', typeFilter)
 
       const res = await fetch(`/api/contacts?${params.toString()}`)
       
@@ -125,7 +150,7 @@ function ContatosContent() {
     } finally {
       setIsLoading(false)
     }
-  }, [search, statusFilter, priorityFilter, router])
+  }, [search, statusFilter, priorityFilter, typeFilter, router])
 
   useEffect(() => {
     loadContacts()
@@ -284,7 +309,19 @@ function ContatosContent() {
             />
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <div className="relative">
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}
+                className="appearance-none px-4 py-3 pr-10 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-lg text-gray-900 dark:text-[#E0E0E0] focus:outline-none focus:border-[#D93636] transition cursor-pointer"
+              >
+                <option value="all">Todos os tipos</option>
+                <option value="general">Geral</option>
+                <option value="charter">Fretamento</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-[#666] pointer-events-none" />
+            </div>
             <div className="relative">
               <select
                 value={priorityFilter}
@@ -335,8 +372,12 @@ function ContatosContent() {
 
                       {/* Conteúdo */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <h3 className="font-semibold text-gray-900 dark:text-[#E0E0E0] truncate">{contact.name}</h3>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full border ${typeConfig[contact.type].color}`}>
+                            {contact.type === 'charter' && <Bus className="w-3 h-3" />}
+                            {typeConfig[contact.type].label}
+                          </span>
                           <span className={`px-2 py-0.5 text-xs rounded-full border ${statusConfig[contact.status].color}`}>
                             {statusConfig[contact.status].label}
                           </span>
@@ -362,6 +403,30 @@ function ContatosContent() {
                           <p className="text-sm text-[#D93636] mb-1">
                             Assunto: {contact.subject}
                           </p>
+                        )}
+
+                        {contact.type === 'charter' && (
+                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600 dark:text-[#B0B0B0] mb-1">
+                            {(contact.origin || contact.destination) && (
+                              <span className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {[contact.origin, contact.destination].filter(Boolean).join(' → ')}
+                              </span>
+                            )}
+                            {contact.departure_date && (
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3" />
+                                {formatDateBr(contact.departure_date)}
+                                {contact.return_date && ` → ${formatDateBr(contact.return_date)}`}
+                              </span>
+                            )}
+                            {contact.passengers_count && (
+                              <span className="flex items-center gap-1">
+                                <Users className="w-3 h-3" />
+                                {contact.passengers_count} pax
+                              </span>
+                            )}
+                          </div>
                         )}
 
                         <p className="text-sm text-gray-500 dark:text-[#A0A0A0] line-clamp-2">
@@ -466,6 +531,60 @@ function ContatosContent() {
                 <div>
                   <p className="text-sm text-gray-500 dark:text-[#A0A0A0] mb-1">Assunto</p>
                   <p className="text-[#D93636] font-medium">{selectedContact.subject}</p>
+                </div>
+              )}
+
+              {/* Detalhes do Fretamento */}
+              {selectedContact.type === 'charter' && (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
+                  <h3 className="text-sm font-semibold text-primary flex items-center gap-2">
+                    <Bus className="w-4 h-4" />
+                    Detalhes do Fretamento
+                  </h3>
+                  <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                    {selectedContact.origin && (
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Origem</p>
+                        <p className="text-gray-900 dark:text-[#E0E0E0]">{selectedContact.origin}</p>
+                      </div>
+                    )}
+                    {selectedContact.destination && (
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Destino</p>
+                        <p className="text-gray-900 dark:text-[#E0E0E0]">{selectedContact.destination}</p>
+                      </div>
+                    )}
+                    {selectedContact.departure_date && (
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Data de ida</p>
+                        <p className="text-gray-900 dark:text-[#E0E0E0]">
+                          {formatDateBr(selectedContact.departure_date)}
+                        </p>
+                      </div>
+                    )}
+                    {selectedContact.return_date && (
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Data de volta</p>
+                        <p className="text-gray-900 dark:text-[#E0E0E0]">
+                          {formatDateBr(selectedContact.return_date)}
+                        </p>
+                      </div>
+                    )}
+                    {selectedContact.passengers_count && (
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Passageiros</p>
+                        <p className="text-gray-900 dark:text-[#E0E0E0]">
+                          {selectedContact.passengers_count}
+                        </p>
+                      </div>
+                    )}
+                    {selectedContact.event_type && (
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Tipo de evento</p>
+                        <p className="text-gray-900 dark:text-[#E0E0E0]">{selectedContact.event_type}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 

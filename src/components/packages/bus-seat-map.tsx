@@ -6,8 +6,9 @@ import { useState, useEffect, useCallback } from 'react';
 export interface BusInfo {
   id: string;
   model: string;
-  year: number;
-  plate: string;
+  // `year` e `plate` são opcionais: a API pública não os retorna (admin sim)
+  year?: number;
+  plate?: string;
   seats: number;
   floors: number;
   photos: string[];

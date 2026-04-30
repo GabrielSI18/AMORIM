@@ -11,8 +11,9 @@ import { GlobalSearch } from '@/components/ui/global-search'
 interface BusData {
   id: string
   model: string
-  year: number
-  plate: string
+  // `year`/`plate` não vêm da API pública; mantidos opcionais por compat
+  year?: number
+  plate?: string
   seats: number
   floors: number
   photos: string[]

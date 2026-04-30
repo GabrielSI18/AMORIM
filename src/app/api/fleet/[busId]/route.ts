@@ -3,9 +3,30 @@ import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/prisma';
 import { toCamelCase } from '@/lib/case-transform';
 
+// Campos seguros para o público — `plate` e `year` ficam de fora (info interna).
+const publicBusSelect = {
+  id: true,
+  model: true,
+  seats: true,
+  floors: true,
+  photos: true,
+  is_active: true,
+  created_at: true,
+  updated_at: true,
+} as const;
+
+async function isRequesterAdmin(clerkId: string | null | undefined): Promise<boolean> {
+  if (!clerkId) return false;
+  const user = await prisma.user.findUnique({
+    where: { clerk_id: clerkId },
+    select: { role: true },
+  });
+  return user ? user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' : false;
+}
+
 /**
  * GET /api/fleet/[busId]
- * Busca um ônibus específico
+ * Busca um ônibus específico. Admin recebe todos os campos; público não recebe `plate` nem `year`.
  */
 export async function GET(
   request: NextRequest,
@@ -13,9 +34,12 @@ export async function GET(
 ) {
   try {
     const { busId } = await params;
+    const { userId } = await auth();
+    const isAdmin = await isRequesterAdmin(userId);
 
     const bus = await prisma.bus.findUnique({
       where: { id: busId },
+      ...(isAdmin ? {} : { select: publicBusSelect }),
     });
 
     if (!bus) {

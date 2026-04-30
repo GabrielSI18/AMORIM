@@ -10,6 +10,7 @@ export async function GET(
     const { packageId } = await params;
 
     // Busca o pacote para pegar total de assentos e ônibus
+    // (rota pública — não expõe `plate` nem `year` do ônibus)
     const pkg = await prisma.package.findUnique({
       where: { id: packageId },
       select: {
@@ -20,8 +21,6 @@ export async function GET(
           select: {
             id: true,
             model: true,
-            year: true,
-            plate: true,
             seats: true,
             floors: true,
             photos: true,

@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/prisma';
 import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
 import { toCamelCase } from '@/lib/case-transform';
+import { passengersSchema, safeParse } from '@/lib/validations';
 import type { CreateBookingDto } from '@/types';
 
 /**
@@ -25,6 +26,9 @@ export async function GET(req: NextRequest) {
               destination_rel: true,
               category: true,
             },
+          },
+          passengers: {
+            orderBy: { created_at: 'asc' },
           },
         },
       });
@@ -66,6 +70,9 @@ export async function GET(req: NextRequest) {
             category: true,
           },
         },
+        passengers: {
+          orderBy: { created_at: 'asc' },
+        },
       },
       orderBy: { created_at: 'desc' },
     });
@@ -104,7 +111,7 @@ export async function POST(req: NextRequest) {
       return rateLimitExceededResponse(rateLimitResult);
     }
 
-    const body: CreateBookingDto & { 
+    const body: CreateBookingDto & {
       selectedSeats?: number[];
       totalPrice?: number;
       passengerDetails?: {
@@ -113,12 +120,30 @@ export async function POST(req: NextRequest) {
         children_6_10: number;
         children_free: number;
       };
+      passengers?: unknown;
     } = await req.json();
 
     // Validação
     if (!body.packageId || !body.customerName || !body.customerEmail || !body.customerPhone || !body.numPassengers) {
       return NextResponse.json(
         { error: 'Campos obrigatórios faltando' },
+        { status: 400 }
+      );
+    }
+
+    // Validação de passageiros (obrigatório)
+    const passengersResult = safeParse(passengersSchema, body.passengers);
+    if (!passengersResult.success || !passengersResult.data) {
+      return NextResponse.json(
+        { error: passengersResult.error || 'Lista de passageiros inválida' },
+        { status: 400 }
+      );
+    }
+    const passengers = passengersResult.data;
+
+    if (passengers.length !== body.numPassengers) {
+      return NextResponse.json(
+        { error: `Cadastre exatamente ${body.numPassengers} passageiro(s)` },
         { status: 400 }
       );
     }
@@ -203,7 +228,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Criar reserva
+    // Criar reserva + passageiros em transação
     const booking = await prisma.booking.create({
       data: {
         package_id: body.packageId,
@@ -216,12 +241,29 @@ export async function POST(req: NextRequest) {
         total_amount: totalAmount,
         customer_notes: body.customerNotes,
         selected_seats: body.selectedSeats ?? undefined,
+        passengers: {
+          create: passengers.map((p, idx) => ({
+            full_name: p.fullName,
+            cpf: p.cpf,
+            birth_date: new Date(p.birthDate),
+            phone: p.phone,
+            sex: p.sex,
+            rg: p.rg || null,
+            emergency_contact_name: p.emergencyContactName || null,
+            emergency_contact_phone: p.emergencyContactPhone || null,
+            is_responsible: p.isResponsible ?? false,
+            seat_number: p.seatNumber ?? body.selectedSeats?.[idx] ?? null,
+          })),
+        },
       },
       include: {
         package: {
           include: {
             destination_rel: true,
           },
+        },
+        passengers: {
+          orderBy: { created_at: 'asc' },
         },
       },
     });

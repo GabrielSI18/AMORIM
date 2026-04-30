@@ -1,20 +1,24 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { PublicLayout } from '@/components/layout';
 import { useSiteConfig } from '@/hooks/use-site-config';
-import { 
-  Send, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Clock, 
+import {
+  Send,
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
   MessageCircle,
   CheckCircle2,
-  Loader2
+  Loader2,
+  Bus,
 } from 'lucide-react';
+
+const CHARTER_SUBJECT = 'Fretamento de ônibus';
 
 export default function ContatoPage() {
   const [formData, setFormData] = useState({
@@ -106,6 +110,7 @@ export default function ContatoPage() {
 
   const subjects = [
     'Dúvidas sobre pacotes',
+    CHARTER_SUBJECT,
     'Informações de pagamento',
     'Programa de Afiliados',
     'Suporte técnico',
@@ -113,6 +118,8 @@ export default function ContatoPage() {
     'Reclamações',
     'Outros',
   ];
+
+  const isCharterSubject = formData.subject === CHARTER_SUBJECT;
 
   return (
     <PublicLayout>
@@ -238,6 +245,22 @@ export default function ContatoPage() {
                     </select>
                   </div>
                 </div>
+
+                {isCharterSubject && (
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-lg bg-primary/10 border border-primary/30">
+                    <Bus className="w-6 h-6 text-primary flex-shrink-0" />
+                    <p className="text-sm text-foreground flex-1">
+                      Para fretamento, recomendamos o formulário dedicado — ele captura origem,
+                      destino, datas e quantidade de passageiros para uma cotação mais rápida.
+                    </p>
+                    <Link
+                      href="/fretamento"
+                      className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium text-sm hover:bg-primary/90 transition"
+                    >
+                      Ir para fretamento
+                    </Link>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-muted-foreground mb-2">

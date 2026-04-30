@@ -4,7 +4,8 @@ import prisma from '@/lib/prisma'
 import { z } from 'zod'
 
 // Schema de validação para criar contato (público)
-const createContactSchema = z.object({
+// Aceita 2 tipos: "general" (formulário padrão) e "charter" (fretamento, com campos extras obrigatórios)
+const baseContactSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   email: z.string().email('E-mail inválido'),
   phone: z.string().optional(),
@@ -12,13 +13,37 @@ const createContactSchema = z.object({
   message: z.string().min(10, 'Mensagem deve ter pelo menos 10 caracteres'),
 })
 
+const charterFieldsSchema = z.object({
+  type: z.literal('charter'),
+  origin: z.string().min(2, 'Informe a cidade de origem'),
+  destination: z.string().min(2, 'Informe o destino'),
+  departureDate: z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'Data de ida inválida'),
+  returnDate: z
+    .string()
+    .optional()
+    .refine((v) => !v || !Number.isNaN(Date.parse(v)), 'Data de volta inválida'),
+  passengersCount: z.coerce
+    .number()
+    .int('Quantidade deve ser um número inteiro')
+    .min(1, 'Informe ao menos 1 passageiro'),
+  eventType: z.string().optional(),
+})
+
+const createContactSchema = z.discriminatedUnion('type', [
+  baseContactSchema.extend({ type: z.literal('general').optional().default('general') }),
+  baseContactSchema.merge(charterFieldsSchema),
+])
+
 // POST /api/contacts - Criar novo contato (público)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    
+
+    // Default type para 'general' se não informado
+    const payload = { ...body, type: body?.type ?? 'general' }
+
     // Validar dados
-    const validation = createContactSchema.safeParse(body)
+    const validation = createContactSchema.safeParse(payload)
     if (!validation.success) {
       const firstError = validation.error.issues[0]
       return NextResponse.json(
@@ -27,18 +52,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { name, email, phone, subject, message } = validation.data
+    const data = validation.data
+    const isCharter = data.type === 'charter'
 
     // Criar contato no banco
     const contact = await prisma.contact.create({
       data: {
-        name,
-        email,
-        phone,
-        subject,
-        message,
+        type: data.type,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        subject: data.subject,
+        message: data.message,
+        origin: isCharter ? data.origin : null,
+        destination: isCharter ? data.destination : null,
+        departure_date: isCharter ? new Date(data.departureDate) : null,
+        return_date: isCharter && data.returnDate ? new Date(data.returnDate) : null,
+        passengers_count: isCharter ? data.passengersCount : null,
+        event_type: isCharter ? data.eventType ?? null : null,
         status: 'pending',
-        priority: 'normal',
+        priority: isCharter ? 'high' : 'normal', // fretamento tem prioridade alta por default
       },
     })
 
@@ -79,27 +112,34 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const priority = searchParams.get('priority')
+    const type = searchParams.get('type')
     const search = searchParams.get('search')
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
 
     // Construir filtros
     const where: Record<string, unknown> = {}
-    
+
     if (status && status !== 'all') {
       where.status = status
     }
-    
+
     if (priority && priority !== 'all') {
       where.priority = priority
     }
-    
+
+    if (type && type !== 'all') {
+      where.type = type
+    }
+
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
         { phone: { contains: search, mode: 'insensitive' } },
         { message: { contains: search, mode: 'insensitive' } },
+        { origin: { contains: search, mode: 'insensitive' } },
+        { destination: { contains: search, mode: 'insensitive' } },
       ]
     }
 

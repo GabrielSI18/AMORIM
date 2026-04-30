@@ -50,3 +50,6 @@ next-env.d.ts
 
 /src/generated/prisma
 .env.vercel.tmp
+
+# Claude Code (configurações locais do usuário)
+.claude/
