@@ -4,7 +4,14 @@ import prisma from '@/lib/prisma';
 import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
 import { toCamelCase } from '@/lib/case-transform';
 import { passengersSchema, safeParse } from '@/lib/validations';
+import { sendAffiliateNewSaleEmail } from '@/lib/email';
 import type { CreateBookingDto } from '@/types';
+
+const APP_URL = process.env.NEXT_PUBLIC_URL || 'https://amorimturismo.com.br';
+
+function formatBRL(cents: number): string {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
+}
 
 /**
  * GET /api/bookings
@@ -278,10 +285,10 @@ export async function POST(req: NextRequest) {
       } : null,
     };
 
-    // Se há afiliado válido, criar registro de indicação
+    // Se há afiliado válido, criar registro de indicação + notificar afiliado
     if (affiliate) {
       const commissionAmount = Math.floor(totalAmount * (affiliate.commission_rate / 100));
-      
+
       await prisma.affiliateReferral.create({
         data: {
           affiliate_id: affiliate.id,
@@ -293,6 +300,20 @@ export async function POST(req: NextRequest) {
           commission_status: 'pending', // Aguarda aprovação manual
         },
       });
+
+      // Notifica afiliado em fire-and-forget — falha de email não derruba a reserva
+      if (affiliate.email) {
+        sendAffiliateNewSaleEmail({
+          to: affiliate.email,
+          affiliateName: affiliate.name,
+          packageTitle: package_.title,
+          saleAmount: formatBRL(totalAmount),
+          commissionAmount: formatBRL(commissionAmount),
+          panelUrl: `${APP_URL}/dashboard/parceiro`,
+        }).catch((err) => {
+          console.error('[booking.affiliate] email error:', err);
+        });
+      }
     }
 
     // Atualizar vagas disponíveis

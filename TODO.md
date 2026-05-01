@@ -104,22 +104,25 @@
 
 ## Sprint 2 — P1 (Alta)
 
-### [ ] Task 5: Home focada em Fretamento
-**Prioridade:** P1 | **Estimativa:** G
+### [⏸] Task 5: Home focada em Fretamento — EM STAND BY
+**Prioridade:** P1 | **Estimativa:** G | **Status:** aguardando decisão
 
-**O que fazer:**
+**Decisão pendente (2026-04-30):**
+O foco do site é venda de pacotes, não fretamento. Fretamento é uma realidade da empresa mas papel secundário — `/fretamento` (Task 7) + entrada no `/contato` já cobrem quem quer fretar. A reescrita completa da home pra fretamento não faz mais sentido.
+
+**Possíveis caminhos quando reabrir:**
+- **A. Cancelar a task** — home atual já vende pacotes; canal de fretamento existe via `/fretamento` e `/contato`.
+- **B. Versão reduzida (P/M)** — manter home focada em pacotes e adicionar 1 banner/card discreto para `/fretamento` no final + link no footer/menu. Mantém visibilidade sem mover o foco.
+
+**Escopo original (caso seja decidido executar como estava):**
 1. Reescrever `src/app/page.tsx`:
-   - **Hero:** "Fretamento de Ônibus para Viagens, Eventos e Empresas" + CTA duplo (formulário + WhatsApp)
-   - **Cards de fretamento:** tipos (excursões, corporativo, casamentos, religiosos)
-   - **Seção Frota:** preview com fotos, capacidade → link `/frota`
-   - **Pacotes em Destaque:** manter
-   - **Depoimentos/confiança:** nova seção
-   - **Contato:** consumir do SiteConfig
+   - Hero: "Fretamento de Ônibus para Viagens, Eventos e Empresas" + CTA duplo (formulário + WhatsApp)
+   - Cards de fretamento: tipos (excursões, corporativo, casamentos, religiosos)
+   - Seção Frota: preview com fotos, capacidade → link `/frota`
+   - Pacotes em Destaque: manter
+   - Depoimentos/confiança: nova seção
+   - Contato: consumir do SiteConfig
 2. Manter bottom navigation e GlobalSearch
-
-**Aceite:**
-- CTA principal leva para formulário de fretamento ou WhatsApp
-- Frota visível acima da dobra no mobile
 
 ---
 
@@ -178,16 +181,20 @@
 
 ---
 
-### [x] Task 10: Clientes — corrigir busca + UX ✅
-**Prioridade:** P2 | **Estimativa:** M | **Concluída em:** 2026-04-30
+### [ ] Task 10: Clientes — corrigir busca + UX
+**Prioridade:** P2 | **Estimativa:** M
 
-**Resultado:**
-- `GET /api/clients` (admin) com `search`, `page`, `limit` (max 100), `sortBy` (name/date/bookings), `sortOrder` (asc/desc), `source` (all/user/booking). Validação Zod via `querySchema`. Retorna `{data, pagination, stats}`.
-- Lista unificada (Users com role USER + bookings guest agrupados por email) feita em memória após carregar as duas fontes — adequado para o volume esperado (centenas a baixos milhares). Busca compara texto normalizado (sem acentos) para nome/email; já se a query tem dígitos, compara só dígitos para telefone/CPF.
-- `src/app/dashboard/clientes/page.tsx` virou shell mínimo (auth + page header). Listagem extraída para `clientes-list.tsx` (Client Component) com debounce 400ms na busca, headers da tabela clicáveis para ordenar, dropdown de sort/source, paginação (Anterior/Próxima + indicador "1/N"), cards no mobile e tabela no desktop.
-- Highlight do termo via `<mark>` com `bg-yellow-200/dark:bg-yellow-500/40` em todos os campos exibidos (nome, email, telefone, CPF).
-- Comunicação Actions ↔ List via custom event (`clientes:refresh`) — quando criação/import sucedem, dispara o evento e a List re-fetcha sem precisar de wrapper.
-- Type-check e lint 100% limpos.
+**O que fazer:**
+1. Converter lista para client component (ou extrair)
+2. API `/api/clients?search=TERMO` buscando por nome, email, telefone, CPF
+3. Paginação (offset/limit) na API e frontend
+4. Highlight do termo buscado
+5. Ordenação por nome, data, qtd bookings
+
+**Aceite:**
+- Busca funciona por nome/telefone/CPF/email
+- Paginação e ordenação funcional
+- Responsivo no mobile
 
 ---
 
@@ -219,31 +226,31 @@
 
 ---
 
-### [ ] Task 13: Corrigir tela de detalhes do afiliado
-**Prioridade:** P2 | **Estimativa:** M
+### [x] Task 13: Corrigir tela de detalhes do afiliado ✅
+**Prioridade:** P2 | **Estimativa:** M | **Concluída em:** 2026-04-30
 
-**O que fazer:**
-1. Criar view de detalhe (modal ou page `/afiliados/[id]`) no dashboard
-2. Mostrar: dados completos, link de afiliado, stats, histórico de referrals
-3. Ações: editar, ativar/desativar/suspender, copiar link, marcar comissões pagas
-
-**Aceite:**
-- Detalhe mostra informações completas com ações
+**Resultado:**
+- Layout da `src/app/dashboard/afiliados/[id]/page.tsx` corrigido: removido `container-custom` (que limitava largura), agora usa `px-4 sm:px-6 py-6 space-y-6` consistente com as outras telas do dashboard.
+- Header com `flex-wrap` + `truncate` para acomodar nomes longos.
+- Detalhes completos já existentes: dados pessoais, código, link copiável, chave PIX, stats (comissão, reservas, vendas, ganhos), histórico de referrals com ações (aprovar/pagar/copiar). Ações de status (aprovar/rejeitar/suspender/reativar) integradas com `PATCH /api/affiliates/[id]` que agora dispara email automaticamente quando vira `active`.
 
 ---
 
-### [ ] Task 14: Verificar tracking do link de afiliado
-**Prioridade:** P2 | **Estimativa:** P
+### [x] Task 14: Tracking do link de afiliado + sistema 100% funcional ✅
+**Prioridade:** P2 | **Estimativa:** P (consolidada em escopo maior) | **Concluída em:** 2026-04-30
 
-**O que fazer:**
-1. Revisar `src/hooks/use-affiliate-tracking.ts` (cookie + localStorage)
-2. Verificar se reserva envia `affiliateCode` no booking
-3. Verificar se API cria `AffiliateReferral` corretamente
-4. Testar fluxo: link → navegar → reservar → referral no admin
-5. Corrigir gaps
+**Resultado:**
+- **Tracking universal:** novo `<AffiliateTracker />` (Client Component com Suspense boundary) no root layout chama `useAffiliateTracking` em todas as páginas. Antes só rodava em `/pacotes` — agora `?ref=CODIGO` funciona em qualquer URL pública (home, pacote individual, frota, etc). Cookie + localStorage por 30 dias (já existiam).
+- **Reserva:** `/api/bookings` POST já lia `affiliateCode`, validava `status='active'` e criava `AffiliateReferral`. Agora também dispara email `sendAffiliateNewSaleEmail` para o afiliado fire-and-forget.
+- **Aprovação:** `PATCH /api/affiliates` e `PATCH /api/affiliates/[id]` detectam transição `pending→active` (busca status anterior antes do update) e disparam `sendAffiliateApprovedEmail` com código + link + comissão.
+- **Pagamento de comissão:** `PUT /api/affiliates/referrals` quando vira `paid` dispara `sendAffiliateCommissionPaidEmail` com valor formatado em BRL e data.
+- **3 templates novos** em `src/lib/email-templates.tsx` (AffiliateApprovedEmail, AffiliateNewSaleEmail, AffiliateCommissionPaidEmail) com branding Amorim (azul `#003c71`, logo) e CTAs para `/dashboard/parceiro`.
+- **3 helpers novos** em `src/lib/email.ts` (sendAffiliateApprovedEmail, sendAffiliateNewSaleEmail, sendAffiliateCommissionPaidEmail).
+- **Painel do parceiro** (`/dashboard/parceiro`): já tinha código copiável, link geral copiável e **link individual por pacote** com cálculo de comissão visível.
+- **APP_NAME / EMAIL_FROM defaults** corrigidos: deixaram de apontar para "Base2025" e agora apontam para "Amorim Turismo" / `noreply@amorimturismo.com.br`.
 
-**Aceite:**
-- Link do afiliado → reserva → referral vinculado corretamente
+**Como ativar emails em produção:**
+- Setar `ACTIVE_EMAIL=true`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `EMAIL_FROM` no Vercel env. Sem isso, helpers retornam `success: false` mas não bloqueiam fluxo.
 
 ---
 
@@ -279,4 +286,5 @@
 - **G** = Grande (6h+)
 - **[ ]** = Não iniciado
 - **[~]** = Em progresso
+- **[⏸]** = Em stand by (aguardando decisão de escopo)
 - **[x]** = Concluído

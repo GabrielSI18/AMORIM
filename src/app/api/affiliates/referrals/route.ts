@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/prisma';
 import { toCamelCase } from '@/lib/case-transform';
+import { sendAffiliateCommissionPaidEmail } from '@/lib/email';
+
+const APP_URL = process.env.NEXT_PUBLIC_URL || 'https://amorimturismo.com.br';
+
+function formatBRL(cents: number): string {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
+}
 
 /**
  * GET /api/affiliates/referrals
@@ -145,7 +152,7 @@ export async function PUT(request: NextRequest) {
       data: updateData,
     });
 
-    // Se marcou como pago, atualizar estatísticas do afiliado
+    // Se marcou como pago, atualizar estatísticas do afiliado + notificar por email
     if (status === 'paid' && currentReferral.commission_status !== 'paid') {
       await prisma.affiliate.update({
         where: { id: currentReferral.affiliate_id },
@@ -155,6 +162,25 @@ export async function PUT(request: NextRequest) {
           total_bookings: { increment: 1 },
         },
       });
+
+      // Notifica afiliado fire-and-forget
+      if (currentReferral.affiliate.email) {
+        const paidAtFmt = new Date().toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+        });
+        sendAffiliateCommissionPaidEmail({
+          to: currentReferral.affiliate.email,
+          affiliateName: currentReferral.affiliate.name,
+          packageTitle: currentReferral.package_title,
+          commissionAmount: formatBRL(currentReferral.commission_amount),
+          paidAt: paidAtFmt,
+          panelUrl: `${APP_URL}/dashboard/parceiro`,
+        }).catch((err) => {
+          console.error('[referral.paid] email error:', err);
+        });
+      }
     }
 
     return NextResponse.json({

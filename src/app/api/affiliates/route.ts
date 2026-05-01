@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { toCamelCase, toSnakeCase } from '@/lib/case-transform';
+import { sendAffiliateApprovedEmail } from '@/lib/email';
+
+const APP_URL = process.env.NEXT_PUBLIC_URL || 'https://amorimturismo.com.br';
 
 /**
  * GET /api/affiliates
@@ -240,6 +243,12 @@ export async function PATCH(request: NextRequest) {
     if (bankAccount !== undefined) updateData.bank_account = bankAccount;
     if (commissionRate !== undefined) updateData.commission_rate = commissionRate;
 
+    // Buscar status anterior para detectar transição → active
+    const previous = await prisma.affiliate.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+
     // Se aprovando, adicionar data de aprovação
     if (status === 'active') {
       updateData.approved_at = new Date();
@@ -250,7 +259,23 @@ export async function PATCH(request: NextRequest) {
       data: updateData,
     });
 
-    // TODO: Enviar email de aprovação se status mudou para active
+    // Email de aprovação: só envia quando o status muda PARA active (não em re-saves)
+    const becameActive =
+      status === 'active' && previous?.status !== 'active' && affiliate.email;
+
+    if (becameActive) {
+      // Disparo em fire-and-forget para não bloquear a response do admin
+      sendAffiliateApprovedEmail({
+        to: affiliate.email,
+        affiliateName: affiliate.name,
+        code: affiliate.code,
+        commissionRate: affiliate.commission_rate,
+        affiliateLink: `${APP_URL}/pacotes?ref=${affiliate.code}`,
+        panelUrl: `${APP_URL}/dashboard/parceiro`,
+      }).catch((err) => {
+        console.error('[affiliate.approve] email error:', err);
+      });
+    }
 
     return NextResponse.json({
       data: toCamelCase(affiliate),

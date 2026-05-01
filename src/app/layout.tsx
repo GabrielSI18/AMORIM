@@ -6,6 +6,7 @@ import { QueryProvider } from '@/lib/query-provider';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from 'sonner';
 import { baseMetadata, getOrganizationSchema, getWebsiteSchema, JsonLd } from '@/lib/seo';
+import { AffiliateTracker } from '@/components/affiliates/affiliate-tracker';
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -44,6 +45,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <QueryProvider>
+              <AffiliateTracker />
               {children}
             </QueryProvider>
             <Toaster 
@@ -83,6 +85,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <QueryProvider>
+              <AffiliateTracker />
               {children}
             </QueryProvider>
             <Toaster 

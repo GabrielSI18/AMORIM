@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { PublicLayout } from '@/components/layout';
-import { useAffiliateTracking } from '@/hooks/use-affiliate-tracking';
 import type { Package } from '@/types';
 
 // Formatador de moeda
@@ -29,9 +28,6 @@ const formatDate = (date: Date | string | undefined) => {
 
 // Componente interno que usa useSearchParams (precisa de Suspense)
 function PackagesContent() {
-  // Rastrear código de afiliado da URL
-  useAffiliateTracking();
-  
   const [packages, setPackages] = useState<Package[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');

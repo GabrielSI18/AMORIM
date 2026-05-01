@@ -16,6 +16,9 @@ import {
   PaymentSuccessEmail,
   PaymentFailedEmail,
   SubscriptionCanceledEmail,
+  AffiliateApprovedEmail,
+  AffiliateNewSaleEmail,
+  AffiliateCommissionPaidEmail,
 } from './email-templates';
 
 // ============================================
@@ -30,8 +33,8 @@ const sesClient = new SESClient({
   },
 });
 
-const DEFAULT_FROM = process.env.EMAIL_FROM || 'noreply@base2025.com';
-const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'Base2025';
+const DEFAULT_FROM = process.env.EMAIL_FROM || 'noreply@amorimturismo.com.br';
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'Amorim Turismo';
 
 // ============================================
 // Tipos
@@ -243,5 +246,84 @@ export async function sendSubscriptionCanceledEmail(params: {
     to: params.to,
     subject: `Sua assinatura foi cancelada - ${APP_NAME}`,
     template: SubscriptionCanceledEmail(params),
+  });
+}
+
+// ============================================
+// Emails de Afiliados
+// ============================================
+
+/**
+ * Envia email quando o afiliado é aprovado pelo admin.
+ * Inclui código de afiliado, link personalizado e taxa de comissão.
+ */
+export async function sendAffiliateApprovedEmail(params: {
+  to: string;
+  affiliateName: string;
+  code: string;
+  commissionRate: number;
+  affiliateLink: string;
+  panelUrl: string;
+}): Promise<EmailResult> {
+  return sendEmailWithTemplate({
+    to: params.to,
+    subject: `Cadastro aprovado! Bem-vindo ao programa de afiliados ${APP_NAME} 🎉`,
+    template: AffiliateApprovedEmail({
+      affiliateName: params.affiliateName,
+      code: params.code,
+      commissionRate: params.commissionRate,
+      affiliateLink: params.affiliateLink,
+      panelUrl: params.panelUrl,
+    }),
+  });
+}
+
+/**
+ * Envia email quando uma nova venda é atribuída ao afiliado.
+ * Disparado automaticamente após criação de Booking com affiliateCode válido.
+ */
+export async function sendAffiliateNewSaleEmail(params: {
+  to: string;
+  affiliateName: string;
+  packageTitle: string;
+  saleAmount: string;
+  commissionAmount: string;
+  panelUrl: string;
+}): Promise<EmailResult> {
+  return sendEmailWithTemplate({
+    to: params.to,
+    subject: `🎯 Nova venda no seu link! Comissão de ${params.commissionAmount}`,
+    template: AffiliateNewSaleEmail({
+      affiliateName: params.affiliateName,
+      packageTitle: params.packageTitle,
+      saleAmount: params.saleAmount,
+      commissionAmount: params.commissionAmount,
+      panelUrl: params.panelUrl,
+    }),
+  });
+}
+
+/**
+ * Envia email quando a comissão do afiliado é paga.
+ * Disparado quando admin marca AffiliateReferral como `paid`.
+ */
+export async function sendAffiliateCommissionPaidEmail(params: {
+  to: string;
+  affiliateName: string;
+  packageTitle: string;
+  commissionAmount: string;
+  paidAt: string;
+  panelUrl: string;
+}): Promise<EmailResult> {
+  return sendEmailWithTemplate({
+    to: params.to,
+    subject: `💸 Comissão de ${params.commissionAmount} paga - ${APP_NAME}`,
+    template: AffiliateCommissionPaidEmail({
+      affiliateName: params.affiliateName,
+      packageTitle: params.packageTitle,
+      commissionAmount: params.commissionAmount,
+      paidAt: params.paidAt,
+      panelUrl: params.panelUrl,
+    }),
   });
 }

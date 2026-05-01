@@ -1,6 +1,9 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { sendAffiliateApprovedEmail } from '@/lib/email';
+
+const APP_URL = process.env.NEXT_PUBLIC_URL || 'https://amorimturismo.com.br';
 
 export async function GET(
   request: NextRequest,
@@ -94,11 +97,15 @@ export async function PATCH(
     }
 
     const updateData: Record<string, unknown> = {};
-    
+
     if (body.status) {
       updateData.status = body.status;
+      // Marca data de aprovação ao virar ACTIVE
+      if (body.status.toLowerCase() === 'active') {
+        updateData.approved_at = new Date();
+      }
     }
-    
+
     if (typeof body.commission_rate === 'number') {
       if (body.commission_rate < 0 || body.commission_rate > 100) {
         return NextResponse.json({ error: 'Taxa de comissão inválida' }, { status: 400 });
@@ -106,10 +113,35 @@ export async function PATCH(
       updateData.commission_rate = body.commission_rate;
     }
 
+    // Buscar status anterior antes de atualizar (para detectar transição → active)
+    const previous = await prisma.affiliate.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+
     const affiliate = await prisma.affiliate.update({
       where: { id },
       data: updateData,
     });
+
+    // Email de aprovação: só dispara quando o status realmente muda PARA active
+    const newStatusLower = (body.status || '').toLowerCase();
+    const prevStatusLower = (previous?.status || '').toLowerCase();
+    const becameActive =
+      newStatusLower === 'active' && prevStatusLower !== 'active' && affiliate.email;
+
+    if (becameActive) {
+      sendAffiliateApprovedEmail({
+        to: affiliate.email,
+        affiliateName: affiliate.name,
+        code: affiliate.code,
+        commissionRate: affiliate.commission_rate,
+        affiliateLink: `${APP_URL}/pacotes?ref=${affiliate.code}`,
+        panelUrl: `${APP_URL}/dashboard/parceiro`,
+      }).catch((err) => {
+        console.error('[affiliate.approve] email error:', err);
+      });
+    }
 
     // Get user data if user_id exists
     let userData = null;
