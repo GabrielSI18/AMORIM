@@ -235,12 +235,56 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Calcular valor total (usar do frontend se enviado, senão calcular)
-    let totalAmount = body.totalPrice;
-    if (!totalAmount) {
-      // Fallback: calcular baseado no preço padrão
-      totalAmount = package_.price * body.numPassengers;
+    // Calcular valor total NO SERVIDOR — nunca confiar no `totalPrice` enviado
+    // pelo cliente (era o vetor clássico de price tampering: o atacante
+    // editava o body e pagava R$1 por um pacote de R$5.000).
+    //
+    // Fonte da verdade: preços do pacote no banco × breakdown de passageiros.
+    //   - Se o pacote tem priceChild610 ou priceChild1113 e o frontend mandou
+    //     `passengerDetails`, usamos o breakdown (adultos + crianças por faixa).
+    //     Crianças de 0-5 anos (children_free) não pagam.
+    //   - Caso contrário, fallback: package.price × numPassengers.
+    //
+    // O `body.totalPrice` é IGNORADO. Se ele veio diferente do calculado, logamos
+    // pra ajudar a detectar tentativas de fraude.
+    const hasChildPrices = !!(
+      (package_.price_child_6_10 && package_.price_child_6_10 > 0) ||
+      (package_.price_child_11_13 && package_.price_child_11_13 > 0)
+    );
+    const details = body.passengerDetails;
+
+    let computedAmount: number;
+    if (hasChildPrices && details) {
+      const adults = Math.max(0, Math.floor(details.adults || 0));
+      const children1113 = Math.max(0, Math.floor(details.children_11_13 || 0));
+      const children610 = Math.max(0, Math.floor(details.children_6_10 || 0));
+      // children_free (0-5 anos no colo) não paga.
+
+      // Sanity check: total pagantes precisa bater com numPassengers.
+      const payingTotal = adults + children1113 + children610;
+      if (payingTotal !== body.numPassengers) {
+        return NextResponse.json(
+          {
+            error: `Quantidade de passageiros pagantes (${payingTotal}) não bate com numPassengers (${body.numPassengers})`,
+          },
+          { status: 400 },
+        );
+      }
+
+      computedAmount =
+        package_.price * adults +
+        (package_.price_child_11_13 || package_.price) * children1113 +
+        (package_.price_child_6_10 || package_.price) * children610;
+    } else {
+      computedAmount = package_.price * body.numPassengers;
     }
+
+    if (typeof body.totalPrice === 'number' && body.totalPrice !== computedAmount) {
+      console.warn(
+        `[booking.price] cliente enviou totalPrice=${body.totalPrice} mas servidor calculou ${computedAmount} (pkg=${package_.id}, n=${body.numPassengers}) — usando valor calculado`,
+      );
+    }
+    const totalAmount = computedAmount;
 
     // Verificar se há código de afiliado
     // Buscamos só pelo código (que é unique). O filtro de status feito antes

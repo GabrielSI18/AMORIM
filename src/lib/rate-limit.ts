@@ -163,6 +163,27 @@ export const imageLimiter = createRateLimiter({
 });
 
 /**
+ * Rate limiter para endpoints públicos sem autenticação
+ * (formulário de contato, cadastro de afiliado, etc).
+ * 5 requests por minuto por chave (geralmente IP) — restritivo o bastante
+ * para impedir spam mas permitir uso legítimo.
+ */
+export const publicFormLimiter = createRateLimiter({
+  limit: 5,
+  windowInSeconds: 60,
+});
+
+/**
+ * Rate limiter para envio de emails (test/email, dispatch manual etc).
+ * 10 emails por hora por usuário — evita transformar a app em ferramenta
+ * de spam ou estourar quota da AWS SES.
+ */
+export const emailLimiter = createRateLimiter({
+  limit: 10,
+  windowInSeconds: 60 * 60,
+});
+
+/**
  * Rate limiter para webhooks
  * 1000 requests por minuto (webhooks podem vir em rajadas)
  */

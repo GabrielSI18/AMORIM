@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import prisma from '@/lib/prisma';
 import { toCamelCase } from '@/lib/case-transform';
+import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
 
 /**
  * GET /api/affiliates/me
@@ -96,13 +97,18 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();
-    
+
     if (!userId) {
       return NextResponse.json(
         { error: 'Não autorizado' },
         { status: 401 }
       );
     }
+
+    // Rate limit — endpoint autenticado mas evita criação em loop
+    // (cada user só pode ser afiliado uma vez de qualquer forma).
+    const limit = generalApiLimiter(`affiliates:me:${userId}`);
+    if (!limit.success) return rateLimitExceededResponse(limit);
 
     const body = await request.json();
     const { phone, cpf, pixKey } = body;

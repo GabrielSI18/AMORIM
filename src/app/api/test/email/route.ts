@@ -15,6 +15,7 @@ import {
   sendEmailWithTemplate,
 } from '@/lib/email';
 import { TrialEndingEmail } from '@/lib/email-templates';
+import { emailLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,6 +24,12 @@ export async function POST(req: NextRequest) {
     if (!userId) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
+
+    // Rate limit — endpoint de teste, mas qualquer user logado podia disparar
+    // emails para si em loop (transformava a app em ferramenta de spam e
+    // estourava quota da AWS SES).
+    const limit = emailLimiter(`test-email:${userId}`);
+    if (!limit.success) return rateLimitExceededResponse(limit);
 
     // Check if email is enabled
     if (process.env.ACTIVE_EMAIL !== 'true') {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
 import prisma from '@/lib/prisma'
+import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit'
 
 // Cada linha do CSV é validada individualmente. Campos com erro fatal
 // (sem nome ou sem email) são reportados em `errors`.
@@ -58,6 +59,11 @@ export async function POST(req: NextRequest) {
   if (!admin || (admin.role !== 'ADMIN' && admin.role !== 'SUPER_ADMIN')) {
     return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
   }
+
+  // Rate limit — admin-only mas evita loop acidental: cada batch tem até
+  // 5000 linhas; 100 req/min limita o impacto em caso de bug no front.
+  const limit = generalApiLimiter(`clients:import:${userId}`)
+  if (!limit.success) return rateLimitExceededResponse(limit)
 
   try {
     const body = await req.json()

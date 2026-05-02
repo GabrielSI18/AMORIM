@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import prisma from '@/lib/prisma'
 import { z } from 'zod'
+import { publicFormLimiter, rateLimitExceededResponse } from '@/lib/rate-limit'
 
 // Schema de validação para criar contato (público)
 // Aceita 2 tipos: "general" (formulário padrão) e "charter" (fretamento, com campos extras obrigatórios)
@@ -36,6 +37,13 @@ const createContactSchema = z.discriminatedUnion('type', [
 
 // POST /api/contacts - Criar novo contato (público)
 export async function POST(request: NextRequest) {
+  // Rate limit por IP — endpoint público, alvo natural de spam de formulário.
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'anonymous'
+  const limit = publicFormLimiter(`contacts:${ip}`)
+  if (!limit.success) {
+    return rateLimitExceededResponse(limit)
+  }
+
   try {
     const body = await request.json()
 
