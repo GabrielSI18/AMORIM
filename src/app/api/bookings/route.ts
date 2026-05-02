@@ -5,6 +5,7 @@ import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
 import { toCamelCase } from '@/lib/case-transform';
 import { passengersSchema, safeParse } from '@/lib/validations';
 import { sendAffiliateNewSaleEmail } from '@/lib/email';
+import { requireAdminApi } from '@/lib/api-auth';
 import type { CreateBookingDto } from '@/types';
 
 const APP_URL = process.env.NEXT_PUBLIC_URL || 'https://amorimturismo.com.br';
@@ -23,18 +24,40 @@ export async function GET(req: NextRequest) {
     const packageId = searchParams.get('packageId');
     const bookingId = searchParams.get('id');
 
-    // Buscar reserva específica por ID (permite sem auth para página de confirmação)
+    // GET por ID (público — usado pela página de confirmação após reserva).
+    // Como o ID é cuid (já difícil de adivinhar) mas não é segredo de fato,
+    // retornamos SOMENTE campos não-sensíveis. CPF, telefone e dados detalhados
+    // dos passageiros (nome, CPF, RG, data de nascimento) ficam fora — só admin
+    // (via /dashboard/reservas) tem acesso a esses.
     if (bookingId) {
       const booking = await prisma.booking.findUnique({
         where: { id: bookingId },
-        include: {
+        select: {
+          id: true,
+          customer_name: true,
+          customer_email: true,
+          num_passengers: true,
+          total_amount: true,
+          selected_seats: true,
+          status: true,
+          payment_status: true,
+          created_at: true,
           package: {
-            include: {
-              destination_rel: true,
-              category: true,
+            select: {
+              id: true,
+              title: true,
+              slug: true,
+              cover_image: true,
+              departure_date: true,
+              return_date: true,
+              departure_location: true,
+              destination: true,
+              destination_rel: { select: { name: true } },
+              category: { select: { name: true, slug: true } },
             },
           },
           passengers: {
+            select: { id: true, is_responsible: true, seat_number: true },
             orderBy: { created_at: 'asc' },
           },
         },
@@ -56,16 +79,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ data: bookingResult });
     }
 
-    // Para listar todas as reservas, precisa de autenticação
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
+    // Listagem completa (com CPF/passengers detalhados) é admin-only.
+    const guard = await requireAdminApi();
+    if (!guard.ok) return guard.response;
 
     const where: any = {};
-    
-    // TODO: Verificar se é admin, senão filtrar por userId
     if (packageId) where.package_id = packageId;
 
     const bookings = await prisma.booking.findMany({
@@ -349,16 +367,15 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * PUT /api/bookings
- * Atualiza status da reserva (admin)
+ * PUT /api/bookings (admin-only)
+ * Atualiza status, payment_status e notes de uma reserva.
+ * Antes só checava `auth()` — qualquer cliente logado podia editar
+ * qualquer reserva (IDOR). Agora exige role admin/super_admin.
  */
 export async function PUT(req: NextRequest) {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
+    const guard = await requireAdminApi();
+    if (!guard.ok) return guard.response;
 
     const body = await req.json();
     const { id, status, paymentStatus, notes } = body;

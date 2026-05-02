@@ -1,15 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { toCamelCase, toSnakeCase } from '@/lib/case-transform';
 import { sendAffiliateApprovedEmail } from '@/lib/email';
+import { requireAdminApi } from '@/lib/api-auth';
+import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
+import { emailSchema, optionalPhoneSchema } from '@/lib/validations';
 
 const APP_URL = process.env.NEXT_PUBLIC_URL || 'https://amorimturismo.com.br';
 
+// Schema público de cadastro de afiliado (POST /api/affiliates).
+// Não aceita campos privilegiados (userId, status, commission_rate, etc).
+const publicAffiliateRegistrationSchema = z.object({
+  name: z.string().trim().min(2, 'Nome deve ter pelo menos 2 caracteres').max(120),
+  email: emailSchema,
+  phone: optionalPhoneSchema,
+  cpf: z
+    .string()
+    .trim()
+    .transform((v) => v.replace(/\D/g, ''))
+    .refine((v) => v === '' || v.length === 11, 'CPF deve ter 11 dígitos')
+    .optional(),
+});
+
 /**
- * GET /api/affiliates
- * Lista todos os afiliados ou busca por código/email
+ * GET /api/affiliates (admin-only)
+ * Lista afiliados ou busca por código/email/id.
+ * Era público antes — passou a exigir admin para não vazar nome/email/CPF/telefone/comissão
+ * de toda a base de afiliados a quem souber adivinhar a URL.
  */
 export async function GET(request: NextRequest) {
+  const guard = await requireAdminApi();
+  if (!guard.ok) return guard.response;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
@@ -143,21 +166,29 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/affiliates
- * Cria novo afiliado
+ * POST /api/affiliates (público, rate-limited)
+ * Cria novo afiliado em status `pending` (precisa aprovação admin).
+ * NÃO aceita `userId` do body (era um vetor de privilege escalation —
+ * permitia vincular o afiliado a qualquer User do banco).
  */
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { name, email, phone, cpf, userId } = body;
+  // Rate limit por IP — endpoint público, é o único alvo de spam de cadastro.
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'anonymous';
+  const rateLimitResult = generalApiLimiter(`affiliates:register:${ip}`);
+  if (!rateLimitResult.success) {
+    return rateLimitExceededResponse(rateLimitResult);
+  }
 
-    // Validações básicas
-    if (!name || !email) {
+  try {
+    const rawBody = await request.json();
+    const validation = publicAffiliateRegistrationSchema.safeParse(rawBody);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Nome e email são obrigatórios' },
+        { error: validation.error.issues[0]?.message || 'Dados inválidos' },
         { status: 400 }
       );
     }
+    const { name, email, phone, cpf } = validation.data;
 
     // Verificar se email já existe
     const existingAffiliate = await prisma.affiliate.findUnique({
@@ -193,10 +224,11 @@ export async function POST(request: NextRequest) {
       codeExists = await prisma.affiliate.findUnique({ where: { code } });
     }
 
-    // Criar afiliado
+    // Criar afiliado (user_id sempre null aqui — fluxo público;
+    // o vínculo com User logado é feito via POST /api/affiliates/me).
     const affiliate = await prisma.affiliate.create({
       data: {
-        user_id: userId || null,
+        user_id: null,
         name,
         email,
         phone: phone || null,
@@ -226,10 +258,15 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * PATCH /api/affiliates
- * Atualiza afiliado (status, dados bancários, etc)
+ * PATCH /api/affiliates (admin-only)
+ * Atualiza afiliado (status, dados bancários, taxa de comissão).
+ * Era público antes — qualquer um modificava chave PIX, dados bancários
+ * e status de qualquer afiliado.
  */
 export async function PATCH(request: NextRequest) {
+  const guard = await requireAdminApi();
+  if (!guard.ok) return guard.response;
+
   try {
     const body = await request.json();
     const { id, status, pixKey, bankAccount, commissionRate } = body;
@@ -300,10 +337,13 @@ export async function PATCH(request: NextRequest) {
 }
 
 /**
- * DELETE /api/affiliates
- * Deleta afiliado
+ * DELETE /api/affiliates (admin-only)
+ * Deleta afiliado (hard delete). Era público antes.
  */
 export async function DELETE(request: NextRequest) {
+  const guard = await requireAdminApi();
+  if (!guard.ok) return guard.response;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get('id');

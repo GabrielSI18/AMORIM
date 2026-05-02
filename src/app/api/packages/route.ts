@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/prisma';
 import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
 import { toCamelCase, toSnakeCase } from '@/lib/case-transform';
+import { requireAdminApi } from '@/lib/api-auth';
 import type { PackageFilters } from '@/types';
 
 /**
@@ -97,14 +97,12 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
+    // Antes só checava `auth()` — qualquer cliente cadastrado podia criar pacote.
+    const guard = await requireAdminApi();
+    if (!guard.ok) return guard.response;
 
-    // Rate limiting
-    const rateLimitResult = generalApiLimiter(userId);
+    // Rate limiting (admin authenticado, mas evita loop acidental)
+    const rateLimitResult = generalApiLimiter(guard.userId);
     if (!rateLimitResult.success) {
       return rateLimitExceededResponse(rateLimitResult);
     }
@@ -187,11 +185,8 @@ export async function POST(req: NextRequest) {
  */
 export async function PUT(req: NextRequest) {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
+    const guard = await requireAdminApi();
+    if (!guard.ok) return guard.response;
 
     const body = await req.json();
     const { id, ...data } = body;
@@ -247,11 +242,8 @@ export async function PUT(req: NextRequest) {
  */
 export async function DELETE(req: NextRequest) {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
+    const guard = await requireAdminApi();
+    if (!guard.ok) return guard.response;
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');

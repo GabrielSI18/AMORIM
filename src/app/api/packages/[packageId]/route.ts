@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/prisma';
 import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
 import { toCamelCase } from '@/lib/case-transform';
+import { requireAdminApi } from '@/lib/api-auth';
 
 interface RouteParams {
   params: Promise<{
@@ -58,14 +58,11 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
  */
 export async function PUT(req: NextRequest, { params }: RouteParams) {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
+    const guard = await requireAdminApi();
+    if (!guard.ok) return guard.response;
 
     // Rate limiting
-    const rateLimitResult = generalApiLimiter(userId);
+    const rateLimitResult = generalApiLimiter(guard.userId);
     if (!rateLimitResult.success) {
       return rateLimitExceededResponse(rateLimitResult);
     }
@@ -166,11 +163,8 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
  */
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
+    const guard = await requireAdminApi();
+    if (!guard.ok) return guard.response;
 
     const { packageId } = await params;
 
