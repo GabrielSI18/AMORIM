@@ -156,11 +156,17 @@
     @apply bg-background text-foreground;
     font-feature-settings: "cv11", "ss01";
     font-optical-sizing: auto;
+    /* Impede scroll horizontal e clipa elementos posicionados fora da viewport
+       (ex: o sidebar mobile fechado com -translate-x-full). Usamos `clip` em
+       vez de `hidden` porque `hidden` cria um scroll container e quebra
+       `position: sticky` em ancestrais. */
+    overflow-x: clip;
   }
-  
+
   /* Smooth scrolling */
   html {
     scroll-behavior: smooth;
+    overflow-x: clip;
   }
 }
 

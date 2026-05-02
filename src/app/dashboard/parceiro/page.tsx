@@ -212,16 +212,16 @@ export default function ParceiroPage() {
     <DashboardShell title="Painel do Parceiro">
       <div className="flex flex-col gap-6 p-4 pb-24">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <div className="flex items-start sm:items-center justify-between gap-3 flex-wrap">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
               Painel do Parceiro
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
               Bem-vindo, {affiliateData?.name?.split(' ')[0]}! 🎉
             </p>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 text-green-600 dark:text-green-400">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 flex-shrink-0">
             <CheckCircle2 className="w-4 h-4" />
             <span className="text-sm font-medium">Ativo</span>
           </div>
@@ -230,18 +230,18 @@ export default function ParceiroPage() {
         {/* Link e Código */}
         <div className="grid gap-4 md:grid-cols-2">
           {/* Código de Afiliado */}
-          <div className="rounded-xl bg-gradient-to-br from-[#D93636] to-[#b82e2e] p-4 text-white">
+          <div className="rounded-xl bg-gradient-to-br from-[#D93636] to-[#b82e2e] p-4 text-white min-w-0">
             <div className="flex items-center gap-2 mb-3">
-              <Handshake className="w-5 h-5" />
+              <Handshake className="w-5 h-5 flex-shrink-0" />
               <span className="font-medium">Seu Código de Afiliado</span>
             </div>
-            <div className="flex items-center justify-between bg-white/20 rounded-lg px-4 py-3">
-              <span className="text-2xl font-bold tracking-wider">
+            <div className="flex items-center justify-between gap-2 bg-white/20 rounded-lg px-4 py-3 min-w-0">
+              <span className="text-2xl font-bold tracking-wider truncate">
                 {affiliateData?.code}
               </span>
               <button
                 onClick={copyCode}
-                className="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+                className="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors flex-shrink-0"
               >
                 {copied ? (
                   <Check className="w-5 h-5" />
@@ -253,21 +253,21 @@ export default function ParceiroPage() {
           </div>
 
           {/* Link de Afiliado */}
-          <div className="rounded-xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-700 p-4">
+          <div className="rounded-xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-700 p-4 min-w-0">
             <div className="flex items-center gap-2 mb-3 text-gray-900 dark:text-white">
-              <LinkIcon className="w-5 h-5" />
+              <LinkIcon className="w-5 h-5 flex-shrink-0" />
               <span className="font-medium">Seu Link de Divulgação</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 bg-gray-100 dark:bg-[#2a2a2a] rounded-lg px-4 py-3 text-sm text-gray-600 dark:text-gray-400 truncate">
-                {typeof window !== 'undefined' 
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex-1 min-w-0 bg-gray-100 dark:bg-[#2a2a2a] rounded-lg px-4 py-3 text-sm text-gray-600 dark:text-gray-400 truncate">
+                {typeof window !== 'undefined'
                   ? `${window.location.origin}/pacotes?ref=${affiliateData?.code}`
                   : `/pacotes?ref=${affiliateData?.code}`
                 }
               </div>
               <button
                 onClick={copyLink}
-                className="p-3 rounded-lg bg-[#D93636] text-white hover:bg-[#b82e2e] transition-colors"
+                className="p-3 rounded-lg bg-[#D93636] text-white hover:bg-[#b82e2e] transition-colors flex-shrink-0"
               >
                 {copiedLink ? (
                   <Check className="w-5 h-5" />
@@ -287,7 +287,7 @@ export default function ParceiroPage() {
               <Percent className="w-4 h-4" />
               <span className="text-sm">Sua Comissão</span>
             </div>
-            <p className="text-3xl font-bold text-[#D93636]">
+            <p className="text-2xl sm:text-3xl font-bold text-[#D93636] truncate">
               {affiliateData?.commissionRate}%
             </p>
           </div>
@@ -298,7 +298,7 @@ export default function ParceiroPage() {
               <DollarSign className="w-4 h-4" />
               <span className="text-sm">Total Ganho</span>
             </div>
-            <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+            <p className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400 truncate">
               {formatCurrency(affiliateData?.totalEarned || 0)}
             </p>
           </div>
@@ -309,7 +309,7 @@ export default function ParceiroPage() {
               <TrendingUp className="w-4 h-4" />
               <span className="text-sm">Vendas Concluídas</span>
             </div>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white">
+            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white truncate">
               {affiliateData?.stats?.approvedReferrals || 0}
             </p>
           </div>
@@ -320,7 +320,7 @@ export default function ParceiroPage() {
               <Clock className="w-4 h-4" />
               <span className="text-sm">Pendentes</span>
             </div>
-            <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+            <p className="text-2xl sm:text-3xl font-bold text-yellow-600 dark:text-yellow-400 truncate">
               {affiliateData?.stats?.pendingReferrals || 0}
             </p>
           </div>
@@ -332,29 +332,29 @@ export default function ParceiroPage() {
             Resumo Financeiro
           </h2>
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-yellow-500/10">
-              <Clock className="w-8 h-8 text-yellow-600" />
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Aguardando Aprovação</p>
-                <p className="text-xl font-bold text-yellow-600">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-yellow-500/10 min-w-0">
+              <Clock className="w-8 h-8 text-yellow-600 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Aguardando Aprovação</p>
+                <p className="text-lg sm:text-xl font-bold text-yellow-600 truncate">
                   {formatCurrency(affiliateData?.stats?.pendingCommission || 0)}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-500/10">
-              <CheckCircle2 className="w-8 h-8 text-blue-600" />
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Aprovado (a pagar)</p>
-                <p className="text-xl font-bold text-blue-600">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-500/10 min-w-0">
+              <CheckCircle2 className="w-8 h-8 text-blue-600 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Aprovado (a pagar)</p>
+                <p className="text-lg sm:text-xl font-bold text-blue-600 truncate">
                   {formatCurrency((affiliateData?.stats?.approvedCommission || 0) - (affiliateData?.stats?.paidCommission || 0))}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10">
-              <Wallet className="w-8 h-8 text-green-600" />
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Total Pago</p>
-                <p className="text-xl font-bold text-green-600">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10 min-w-0">
+              <Wallet className="w-8 h-8 text-green-600 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Total Pago</p>
+                <p className="text-lg sm:text-xl font-bold text-green-600 truncate">
                   {formatCurrency(affiliateData?.stats?.paidCommission || 0)}
                 </p>
               </div>
@@ -373,18 +373,18 @@ export default function ParceiroPage() {
               {affiliateData.referrals.slice(0, 5).map((referral) => (
                 <div
                   key={referral.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-[#2a2a2a]"
+                  className="flex items-center justify-between gap-3 p-3 rounded-lg bg-gray-50 dark:bg-[#2a2a2a]"
                 >
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900 dark:text-white">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 dark:text-white truncate">
                       {referral.packageTitle}
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                       {referral.customerEmail.replace(/(.{3}).*@/, '$1***@')}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-green-600">
+                  <div className="text-right flex-shrink-0">
+                    <p className="font-bold text-green-600 whitespace-nowrap">
                       +{formatCurrency(referral.commissionAmount)}
                     </p>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${
