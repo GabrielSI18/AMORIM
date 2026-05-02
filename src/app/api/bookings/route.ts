@@ -225,14 +225,24 @@ export async function POST(req: NextRequest) {
     }
 
     // Verificar se há código de afiliado
+    // Buscamos só pelo código (que é unique). O filtro de status feito antes
+    // dentro do findUnique era frágil — bastava o admin aprovar o afiliado com
+    // status em UPPERCASE ('ACTIVE') que o lookup retornava null e a indicação
+    // nunca era gravada. Agora tolera qualquer case.
     let affiliate = null;
     if (body.affiliateCode) {
-      affiliate = await prisma.affiliate.findUnique({
-        where: { 
-          code: body.affiliateCode.toUpperCase(),
-          status: 'active', // Apenas afiliados ativos
-        },
+      const affiliateRecord = await prisma.affiliate.findUnique({
+        where: { code: body.affiliateCode.toUpperCase() },
       });
+      if (affiliateRecord && affiliateRecord.status?.toLowerCase() === 'active') {
+        affiliate = affiliateRecord;
+      } else if (affiliateRecord) {
+        console.warn(
+          `[booking.affiliate] código ${body.affiliateCode} encontrado, mas status="${affiliateRecord.status}" não é "active" — ignorando atribuição`
+        );
+      } else {
+        console.warn(`[booking.affiliate] código ${body.affiliateCode} não encontrado — ignorando atribuição`);
+      }
     }
 
     // Criar reserva + passageiros em transação
@@ -368,11 +378,12 @@ export async function PUT(req: NextRequest) {
     // Buscar reserva atual para verificar se está sendo cancelada
     const currentBooking = await prisma.booking.findUnique({
       where: { id },
-      select: { 
-        status: true, 
-        num_passengers: true, 
+      select: {
+        status: true,
+        num_passengers: true,
         package_id: true,
         selected_seats: true,
+        payment_status: true,
       },
     });
 
@@ -398,6 +409,33 @@ export async function PUT(req: NextRequest) {
         package: true,
       },
     });
+
+    // Quando o admin marca a reserva como paga, aprovar a comissão do afiliado
+    // (caso exista AffiliateReferral pendente vinculada a esse booking).
+    // Só dispara na transição: estava pendente/falha → agora paid.
+    if (
+      paymentStatus === 'paid' &&
+      currentBooking.payment_status !== 'paid'
+    ) {
+      try {
+        await prisma.affiliateReferral.updateMany({
+          where: {
+            booking_id: id,
+            commission_status: 'pending',
+          },
+          data: {
+            commission_status: 'approved',
+            updated_at: new Date(),
+          },
+        });
+      } catch (err) {
+        console.error('[booking.PUT] erro ao aprovar comissão do afiliado:', err);
+      }
+    }
+
+    // Obs: cancelamento de reserva NÃO altera automaticamente a comissão.
+    // Mantemos a indicação no histórico do afiliado e o admin decide manualmente
+    // se quer reverter (UI em /dashboard/afiliados/[id]).
 
     return NextResponse.json({ data: booking });
   } catch (error) {

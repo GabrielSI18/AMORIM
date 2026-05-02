@@ -53,16 +53,15 @@ export async function GET() {
       });
     }
 
-    // Calcular estatísticas
-    const pendingReferrals = affiliate.referrals.filter(
-      r => r.commission_status === 'pending'
-    );
+    // Calcular estatísticas — toleramos qualquer case no commission_status
+    // pra evitar problemas com dados antigos gravados em UPPERCASE.
+    const csLower = (r: { commission_status: string | null }) =>
+      (r.commission_status || '').toLowerCase();
+    const pendingReferrals = affiliate.referrals.filter(r => csLower(r) === 'pending');
     const approvedReferrals = affiliate.referrals.filter(
-      r => r.commission_status === 'approved' || r.commission_status === 'paid'
+      r => csLower(r) === 'approved' || csLower(r) === 'paid'
     );
-    const paidReferrals = affiliate.referrals.filter(
-      r => r.commission_status === 'paid'
-    );
+    const paidReferrals = affiliate.referrals.filter(r => csLower(r) === 'paid');
 
     const stats = {
       totalReferrals: affiliate.referrals.length,

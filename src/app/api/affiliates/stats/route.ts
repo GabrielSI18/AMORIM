@@ -41,18 +41,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Calcular estatísticas
+    // Calcular estatísticas — case-insensitive em commission_status
+    const csLower = (r: { commission_status: string | null }) =>
+      (r.commission_status || '').toLowerCase();
     const totalReferrals = affiliate.referrals.length;
     const pendingCommissions = affiliate.referrals
-      .filter(r => r.commission_status === 'pending')
+      .filter(r => csLower(r) === 'pending')
       .reduce((sum, r) => sum + r.commission_amount, 0);
-    
+
     const approvedCommissions = affiliate.referrals
-      .filter(r => r.commission_status === 'approved')
+      .filter(r => csLower(r) === 'approved')
       .reduce((sum, r) => sum + r.commission_amount, 0);
-    
+
     const paidCommissions = affiliate.referrals
-      .filter(r => r.commission_status === 'paid')
+      .filter(r => csLower(r) === 'paid')
       .reduce((sum, r) => sum + r.commission_amount, 0);
 
     // Estatísticas por mês (últimos 6 meses)

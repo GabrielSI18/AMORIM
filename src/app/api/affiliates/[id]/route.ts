@@ -90,18 +90,23 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
 
-    // Validate status
-    const validStatuses = ['PENDING', 'ACTIVE', 'REJECTED', 'SUSPENDED'];
-    if (body.status && !validStatuses.includes(body.status)) {
+    // Validate status — aceita qualquer case (ACTIVE/active), normaliza para lowercase
+    // antes de gravar. O resto do sistema (filtros, comparações, lookups na criação
+    // de bookings) usa lowercase, então centralizar a normalização aqui evita o
+    // bug em que o admin aprovava com 'ACTIVE' mas a busca do bookings filtrava
+    // por 'active' e nunca dava match.
+    const validStatuses = ['pending', 'active', 'rejected', 'suspended'];
+    const normalizedStatus = body.status ? String(body.status).toLowerCase() : null;
+    if (normalizedStatus && !validStatuses.includes(normalizedStatus)) {
       return NextResponse.json({ error: 'Status inválido' }, { status: 400 });
     }
 
     const updateData: Record<string, unknown> = {};
 
-    if (body.status) {
-      updateData.status = body.status;
-      // Marca data de aprovação ao virar ACTIVE
-      if (body.status.toLowerCase() === 'active') {
+    if (normalizedStatus) {
+      updateData.status = normalizedStatus;
+      // Marca data de aprovação ao virar active
+      if (normalizedStatus === 'active') {
         updateData.approved_at = new Date();
       }
     }
@@ -125,7 +130,7 @@ export async function PATCH(
     });
 
     // Email de aprovação: só dispara quando o status realmente muda PARA active
-    const newStatusLower = (body.status || '').toLowerCase();
+    const newStatusLower = normalizedStatus || '';
     const prevStatusLower = (previous?.status || '').toLowerCase();
     const becameActive =
       newStatusLower === 'active' && prevStatusLower !== 'active' && affiliate.email;

@@ -63,9 +63,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Build where clause
+    // Status é armazenado em lowercase (ver normalização em PATCH /affiliates/[id]).
+    // Antes esse filtro forçava toUpperCase, o que dava 0 resultados sempre que o
+    // banco já estava normalizado.
     const where: Record<string, unknown> = {};
     if (status) {
-      where.status = status.toUpperCase();
+      where.status = status.toLowerCase();
     }
 
     // Listar todos os afiliados (admin)
@@ -117,13 +120,15 @@ export async function GET(request: NextRequest) {
           last_name: a.name.split(' ').slice(1).join(' '),
           email: a.email,
         },
-        // Add computed fields
+        // Add computed fields — commission_status é lowercase no banco
+        // ('pending', 'approved', 'paid', 'rejected'). Antes os filtros aqui
+        // procuravam UPPERCASE e zeravam tudo no painel admin.
         total_referrals: a.referrals.length,
         total_earnings: a.referrals
-          .filter(r => r.commission_status === 'PAID')
+          .filter(r => (r.commission_status || '').toLowerCase() === 'paid')
           .reduce((sum, r) => sum + (r.commission_amount || 0), 0),
         pending_earnings: a.referrals
-          .filter(r => ['PENDING', 'APPROVED'].includes(r.commission_status || ''))
+          .filter(r => ['pending', 'approved'].includes((r.commission_status || '').toLowerCase()))
           .reduce((sum, r) => sum + (r.commission_amount || 0), 0),
       })),
       total: affiliates.length,
@@ -238,7 +243,10 @@ export async function PATCH(request: NextRequest) {
 
     const updateData: any = {};
 
-    if (status) updateData.status = status;
+    // Normaliza status para lowercase — fonte única de verdade no banco.
+    const normalizedStatus = status ? String(status).toLowerCase() : null;
+
+    if (normalizedStatus) updateData.status = normalizedStatus;
     if (pixKey !== undefined) updateData.pix_key = pixKey;
     if (bankAccount !== undefined) updateData.bank_account = bankAccount;
     if (commissionRate !== undefined) updateData.commission_rate = commissionRate;
@@ -250,7 +258,7 @@ export async function PATCH(request: NextRequest) {
     });
 
     // Se aprovando, adicionar data de aprovação
-    if (status === 'active') {
+    if (normalizedStatus === 'active') {
       updateData.approved_at = new Date();
     }
 
@@ -260,8 +268,9 @@ export async function PATCH(request: NextRequest) {
     });
 
     // Email de aprovação: só envia quando o status muda PARA active (não em re-saves)
+    const prevStatusLower = (previous?.status || '').toLowerCase();
     const becameActive =
-      status === 'active' && previous?.status !== 'active' && affiliate.email;
+      normalizedStatus === 'active' && prevStatusLower !== 'active' && affiliate.email;
 
     if (becameActive) {
       // Disparo em fire-and-forget para não bloquear a response do admin
