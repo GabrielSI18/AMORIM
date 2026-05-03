@@ -105,10 +105,14 @@ export function Sidebar({
         }`}
         style={{ transform: isOpen ? 'translateX(0)' : 'translateX(-100%)' }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#D93636] flex items-center justify-center text-white font-bold">
+        {/* Header
+            `min-w-0` na cadeia toda (header > info wrapper > coluna nome/email)
+            é OBRIGATÓRIO para que o `truncate` dos <p> filhos funcione. Sem
+            isso, o flex container cresce com o conteúdo (email longo) e
+            transborda o sidebar para fora da viewport. */}
+        <div className="flex items-center justify-between gap-2 p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-full bg-[#D93636] flex items-center justify-center text-white font-bold flex-shrink-0">
               {userName?.charAt(0).toUpperCase() || 'A'}
             </div>
             <div className="flex-1 min-w-0">
@@ -122,7 +126,7 @@ export function Sidebar({
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors flex-shrink-0"
           >
             <X className="w-5 h-5 text-gray-500 dark:text-[#A0A0A0]" />
           </button>
