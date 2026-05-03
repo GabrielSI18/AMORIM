@@ -132,8 +132,14 @@ export default function ReservaPage({ params }: ReservaPageProps) {
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerCpf, setCustomerCpf] = useState('');
   const [customerNotes, setCustomerNotes] = useState('');
-  // Código de indicação: pré-preenchido se chegou via ?ref=, mas cliente
-  // pode digitar/alterar manualmente também.
+  // Código de indicação:
+  //   - Se vier via link ?ref= (`lockedAffiliateCode`), o campo de input
+  //     fica OCULTO e o cliente não consegue editar/remover. Isso protege
+  //     o afiliado: ele não perde a venda só porque o cliente apagou o
+  //     campo na hora de fechar a reserva.
+  //   - Se NÃO vier via link, o campo aparece normalmente para o cliente
+  //     digitar manualmente um código que ele recebeu de boca.
+  const [lockedAffiliateCode, setLockedAffiliateCode] = useState<string | null>(null);
   const [affiliateCodeInput, setAffiliateCodeInput] = useState('');
   
   // Seats state
@@ -164,12 +170,14 @@ export default function ReservaPage({ params }: ReservaPageProps) {
     }
   }, [isLoaded, user]);
 
-  // Pré-preencher campo de código de indicação a partir do cookie/localStorage
-  // (caso cliente tenha chegado via link `?ref=CODIGO`). O cliente ainda pode
-  // editar/limpar/preencher manualmente.
+  // Se o cliente chegou via link `?ref=CODIGO`, o código fica TRAVADO:
+  // não aparece input editável e ele segue para o submit automaticamente.
+  // Se não veio do link, o input fica liberado para digitação manual.
   useEffect(() => {
     const cookieCode = getAffiliateCode();
-    if (cookieCode) setAffiliateCodeInput(cookieCode);
+    if (cookieCode) {
+      setLockedAffiliateCode(cookieCode);
+    }
   }, []);
 
   // Carregar assentos ocupados e dados do ônibus
@@ -370,11 +378,14 @@ export default function ReservaPage({ params }: ReservaPageProps) {
     setIsSubmitting(true);
 
     try {
-      // Código de indicação: prioriza o que o cliente digitou no campo;
-      // se vazio, cai no que veio via cookie/?ref= (link do afiliado).
-      // Normaliza para uppercase A-Z 0-9 (mesmo formato gerado em /api/affiliates).
-      const manualCode = affiliateCodeInput.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-      const affiliateCode = manualCode || getAffiliateCode() || null;
+      // Código de indicação:
+      // 1. Se cliente chegou via link `?ref=`, usa esse (locked, sempre).
+      // 2. Senão, usa o que ele digitou manualmente no input.
+      // Normalizamos para A-Z 0-9 uppercase (formato dos códigos gerados).
+      const sanitize = (v: string) => v.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const affiliateCode = lockedAffiliateCode
+        ? sanitize(lockedAffiliateCode)
+        : sanitize(affiliateCodeInput) || null;
 
       const sortedSeats = [...selectedSeats].sort((a, b) => a - b);
       const passengersPayload = passengers.map((p, idx) => ({
@@ -815,26 +826,33 @@ export default function ReservaPage({ params }: ReservaPageProps) {
                       placeholder="000.000.000-00"
                     />
                   </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-[#4F4F4F] dark:text-[#adb5bd] mb-1">
-                      Código de Indicação <span className="text-xs text-[#6c757d] dark:text-[#adb5bd] font-normal">(opcional)</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={affiliateCodeInput}
-                      onChange={(e) =>
-                        setAffiliateCodeInput(
-                          e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12),
-                        )
-                      }
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-[#1A2E40] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#004a80] focus:border-transparent uppercase tracking-wider font-mono"
-                      placeholder="Ex: GABRIEL01"
-                      maxLength={12}
-                    />
-                    <p className="text-xs text-[#6c757d] dark:text-[#adb5bd] mt-1">
-                      Recebeu uma indicação? Digite o código aqui pra creditar a comissão ao parceiro.
-                    </p>
-                  </div>
+                  {/* Código de Indicação: input só aparece quando NÃO veio via
+                      link `?ref=`. Se veio via link, o código fica travado em
+                      memória (lockedAffiliateCode) e segue invisível para o
+                      cliente — protege o afiliado de perder a venda caso o
+                      cliente removesse/alterasse o campo. */}
+                  {!lockedAffiliateCode && (
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-[#4F4F4F] dark:text-[#adb5bd] mb-1">
+                        Código de Indicação <span className="text-xs text-[#6c757d] dark:text-[#adb5bd] font-normal">(opcional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={affiliateCodeInput}
+                        onChange={(e) =>
+                          setAffiliateCodeInput(
+                            e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12),
+                          )
+                        }
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-[#1A2E40] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#004a80] focus:border-transparent uppercase tracking-wider font-mono"
+                        placeholder="Ex: GABRIEL01"
+                        maxLength={12}
+                      />
+                      <p className="text-xs text-[#6c757d] dark:text-[#adb5bd] mt-1">
+                        Recebeu uma indicação? Digite o código aqui pra creditar a comissão ao parceiro.
+                      </p>
+                    </div>
+                  )}
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-[#4F4F4F] dark:text-[#adb5bd] mb-1">
                       Observações
