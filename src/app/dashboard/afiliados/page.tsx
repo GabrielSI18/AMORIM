@@ -251,8 +251,11 @@ function AfiliadosContent() {
     return r.commission_status.toUpperCase() === referralFilter.toUpperCase();
   });
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+  // Valores monetários no banco são armazenados em CENTAVOS (padrão do projeto).
+  // Antes essa função formatava `value` direto, fazendo R$ 104,30 (10430 centavos)
+  // virar R$ 10.430,00 nos cards do painel admin de afiliados.
+  const formatCurrency = (cents: number) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
   };
 
   return (

@@ -49,11 +49,16 @@ export async function GET(request: NextRequest) {
       orderBy: { created_at: 'desc' },
     });
 
-    // Transform to expected format
+    // Padronização do projeto: TODOS os valores monetários trafegam em
+    // CENTAVOS no JSON. O front é responsável por dividir por 100 ao
+    // formatar (ver formatCurrency em dashboard/afiliados/page.tsx).
+    // Antes este endpoint dividia por 100, mas o /api/affiliates não, e
+    // o front usava o mesmo formatter para os dois — gerava valores
+    // discrepantes (R$ 104,30 virando R$ 10.430,00).
     const transformedReferrals = referrals.map(r => ({
       id: r.id,
       booking_id: r.booking_id,
-      commission_amount: r.commission_amount / 100, // Convert from cents
+      commission_amount: r.commission_amount, // centavos
       commission_status: r.commission_status.toUpperCase(),
       created_at: r.created_at.toISOString(),
       affiliate: {
@@ -67,7 +72,7 @@ export async function GET(request: NextRequest) {
       },
       booking: {
         id: r.booking_id || '',
-        total_price: r.sale_amount / 100, // Convert from cents
+        total_price: r.sale_amount, // centavos
         status: 'confirmed',
         travel_date: r.created_at.toISOString(),
         package: {
