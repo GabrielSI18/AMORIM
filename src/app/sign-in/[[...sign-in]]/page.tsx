@@ -3,15 +3,12 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useSignIn } from '@clerk/nextjs'
+import { useSignIn, useUser } from '@clerk/nextjs'
 import { Eye, EyeOff, ArrowLeft, Moon, Sun, Mail } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
 // Força um navigate "duro" para o dashboard.
-// Em Next.js 16, `router.push` + `router.refresh` durante login pode
-// deixar a tela de loading travada porque o componente atual não desmonta
-// até o RSC terminar — full reload garante que cookies de sessão sejam
-// propagados ao server e o middleware libere `/dashboard` corretamente.
+// O `window.location.replace` causa full reload e remove /sign-in do histórico.
 function hardRedirectToDashboard() {
   if (typeof window !== 'undefined') {
     window.location.replace('/dashboard')
@@ -20,6 +17,11 @@ function hardRedirectToDashboard() {
 
 export default function SignInPage() {
   const { signIn, setActive } = useSignIn()
+  // `useUser()` reflete o estado client-side da sessão Clerk. Após `setActive`,
+  // `isSignedIn` vira true assim que o Clerk SDK termina de propagar o cookie
+  // de sessão para o navegador. Antes disso, um reload prematuro faz o
+  // middleware redirecionar de volta para /sign-in.
+  const { isSignedIn } = useUser()
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   
@@ -40,6 +42,21 @@ export default function SignInPage() {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Aguarda o Clerk confirmar a sessão (`isSignedIn === true`) antes do
+  // reload — assim o middleware encontra o cookie de sessão e libera
+  // /dashboard. Fallback de 5s em caso de algum hiccup raro do Clerk SDK.
+  useEffect(() => {
+    if (!isRedirecting) return
+    if (isSignedIn) {
+      hardRedirectToDashboard()
+      return
+    }
+    const fallback = setTimeout(() => {
+      hardRedirectToDashboard()
+    }, 5000)
+    return () => clearTimeout(fallback)
+  }, [isRedirecting, isSignedIn])
 
   const toggleTheme = () => {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
@@ -64,11 +81,9 @@ export default function SignInPage() {
 
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId })
+        // O useEffect acima dispara o reload assim que `isSignedIn` virar true.
         setIsRedirecting(true)
-        // Pequeno delay para a sessão ser propagada antes do reload.
-        await new Promise(resolve => setTimeout(resolve, 300))
-        hardRedirectToDashboard()
-        return // Mantém loading enquanto o reload acontece
+        return // Mantém loading enquanto a sessão propaga e o reload acontece
       } else if (result.status === 'needs_second_factor') {
         const factors = result.supportedSecondFactors || []
         console.log('Second factors available:', factors)
@@ -103,9 +118,7 @@ export default function SignInPage() {
         if (sessionId) {
           await setActive({ session: sessionId })
           setIsRedirecting(true)
-          await new Promise(resolve => setTimeout(resolve, 300))
-          hardRedirectToDashboard()
-          return // Mantém loading enquanto o reload acontece
+          return // useEffect aguarda isSignedIn e dispara reload
         } else {
           setError('Login incompleto. Status: ' + result.status)
           setIsLoading(false)
@@ -134,9 +147,7 @@ export default function SignInPage() {
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId })
         setIsRedirecting(true)
-        await new Promise(resolve => setTimeout(resolve, 300))
-        hardRedirectToDashboard()
-        return // Mantém loading enquanto o reload acontece
+        return // useEffect aguarda isSignedIn e dispara reload
       } else {
         setError('Verificação incompleta. Tente novamente.')
         setIsLoading(false)

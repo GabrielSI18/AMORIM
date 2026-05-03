@@ -3,12 +3,10 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useSignUp } from '@clerk/nextjs'
+import { useSignUp, useUser } from '@clerk/nextjs'
 import { Eye, EyeOff, ArrowLeft, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
-// Full reload depois do login: garante que cookies de sessão sejam
-// propagados ao server e o middleware Clerk libere `/dashboard`.
 function hardRedirectToDashboard() {
   if (typeof window !== 'undefined') {
     window.location.replace('/dashboard')
@@ -17,6 +15,8 @@ function hardRedirectToDashboard() {
 
 export default function SignUpPage() {
   const { signUp, setActive } = useSignUp()
+  // Aguarda o Clerk propagar a sessão antes de redirect (vide comentário no sign-in).
+  const { isSignedIn } = useUser()
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   
@@ -33,10 +33,24 @@ export default function SignUpPage() {
   const [error, setError] = useState('')
   const [pendingVerification, setPendingVerification] = useState(false)
   const [code, setCode] = useState('')
+  const [isRedirecting, setIsRedirecting] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Aguarda o Clerk confirmar isSignedIn antes do reload (vide sign-in).
+  useEffect(() => {
+    if (!isRedirecting) return
+    if (isSignedIn) {
+      hardRedirectToDashboard()
+      return
+    }
+    const fallback = setTimeout(() => {
+      hardRedirectToDashboard()
+    }, 5000)
+    return () => clearTimeout(fallback)
+  }, [isRedirecting, isSignedIn])
 
   const toggleTheme = () => {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
@@ -121,9 +135,9 @@ export default function SignUpPage() {
 
       if (completeSignUp.status === 'complete') {
         await setActive({ session: completeSignUp.createdSessionId })
-        await new Promise(resolve => setTimeout(resolve, 300))
-        hardRedirectToDashboard()
-        return // Mantém loading enquanto o reload acontece
+        // useEffect aguarda isSignedIn=true e dispara reload
+        setIsRedirecting(true)
+        return // Mantém loading enquanto a sessão propaga
       }
     } catch (err: any) {
       setError(err.errors?.[0]?.message || 'Código inválido')
