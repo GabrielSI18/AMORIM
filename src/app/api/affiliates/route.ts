@@ -166,18 +166,21 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/affiliates (público, rate-limited)
- * Cria novo afiliado em status `pending` (precisa aprovação admin).
- * NÃO aceita `userId` do body (era um vetor de privilege escalation —
- * permitia vincular o afiliado a qualquer User do banco).
+ * POST /api/affiliates (admin-only)
+ * Cria afiliado a partir do painel admin (caso especial: o admin
+ * pré-cadastra alguém que ainda não tem conta no site).
+ *
+ * Para auto-cadastro de afiliados (fluxo normal), use o endpoint
+ * autenticado POST /api/affiliates/me — ele exige conta Clerk e
+ * vincula `user_id` automaticamente.
+ *
+ * Antes era público; mas como hoje o auto-cadastro vai por
+ * /api/affiliates/me, o uso público foi descontinuado para reduzir
+ * superfície de spam e fraude (cadastros órfãos sem conta).
  */
 export async function POST(request: NextRequest) {
-  // Rate limit por IP — endpoint público, é o único alvo de spam de cadastro.
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'anonymous';
-  const rateLimitResult = generalApiLimiter(`affiliates:register:${ip}`);
-  if (!rateLimitResult.success) {
-    return rateLimitExceededResponse(rateLimitResult);
-  }
+  const guard = await requireAdminApi();
+  if (!guard.ok) return guard.response;
 
   try {
     const rawBody = await request.json();
@@ -234,7 +237,7 @@ export async function POST(request: NextRequest) {
         phone: phone || null,
         cpf: cpf || null,
         code,
-        commission_rate: 10, // 10% padrão
+        commission_rate: 7, // 7% inicial — admin pode ajustar no painel depois
         status: 'pending', // Aguarda aprovação
       },
     });

@@ -366,38 +366,46 @@ model Passenger {
 // Affiliate Model - Sistema de afiliados
 model Affiliate {
   id              String   @id @default(cuid())
-  user_id         String?  @unique @map("user_id") // Opcional: vincula ao usuário logado
-  
+  user_id         String?  @unique @map("user_id") // Vincula ao User logado (Clerk). null = legado do form público antigo
+
   // Dados do afiliado
   name            String   // Nome completo
   email           String   @unique
   phone           String?
-  cpf             String?  @unique
-  
+  cpf             String?  @unique // CPF ou CNPJ (apenas dígitos)
+
+  // Endereço básico (cobrança/contato)
+  city            String?
+  state           String?  // UF: 'MG', 'SP', etc.
+
+  // Redes sociais — útil para verificação de divulgação
+  instagram_handle String? @map("instagram_handle")
+
   // Código e comissões
   code            String   @unique // Código único: "AMORIM2025", "MARIA123", etc.
-  commission_rate Int      @default(10) @map("commission_rate") // Percentual de comissão (10 = 10%)
-  
+  commission_rate Int      @default(7) @map("commission_rate") // Percentual inicial — pode ser ajustado pelo admin no painel
+
   // Estatísticas
   total_sales     Int      @default(0) @map("total_sales") // Total de vendas geradas (centavos)
   total_earned    Int      @default(0) @map("total_earned") // Total de comissões (centavos)
   total_bookings  Int      @default(0) @map("total_bookings") // Número de reservas
-  
+
   // Pagamentos
   pix_key         String?  @map("pix_key") // Chave PIX para receber comissões
-  bank_account    Json?    @map("bank_account") // Dados bancários
-  
+  bank_name       String?  @map("bank_name") // Nome do banco (alternativa/redundância ao PIX)
+  bank_account    Json?    @map("bank_account") // Dados bancários estruturados (legado)
+
   // Status
   status          String   @default("pending") // "pending", "active", "suspended", "blocked"
   approved_at     DateTime? @map("approved_at")
-  
+
   // Timestamps
   created_at      DateTime @default(now()) @map("created_at")
   updated_at      DateTime @updatedAt @map("updated_at")
-  
+
   // Relacionamentos
   referrals       AffiliateReferral[]
-  
+
   @@index([code])
   @@index([status])
   @@map("affiliates")

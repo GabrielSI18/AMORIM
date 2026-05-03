@@ -1,9 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { toast } from 'sonner';
 import { Header } from '@/components/ui/header';
 import { useSiteConfig } from '@/hooks/use-site-config';
 import { 
@@ -28,41 +26,13 @@ import {
 } from 'lucide-react';
 
 export default function AfiliadosPage() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    cpf: '',
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const config = useSiteConfig();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    try {
-      const res = await fetch('/api/affiliates', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        toast.success('Cadastro enviado com sucesso! Você receberá um email em até 24h.');
-        setFormData({ name: '', email: '', phone: '', cpf: '' });
-      } else {
-        toast.error(data.error || 'Erro ao enviar cadastro');
-      }
-    } catch (error) {
-      console.error('Erro ao enviar cadastro:', error);
-      toast.error('Erro ao enviar cadastro. Tente novamente.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  // O cadastro de afiliado agora exige conta de cliente. Toda a tela é
+  // landing + CTA para `/sign-up`; depois do cadastro Clerk o usuário cai
+  // em `/dashboard/parceiro` que mostra um form curto pra completar o
+  // perfil de afiliado (CPF, PIX, cidade, Instagram, etc).
+  const signupUrl = '/sign-up?redirect_url=' + encodeURIComponent('/dashboard/parceiro')
 
   const benefits = [
     {
@@ -535,7 +505,13 @@ export default function AfiliadosPage() {
         </div>
       </section>
 
-      {/* Form Section */}
+      {/* CTA Section
+          Antes esta seção tinha um <form> que criava um Affiliate "órfão"
+          (sem User vinculado), e o cliente depois precisava criar conta no
+          Clerk separadamente — fluxo confuso. Agora levamos direto para
+          /sign-up com redirect_url=/dashboard/parceiro: o cliente cria a
+          conta uma vez e cai num form curto pra completar o cadastro de
+          afiliado já vinculado à sua conta. */}
       <section id="cadastro" className="py-20 bg-muted/30">
         <div className="container-custom">
           <div className="max-w-2xl mx-auto">
@@ -544,124 +520,68 @@ export default function AfiliadosPage() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent text-white text-sm font-bold animate-pulse"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent text-white text-sm font-bold"
               >
-                <Clock className="w-4 h-4" />
-                ⏰ Apenas 17 vagas restantes este mês!
+                <Sparkles className="w-4 h-4" />
+                Cadastro 100% gratuito • Aprovação em até 24h
               </motion.div>
 
               <h2 className="text-3xl md:text-5xl font-bold">
                 Comece a Ganhar <span className="text-accent">HOJE</span>
               </h2>
-              <p className="text-lg">
-                <span className="font-bold">100% GRATUITO</span> • Aprovação em até 24h • Sem burocracia
+              <p className="text-lg text-muted-foreground">
+                Crie sua conta gratuita, complete o cadastro de parceiro e receba
+                seu código de afiliado.
               </p>
-              
-              <div className="bg-gradient-to-r from-accent/10 to-primary/10 rounded-lg p-4 mt-6">
-                <p className="font-medium">
-                  🎯 <span className="text-accent font-bold">GARANTIA:</span> Se você não fizer sua primeira venda em 30 dias, 
-                  te damos <span className="font-bold">R$ 100 em créditos</span> para anúncios!
-                </p>
-              </div>
             </div>
 
-            <motion.form
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              onSubmit={handleSubmit}
               className="bg-card border border-border rounded-xl p-8 space-y-6 shadow-lg"
             >
-              <div className="space-y-2">
-                <label htmlFor="name" className="block text-sm font-medium">
-                  Nome Completo *
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-smooth"
-                  placeholder="Seu nome completo"
-                />
-              </div>
+              {/* Passos */}
+              <ol className="space-y-4">
+                <li className="flex items-start gap-4">
+                  <span className="flex-shrink-0 w-9 h-9 rounded-full bg-accent text-white font-bold flex items-center justify-center">1</span>
+                  <div>
+                    <p className="font-semibold">Crie sua conta gratuita</p>
+                    <p className="text-sm text-muted-foreground">Email, senha e seus dados básicos. Leva 1 minuto.</p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-4">
+                  <span className="flex-shrink-0 w-9 h-9 rounded-full bg-accent text-white font-bold flex items-center justify-center">2</span>
+                  <div>
+                    <p className="font-semibold">Complete o cadastro de parceiro</p>
+                    <p className="text-sm text-muted-foreground">CPF, chave PIX, cidade, Instagram (opcional). Tudo no painel.</p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-4">
+                  <span className="flex-shrink-0 w-9 h-9 rounded-full bg-accent text-white font-bold flex items-center justify-center">3</span>
+                  <div>
+                    <p className="font-semibold">Receba seu link e comece a divulgar</p>
+                    <p className="text-sm text-muted-foreground">Acompanhe vendas e comissões em tempo real.</p>
+                  </div>
+                </li>
+              </ol>
 
-              <div className="space-y-2">
-                <label htmlFor="email" className="block text-sm font-medium">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-smooth"
-                  placeholder="seu@email.com"
-                />
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label htmlFor="phone" className="block text-sm font-medium">
-                    Telefone *
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    required
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-smooth"
-                    placeholder="(00) 00000-0000"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="cpf" className="block text-sm font-medium">
-                    CPF *
-                  </label>
-                  <input
-                    type="text"
-                    id="cpf"
-                    required
-                    value={formData.cpf}
-                    onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
-                    className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-smooth"
-                    placeholder="000.000.000-00"
-                  />
-                </div>
-              </div>
-
-              <div className="bg-muted/30 rounded-lg p-4 space-y-2">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-muted-foreground">
-                    Ao enviar este formulário, você concorda com nossos termos de afiliado e política de privacidade.
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full px-8 py-5 bg-gradient-to-r from-accent to-accent/80 text-white text-lg rounded-lg font-bold hover:shadow-2xl hover:shadow-accent/50 hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              <Link
+                href={signupUrl}
+                className="w-full px-8 py-5 bg-gradient-to-r from-accent to-accent/80 text-white text-lg rounded-lg font-bold hover:shadow-2xl hover:shadow-accent/50 hover:scale-105 transition-all flex items-center justify-center gap-2"
               >
-                {isSubmitting ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Processando seu cadastro...
-                  </>
-                ) : (
-                  <>
-                    🚀 QUERO COMEÇAR A GANHAR AGORA!
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
+                🚀 Quero Ser Parceiro Agora
+                <ArrowRight className="w-5 h-5" />
+              </Link>
 
-              <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground pt-4">
+              <p className="text-center text-sm text-muted-foreground">
+                Já tem conta?{' '}
+                <Link href="/sign-in?redirect_url=/dashboard/parceiro" className="text-accent font-semibold hover:underline">
+                  Entrar e completar cadastro
+                </Link>
+              </p>
+
+              <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground pt-2 flex-wrap">
                 <div className="flex items-center gap-1">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
                   Grátis para sempre
@@ -675,7 +595,7 @@ export default function AfiliadosPage() {
                   Cancele quando quiser
                 </div>
               </div>
-            </motion.form>
+            </motion.div>
           </div>
         </div>
       </section>

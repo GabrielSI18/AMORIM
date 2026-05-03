@@ -562,11 +562,35 @@ export default function ParceiroPage() {
 }
 
 // Componente para usuário não afiliado
+function formatPhoneInput(v: string) {
+  const digits = v.replace(/\D/g, '').slice(0, 11)
+  return digits
+    .replace(/(\d{2})(\d)/, '($1) $2')
+    .replace(/(\d{5})(\d)/, '$1-$2')
+}
+
+function formatCpfInput(v: string) {
+  const digits = v.replace(/\D/g, '').slice(0, 11)
+  return digits
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+}
+
+const UFS = [
+  'AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB',
+  'PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO',
+]
+
 function NotAffiliateView({ onSuccess }: { onSuccess: () => void }) {
   const [formData, setFormData] = useState({
     phone: '',
     cpf: '',
     pixKey: '',
+    city: '',
+    state: '',
+    instagramHandle: '',
+    bankName: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
@@ -581,7 +605,7 @@ function NotAffiliateView({ onSuccess }: { onSuccess: () => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!acceptedTerms) {
       toast.error('Aceite os termos para continuar')
       return
@@ -590,10 +614,22 @@ function NotAffiliateView({ onSuccess }: { onSuccess: () => void }) {
     setIsSubmitting(true)
 
     try {
+      // Envia os campos com a formatação certa: API espera apenas dígitos
+      // para phone/cpf e UF em maiúsculo. Campos vazios viram undefined.
+      const payload = {
+        phone: formData.phone.replace(/\D/g, '') || undefined,
+        cpf: formData.cpf.replace(/\D/g, '') || undefined,
+        pixKey: formData.pixKey.trim() || undefined,
+        city: formData.city.trim() || undefined,
+        state: formData.state.toUpperCase() || undefined,
+        instagramHandle: formData.instagramHandle.trim().replace(/^@/, '') || undefined,
+        bankName: formData.bankName.trim() || undefined,
+      }
+
       const res = await fetch('/api/affiliates/me', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       })
 
       const data = await res.json()
@@ -663,14 +699,14 @@ function NotAffiliateView({ onSuccess }: { onSuccess: () => void }) {
             {/* Telefone */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Telefone (WhatsApp)
+                Telefone (WhatsApp) *
               </label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, phone: formatPhoneInput(e.target.value) })}
                   placeholder="(00) 00000-0000"
                   className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#D93636]/20 focus:border-[#D93636] transition-all"
                   required
@@ -681,14 +717,14 @@ function NotAffiliateView({ onSuccess }: { onSuccess: () => void }) {
             {/* CPF */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                CPF
+                CPF *
               </label>
               <div className="relative">
                 <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
                   value={formData.cpf}
-                  onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, cpf: formatCpfInput(e.target.value) })}
                   placeholder="000.000.000-00"
                   className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#D93636]/20 focus:border-[#D93636] transition-all"
                   required
@@ -696,10 +732,66 @@ function NotAffiliateView({ onSuccess }: { onSuccess: () => void }) {
               </div>
             </div>
 
+            {/* Cidade + UF */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Cidade
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    placeholder="Belo Horizonte"
+                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#D93636]/20 focus:border-[#D93636] transition-all"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  UF
+                </label>
+                <select
+                  value={formData.state}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  className="w-full px-3 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#D93636]/20 focus:border-[#D93636] transition-all"
+                >
+                  <option value="">--</option>
+                  {UFS.map((uf) => (
+                    <option key={uf} value={uf}>{uf}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Instagram (opcional) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Instagram <span className="text-xs text-gray-500 font-normal">(opcional, ajuda no acompanhamento da divulgação)</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">@</span>
+                <input
+                  type="text"
+                  value={formData.instagramHandle}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      instagramHandle: e.target.value.replace(/^@/, '').replace(/[^A-Za-z0-9._]/g, ''),
+                    })
+                  }
+                  placeholder="seu_perfil"
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#D93636]/20 focus:border-[#D93636] transition-all"
+                />
+              </div>
+            </div>
+
             {/* Chave PIX */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Chave PIX (para receber comissões)
+                Chave PIX (para receber comissões) *
               </label>
               <div className="relative">
                 <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -712,6 +804,20 @@ function NotAffiliateView({ onSuccess }: { onSuccess: () => void }) {
                   required
                 />
               </div>
+            </div>
+
+            {/* Banco (opcional) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Banco <span className="text-xs text-gray-500 font-normal">(opcional, caso prefira identificar o banco do PIX)</span>
+              </label>
+              <input
+                type="text"
+                value={formData.bankName}
+                onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
+                placeholder="Ex: Nubank, Itaú, Bradesco..."
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#D93636]/20 focus:border-[#D93636] transition-all"
+              />
             </div>
 
             {/* Termos */}

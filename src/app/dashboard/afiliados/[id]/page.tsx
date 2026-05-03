@@ -114,14 +114,38 @@ function AffiliateDetailsContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
-      
+
       if (!response.ok) throw new Error('Falha ao atualizar status');
-      
+
       toast.success(`Status atualizado para ${status.toLowerCase()}`);
       fetchAffiliate();
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Erro ao atualizar status');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleUpdateCommissionRate = async (newRate: number) => {
+    if (Number.isNaN(newRate) || newRate < 0 || newRate > 100) {
+      toast.error('Comissão deve estar entre 0% e 100%');
+      return;
+    }
+    if (affiliate && affiliate.commission_rate === newRate) return;
+    try {
+      setProcessingId('commission');
+      const response = await fetch(`/api/affiliates/${affiliateId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ commission_rate: newRate }),
+      });
+      if (!response.ok) throw new Error('Falha ao atualizar comissão');
+      toast.success(`Comissão atualizada para ${newRate}%`);
+      fetchAffiliate();
+    } catch (error) {
+      console.error('Error updating commission:', error);
+      toast.error('Erro ao atualizar comissão');
     } finally {
       setProcessingId(null);
     }
@@ -359,7 +383,11 @@ function AffiliateDetailsContent() {
                 <TrendingUp className="h-4 w-4" />
                 <span className="text-sm">Comissão</span>
               </div>
-              <p className="text-2xl font-bold">{affiliate.commission_rate}%</p>
+              <CommissionRateEditor
+                currentRate={affiliate.commission_rate}
+                isProcessing={processingId === 'commission'}
+                onSave={handleUpdateCommissionRate}
+              />
             </div>
 
             <div className="bg-muted/50 rounded-lg p-4">
@@ -478,6 +506,57 @@ function AffiliateDetailsContent() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// Editor inline da taxa de comissão. Mostra o % atual; quando o admin
+// edita o input, aparece um botão "Salvar". Em sucesso, o componente pai
+// re-fetcha os dados do afiliado e o estado é resetado.
+function CommissionRateEditor({
+  currentRate,
+  isProcessing,
+  onSave,
+}: {
+  currentRate: number;
+  isProcessing: boolean;
+  onSave: (rate: number) => void | Promise<void>;
+}) {
+  const [value, setValue] = useState<string>(String(currentRate));
+
+  useEffect(() => {
+    setValue(String(currentRate));
+  }, [currentRate]);
+
+  const parsed = parseInt(value, 10);
+  const isValid = !Number.isNaN(parsed) && parsed >= 0 && parsed <= 100;
+  const isDirty = isValid && parsed !== currentRate;
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex items-baseline">
+        <input
+          type="number"
+          min={0}
+          max={100}
+          step={1}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          disabled={isProcessing}
+          className="w-16 text-2xl font-bold bg-transparent border-b border-transparent focus:border-primary focus:outline-none px-1 disabled:opacity-50"
+          aria-label="Taxa de comissão em porcentagem"
+        />
+        <span className="text-2xl font-bold ml-0.5">%</span>
+      </div>
+      {isDirty && (
+        <Button
+          size="sm"
+          onClick={() => onSave(parsed)}
+          disabled={isProcessing || !isValid}
+        >
+          {isProcessing ? 'Salvando...' : 'Salvar'}
+        </Button>
+      )}
     </div>
   );
 }
