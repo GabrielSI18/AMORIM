@@ -234,29 +234,32 @@ function AffiliateDetailsContent() {
         <div className="bg-card rounded-xl border p-6 space-y-4">
           <h2 className="text-lg font-semibold">Informações do Afiliado</h2>
           
+          {/* Lista de info: ícones com flex-shrink-0 e textos com break-all
+              para emails longos (sem espaço, truncate cortaria parte importante;
+              break-all permite que quebre em qualquer caractere). */}
           <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <span>{affiliate.name}</span>
+            <div className="flex items-start gap-3 min-w-0">
+              <User className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
+              <span className="break-words min-w-0">{affiliate.name}</span>
             </div>
-            <div className="flex items-center gap-3">
-              <Mail className="h-4 w-4 text-muted-foreground" />
-              <span>{affiliate.email}</span>
+            <div className="flex items-start gap-3 min-w-0">
+              <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
+              <span className="break-all min-w-0 text-sm">{affiliate.email}</span>
             </div>
             {affiliate.phone && (
-              <div className="flex items-center gap-3">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <span>{affiliate.phone}</span>
+              <div className="flex items-start gap-3 min-w-0">
+                <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
+                <span className="break-all min-w-0">{affiliate.phone}</span>
               </div>
             )}
-            <div className="flex items-center gap-3">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span>Cadastrado em {formatDate(affiliate.created_at)}</span>
+            <div className="flex items-start gap-3 min-w-0">
+              <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
+              <span className="min-w-0">Cadastrado em {formatDate(affiliate.created_at)}</span>
             </div>
             {affiliate.approved_at && (
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                <span>Aprovado em {formatDate(affiliate.approved_at)}</span>
+              <div className="flex items-start gap-3 min-w-0">
+                <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0 mt-1" />
+                <span className="min-w-0">Aprovado em {formatDate(affiliate.approved_at)}</span>
               </div>
             )}
           </div>
@@ -264,13 +267,13 @@ function AffiliateDetailsContent() {
           {/* Code */}
           <div className="pt-4 border-t">
             <p className="text-sm text-muted-foreground mb-2">Código de Afiliado</p>
-            <div className="flex items-center gap-2">
-              <code className="bg-muted px-3 py-2 rounded text-lg font-mono flex-1">
+            <div className="flex items-center gap-2 min-w-0">
+              <code className="bg-muted px-3 py-2 rounded text-lg font-mono flex-1 min-w-0 truncate">
                 {affiliate.code}
               </code>
               <button
                 onClick={() => copyCode(affiliate.code)}
-                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                className="p-2 hover:bg-muted rounded-lg transition-colors flex-shrink-0"
                 title="Copiar código"
               >
                 <Copy className="h-4 w-4" />
@@ -286,11 +289,12 @@ function AffiliateDetailsContent() {
             </Button>
           </div>
 
-          {/* Pix Key */}
+          {/* Pix Key — chave pode ser email longo, CPF, telefone ou aleatória.
+              `break-all` quebra em qualquer caractere para não estourar o card. */}
           {affiliate.pix_key && (
             <div className="pt-4 border-t">
               <p className="text-sm text-muted-foreground mb-2">Chave PIX</p>
-              <code className="bg-muted px-3 py-2 rounded text-sm font-mono block">
+              <code className="bg-muted px-3 py-2 rounded text-sm font-mono block break-all">
                 {affiliate.pix_key}
               </code>
             </div>
@@ -417,28 +421,28 @@ function AffiliateDetailsContent() {
           <div className="divide-y">
             {affiliate.referrals.map((referral) => (
               <div key={referral.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold">{referral.package_title}</span>
+                <div className="space-y-1 min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold break-words">{referral.package_title}</span>
                     {getCommissionStatusBadge(referral.commission_status)}
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground break-all">
                     Cliente: {referral.customer_email}
                   </p>
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
+                    <Clock className="h-3 w-3 flex-shrink-0" />
                     {formatDate(referral.created_at)}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 flex-wrap md:flex-nowrap md:flex-shrink-0">
                   <div className="text-right">
                     <p className="text-sm text-muted-foreground">Venda</p>
-                    <p className="font-medium">{formatCurrency(referral.sale_amount)}</p>
+                    <p className="font-medium whitespace-nowrap">{formatCurrency(referral.sale_amount)}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-muted-foreground">Comissão</p>
-                    <p className="font-bold text-green-600">{formatCurrency(referral.commission_amount)}</p>
+                    <p className="font-bold text-green-600 whitespace-nowrap">{formatCurrency(referral.commission_amount)}</p>
                   </div>
 
                   {referral.commission_status.toLowerCase() === 'pending' && (
@@ -464,7 +468,7 @@ function AffiliateDetailsContent() {
                   )}
 
                   {referral.commission_status.toLowerCase() === 'paid' && referral.commission_paid_at && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
                       Pago em {formatDate(referral.commission_paid_at)}
                     </span>
                   )}
