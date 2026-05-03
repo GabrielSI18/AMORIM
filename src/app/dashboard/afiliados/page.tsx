@@ -417,14 +417,14 @@ function AfiliadosContent() {
                             : 'bg-gray-50 dark:bg-[#252525]'
                         }`}
                       >
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h3 className="font-semibold text-gray-900 dark:text-white">
+                        <div className="flex items-start justify-between gap-3 mb-3">
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-semibold text-gray-900 dark:text-white truncate">
                               {affiliate.user.first_name} {affiliate.user.last_name}
                             </h3>
-                            <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">{affiliate.user.email}</p>
+                            <p className="text-sm text-gray-500 dark:text-[#A0A0A0] truncate">{affiliate.user.email}</p>
                           </div>
-                          {getStatusBadge(affiliate.status)}
+                          <div className="flex-shrink-0">{getStatusBadge(affiliate.status)}</div>
                         </div>
 
                         {/* Code */}
@@ -560,25 +560,25 @@ function AfiliadosContent() {
                     {filteredReferrals.map((referral) => (
                       <div key={referral.id} className="p-4 bg-gray-50 dark:bg-[#252525] rounded-lg">
                         <div className="flex flex-col gap-3">
-                          <div className="flex items-start justify-between">
-                            <div className="space-y-1">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="space-y-1 min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-semibold text-gray-900 dark:text-white text-sm">
+                                <span className="font-semibold text-gray-900 dark:text-white text-sm break-words">
                                   {referral.booking.package.title}
                                 </span>
                                 {getCommissionStatusBadge(referral.commission_status)}
                               </div>
-                              <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">
+                              <p className="text-xs text-gray-500 dark:text-[#A0A0A0] truncate">
                                 Por: {referral.affiliate.user.first_name} {referral.affiliate.user.last_name}
                                 {' '}({referral.affiliate.code})
                               </p>
-                              <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">
+                              <p className="text-xs text-gray-500 dark:text-[#A0A0A0] truncate">
                                 Reserva: {formatCurrency(referral.booking.total_price)} • {formatDate(referral.created_at)}
                               </p>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right flex-shrink-0">
                               <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Comissão</p>
-                              <p className="text-lg font-bold text-green-600">{formatCurrency(referral.commission_amount)}</p>
+                              <p className="text-lg font-bold text-green-600 whitespace-nowrap">{formatCurrency(referral.commission_amount)}</p>
                             </div>
                           </div>
 
