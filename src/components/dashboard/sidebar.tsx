@@ -89,11 +89,21 @@ export function Sidebar({
         />
       )}
 
-      {/* Mobile Sidebar */}
+      {/* Mobile Sidebar
+          Usamos `transform` inline em vez das classes `translate-x-*` do
+          Tailwind: o combo `transform translate-x-*` ficou inconsistente
+          após Tailwind v4 e o sidebar permanecia visível no canto superior
+          esquerdo, sobrepondo o hamburger e bloqueando cliques.
+          O inline style garante o comportamento independente da versão.
+          `pointer-events-none` quando fechado evita que o elemento, mesmo
+          posicionado fora da viewport, intercepte cliques em desktop ou
+          em casos onde overflow-x: clip não cobrir. */}
       <aside
-        className={`fixed top-0 left-0 h-full w-72 bg-white dark:bg-[#1E1E1E] z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+        aria-hidden={!isOpen}
+        className={`fixed top-0 left-0 h-full w-72 bg-white dark:bg-[#1E1E1E] z-50 transition-transform duration-300 ease-in-out lg:hidden ${
+          isOpen ? '' : 'pointer-events-none'
         }`}
+        style={{ transform: isOpen ? 'translateX(0)' : 'translateX(-100%)' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
