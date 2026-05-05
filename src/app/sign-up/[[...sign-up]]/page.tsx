@@ -4,19 +4,29 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSignUp, useUser } from '@clerk/nextjs'
+import { useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, ArrowLeft, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
-function hardRedirectToDashboard() {
+function hardRedirectTo(target: string) {
   if (typeof window !== 'undefined') {
-    window.location.replace('/dashboard')
+    window.location.replace(target)
   }
+}
+
+// Aceita apenas paths internos (começando com /) — bloqueia open-redirect.
+function sanitizeRedirect(value: string | null | undefined): string {
+  if (!value) return '/dashboard'
+  if (!value.startsWith('/') || value.startsWith('//')) return '/dashboard'
+  return value
 }
 
 export default function SignUpPage() {
   const { signUp, setActive } = useSignUp()
   // Aguarda o Clerk propagar a sessão antes de redirect (vide comentário no sign-in).
-  const { isSignedIn } = useUser()
+  const { isSignedIn, isLoaded: isUserLoaded } = useUser()
+  const searchParams = useSearchParams()
+  const redirectUrl = sanitizeRedirect(searchParams?.get('redirect_url'))
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   
@@ -39,18 +49,26 @@ export default function SignUpPage() {
     setMounted(true)
   }, [])
 
+  // Se o usuário já está logado quando chega em /sign-up, redireciona direto
+  // pro destino (evita "Session already exists" do Clerk).
+  useEffect(() => {
+    if (isUserLoaded && isSignedIn && !isRedirecting) {
+      hardRedirectTo(redirectUrl)
+    }
+  }, [isUserLoaded, isSignedIn, isRedirecting, redirectUrl])
+
   // Aguarda o Clerk confirmar isSignedIn antes do reload (vide sign-in).
   useEffect(() => {
     if (!isRedirecting) return
     if (isSignedIn) {
-      hardRedirectToDashboard()
+      hardRedirectTo(redirectUrl)
       return
     }
     const fallback = setTimeout(() => {
-      hardRedirectToDashboard()
+      hardRedirectTo(redirectUrl)
     }, 5000)
     return () => clearTimeout(fallback)
-  }, [isRedirecting, isSignedIn])
+  }, [isRedirecting, isSignedIn, redirectUrl])
 
   const toggleTheme = () => {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')

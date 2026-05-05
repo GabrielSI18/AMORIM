@@ -4,15 +4,24 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSignIn, useUser } from '@clerk/nextjs'
+import { useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, ArrowLeft, Moon, Sun, Mail } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
-// Força um navigate "duro" para o dashboard.
+// Força um navigate "duro" para uma rota.
 // O `window.location.replace` causa full reload e remove /sign-in do histórico.
-function hardRedirectToDashboard() {
+function hardRedirectTo(target: string) {
   if (typeof window !== 'undefined') {
-    window.location.replace('/dashboard')
+    window.location.replace(target)
   }
+}
+
+// Sanitiza `redirect_url` da query: aceita apenas paths internos relativos
+// (começando com /). Rejeita esquemas externos para evitar open-redirect.
+function sanitizeRedirect(value: string | null | undefined): string {
+  if (!value) return '/dashboard'
+  if (!value.startsWith('/') || value.startsWith('//')) return '/dashboard'
+  return value
 }
 
 export default function SignInPage() {
@@ -21,7 +30,9 @@ export default function SignInPage() {
   // `isSignedIn` vira true assim que o Clerk SDK termina de propagar o cookie
   // de sessão para o navegador. Antes disso, um reload prematuro faz o
   // middleware redirecionar de volta para /sign-in.
-  const { isSignedIn } = useUser()
+  const { isSignedIn, isLoaded: isUserLoaded } = useUser()
+  const searchParams = useSearchParams()
+  const redirectUrl = sanitizeRedirect(searchParams?.get('redirect_url'))
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   
@@ -43,20 +54,29 @@ export default function SignInPage() {
     setMounted(true)
   }, [])
 
+  // Se o usuário JÁ está logado quando chega em /sign-in, redireciona direto
+  // pro destino (evita a tela "Session already exists" do Clerk e poupa o
+  // cliente do passo extra de "voltar para home → ir pro dashboard").
+  useEffect(() => {
+    if (isUserLoaded && isSignedIn && !isRedirecting) {
+      hardRedirectTo(redirectUrl)
+    }
+  }, [isUserLoaded, isSignedIn, isRedirecting, redirectUrl])
+
   // Aguarda o Clerk confirmar a sessão (`isSignedIn === true`) antes do
   // reload — assim o middleware encontra o cookie de sessão e libera
   // /dashboard. Fallback de 5s em caso de algum hiccup raro do Clerk SDK.
   useEffect(() => {
     if (!isRedirecting) return
     if (isSignedIn) {
-      hardRedirectToDashboard()
+      hardRedirectTo(redirectUrl)
       return
     }
     const fallback = setTimeout(() => {
-      hardRedirectToDashboard()
+      hardRedirectTo(redirectUrl)
     }, 5000)
     return () => clearTimeout(fallback)
-  }, [isRedirecting, isSignedIn])
+  }, [isRedirecting, isSignedIn, redirectUrl])
 
   const toggleTheme = () => {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
