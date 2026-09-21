@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
 import { toCamelCase, toSnakeCase } from '@/lib/case-transform';
 import { requireAdminApi } from '@/lib/api-auth';
+import { notExpiredWhere } from '@/lib/package-expiration';
 import type { PackageFilters } from '@/types';
 
 /**
@@ -31,9 +32,11 @@ export async function GET(req: NextRequest) {
       is_active: true,
     };
 
-    // Só adicionar filtro de status se não for "all"
+    // Só adicionar filtro de status se não for "all" (listagem do admin).
+    // Fora do admin, pacotes cuja data de término já passou somem do site.
     if (filters.status && filters.status !== 'all') {
       where.status = filters.status;
+      where.AND = [notExpiredWhere()];
     }
 
     if (filters.category) where.category_id = filters.category;

@@ -11,6 +11,7 @@ import { BusSeatMap, BusInfo } from '@/components/packages/bus-seat-map';
 import { useSiteConfig } from '@/hooks/use-site-config';
 import { getAffiliateCode, clearAffiliateCode } from '@/hooks/use-affiliate-tracking';
 import type { Package } from '@/types';
+import { isPackageExpired } from '@/lib/package-expiration';
 
 interface PassengerFormData {
   fullName: string;
@@ -245,6 +246,11 @@ export default function ReservaPage({ params }: ReservaPageProps) {
       const response = await fetch(`/api/packages/${packageId}`);
       if (!response.ok) throw new Error('Pacote não encontrado');
       const data = await response.json();
+      if (isPackageExpired(data.data)) {
+        toast.error('Este pacote já foi encerrado');
+        router.push('/pacotes');
+        return;
+      }
       setPkg(data.data);
     } catch (error) {
       console.error('Erro ao carregar pacote:', error);

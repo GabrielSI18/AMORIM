@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import { toCamelCase } from '@/lib/case-transform';
+import { notExpiredWhere } from '@/lib/package-expiration';
 import Image from 'next/image';
 import { MapPin, Calendar, Users, Clock } from 'lucide-react';
 import Link from 'next/link';
@@ -23,6 +24,7 @@ async function getPackage(slug: string) {
       slug,
       is_active: true,
       status: 'published',
+      ...notExpiredWhere(),
     },
     include: {
       category: true,

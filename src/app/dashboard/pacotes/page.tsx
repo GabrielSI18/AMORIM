@@ -9,6 +9,7 @@ import { DashboardShell, AdminGuard } from '@/components/dashboard'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import Image from 'next/image'
 import type { Package as PackageType, Category, Destination } from '@/types'
+import { isPackageExpired } from '@/lib/package-expiration'
 
 // Formatador de moeda
 const formatPrice = (priceInCents: number) => {
@@ -237,8 +238,16 @@ function PackagesContent() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex-shrink-0">
+                  <div className="flex-shrink-0 flex flex-col items-end gap-1">
                     {getStatusBadge(pkg.status)}
+                    {isPackageExpired(pkg) && (
+                      <span
+                        className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-500/20 text-gray-400"
+                        title="A data de término já passou: o pacote não aparece mais no site"
+                      >
+                        Encerrado
+                      </span>
+                    )}
                   </div>
                 </div>
 

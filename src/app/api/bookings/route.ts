@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/prisma';
+import { isPackageExpired } from '@/lib/package-expiration';
 import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
 import { toCamelCase } from '@/lib/case-transform';
 import { passengersSchema, safeParse } from '@/lib/validations';
@@ -180,6 +181,10 @@ export async function POST(req: NextRequest) {
 
     if (!package_) {
       return NextResponse.json({ error: 'Pacote não encontrado' }, { status: 404 });
+    }
+
+    if (isPackageExpired(package_)) {
+      return NextResponse.json({ error: 'Este pacote já foi encerrado' }, { status: 400 });
     }
 
     if (package_.available_seats && package_.available_seats < body.numPassengers) {
