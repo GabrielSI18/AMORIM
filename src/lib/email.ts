@@ -13,9 +13,6 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 import {
   WelcomeEmail,
-  PaymentSuccessEmail,
-  PaymentFailedEmail,
-  SubscriptionCanceledEmail,
   AffiliateApprovedEmail,
   AffiliateNewSaleEmail,
   AffiliateCommissionPaidEmail,
@@ -196,56 +193,6 @@ export async function sendWelcomeEmail(params: {
     to: params.to,
     subject: `Bem-vindo ao ${APP_NAME}! 🎉`,
     template: WelcomeEmail({ userName: params.userName }),
-  });
-}
-
-/**
- * Envia email de pagamento confirmado
- */
-export async function sendPaymentSuccessEmail(params: {
-  to: string;
-  userName: string;
-  planName: string;
-  amount: string;
-  invoiceUrl?: string;
-}): Promise<EmailResult> {
-  return sendEmailWithTemplate({
-    to: params.to,
-    subject: `Pagamento confirmado - ${APP_NAME}`,
-    template: PaymentSuccessEmail(params),
-  });
-}
-
-/**
- * Envia email de pagamento falhou
- */
-export async function sendPaymentFailedEmail(params: {
-  to: string;
-  userName: string;
-  planName: string;
-  amount: string;
-  updatePaymentUrl: string;
-}): Promise<EmailResult> {
-  return sendEmailWithTemplate({
-    to: params.to,
-    subject: `Problema com seu pagamento - ${APP_NAME}`,
-    template: PaymentFailedEmail(params),
-  });
-}
-
-/**
- * Envia email de assinatura cancelada
- */
-export async function sendSubscriptionCanceledEmail(params: {
-  to: string;
-  userName: string;
-  planName: string;
-  endDate: string;
-}): Promise<EmailResult> {
-  return sendEmailWithTemplate({
-    to: params.to,
-    subject: `Sua assinatura foi cancelada - ${APP_NAME}`,
-    template: SubscriptionCanceledEmail(params),
   });
 }
 

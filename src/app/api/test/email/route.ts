@@ -2,19 +2,12 @@
  * API Route para testar envio de emails
  *
  * POST /api/test/email
- * Body: { type: 'welcome' | 'payment_success' | 'payment_failed' | 'subscription_canceled' | 'trial_ending' }
+ * Body: { type: 'welcome' }
  */
 
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  sendWelcomeEmail,
-  sendPaymentSuccessEmail,
-  sendPaymentFailedEmail,
-  sendSubscriptionCanceledEmail,
-  sendEmailWithTemplate,
-} from '@/lib/email';
-import { TrialEndingEmail } from '@/lib/email-templates';
+import { sendWelcomeEmail } from '@/lib/email';
 import { emailLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
@@ -50,7 +43,6 @@ export async function POST(req: NextRequest) {
 
     const userEmail = user.emailAddresses[0].emailAddress;
     const userName = user.firstName || 'Usuário';
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
     // Get email type
     const body = await req.json();
@@ -63,48 +55,6 @@ export async function POST(req: NextRequest) {
     switch (type) {
       case 'welcome':
         result = await sendWelcomeEmail({ to: userEmail, userName });
-        break;
-
-      case 'payment_success':
-        result = await sendPaymentSuccessEmail({
-          to: userEmail,
-          userName,
-          planName: 'Plano Pro',
-          amount: 'R$ 79,00',
-          invoiceUrl: `${appUrl}/dashboard/billing`,
-        });
-        break;
-
-      case 'payment_failed':
-        result = await sendPaymentFailedEmail({
-          to: userEmail,
-          userName,
-          planName: 'Plano Pro',
-          amount: 'R$ 79,00',
-          updatePaymentUrl: `${appUrl}/dashboard/billing`,
-        });
-        break;
-
-      case 'subscription_canceled':
-        result = await sendSubscriptionCanceledEmail({
-          to: userEmail,
-          userName,
-          planName: 'Plano Pro',
-          endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR'),
-        });
-        break;
-
-      case 'trial_ending':
-        result = await sendEmailWithTemplate({
-          to: userEmail,
-          subject: 'Seu período de teste está acabando',
-          template: TrialEndingEmail({
-            userName,
-            daysLeft: 3,
-            planName: 'Plano Pro',
-            upgradeUrl: `${appUrl}/pricing`,
-          }),
-        });
         break;
 
       default:

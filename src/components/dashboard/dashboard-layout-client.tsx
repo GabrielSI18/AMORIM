@@ -44,7 +44,6 @@ const routeTitles: Record<string, string> = {
   '/dashboard/perfil': 'Perfil',
   '/dashboard/configuracoes': 'Configurações',
   '/dashboard/parceiro': 'Parceiro Amorim',
-  '/dashboard/billing': 'Assinatura',
 }
 
 function getPageTitle(pathname: string): string {

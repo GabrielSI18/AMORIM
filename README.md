@@ -1,12 +1,11 @@
 # 🚀 Base2025
 
-**Base moderna e completa para projetos SaaS/Web** com Next.js 16, Clerk, Stripe, IA e Prisma.
+**Base moderna e completa para projetos SaaS/Web** com Next.js 16, Clerk, IA e Prisma.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org)
 [![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma)](https://www.prisma.io)
 [![Clerk](https://img.shields.io/badge/Clerk-Auth-6C47FF?logo=clerk)](https://clerk.com)
-[![Stripe](https://img.shields.io/badge/Stripe-Payments-635BFF?logo=stripe)](https://stripe.com)
 
 ---
 
@@ -14,7 +13,6 @@
 
 - ✅ **Next.js 16** - App Router, Server Components, TypeScript 5
 - 🔐 **Clerk** - Autenticação completa (PT-BR), webhook de sincronização
-- 💳 **Stripe** - Assinaturas, add-ons, webhook completo (9 eventos)
 - 🗄️ **Prisma** - PostgreSQL/Supabase, migrações, seed automático
 - 🤖 **IA (3 providers)** - Groq (grátis), OpenAI, DeepInfra com flags de ativação
 - 🎨 **ShadCN + Tailwind v4** - Componentes modernos, design system completo
@@ -32,7 +30,6 @@
 - Prerequisites, quick start, checklist de mudanças
 
 ### **Lógica de Pagamentos**
-💳 **[STRIPE.md](./STRIPE.md)** - Arquitetura Stripe
 - Plans/Prices/Subscriptions, levels, eventos webhook
 
 ### **Lógica de IA**
@@ -54,7 +51,6 @@
 | **Linguagem** | TypeScript | 5 | Tipagem estática |
 | **Banco de Dados** | Prisma + PostgreSQL | Latest | ORM + Supabase |
 | **Autenticação** | Clerk | Latest | Auth completo (PT-BR) |
-| **Pagamentos** | Stripe | 19.3.1 | Assinaturas + Add-ons |
 | **IA** | Vercel AI SDK | Latest | Groq, OpenAI, DeepInfra |
 | **UI** | ShadCN + Tailwind v4 | Latest | Componentes + Design |
 | **State** | Zustand | Latest | Global state |
@@ -87,13 +83,11 @@ base2025/
 │   │   └── api/
 │   │       └── webhooks/
 │   │           ├── clerk/       # 🔐 Sincronização de usuários
-│   │           └── stripe/      # 💳 9 eventos (checkout, subscription, invoice)
 │   ├── components/
 │   │   ├── ui/                  # 🧩 ShadCN components (skeleton, spinner...)
 │   │   └── charts/              # 📊 Chart.js wrappers
 │   ├── lib/
 │   │   ├── prisma.ts            # 🗄️ Singleton do Prisma Client
-│   │   ├── stripe.ts            # 💳 Singleton do Stripe + 6 helpers
 │   │   ├── plans.ts             # 📋 Features e upgrade/downgrade logic
 │   │   ├── addons.ts            # 🔌 Add-ons com level requirements
 │   │   ├── ai.ts                # 🤖 3 providers (Groq, OpenAI, DeepInfra)
@@ -120,7 +114,6 @@ base2025/
 ├── .env                         # 🔑 Variáveis (placeholders, commitado)
 ├── .env.local                   # 🔐 Valores reais (ignorado no git)
 ├── INIT-BASE.md                 # 📚 Guia de inicialização completo
-├── STRIPE.md                    # 💳 Documentação do Stripe
 └── AGENTS.md                    # 🤖 Regras para agentes de IA
 ```
 
@@ -144,9 +137,6 @@ npx prisma generate      # Gera Prisma Client (após mudanças no schema)
 # - OPENAI_API_KEY + ACTIVE_AI_OPENAI="true"
 # - DEEPINFRA_API_KEY + ACTIVE_AI_DEEPINFRA="true"
 
-# Stripe (Testing Local)
-stripe listen --forward-to localhost:3000/api/webhooks/stripe
-# Copia o webhook secret para .env.local (STRIPE_WEBHOOK_SECRET)
 
 # Build e Deploy
 npm run build            # Build de produção
@@ -177,7 +167,6 @@ MIT License - veja [LICENSE](LICENSE) para detalhes.
 
 - [Next.js](https://nextjs.org) - Framework React
 - [Clerk](https://clerk.com) - Autenticação
-- [Stripe](https://stripe.com) - Pagamentos
 - [Prisma](https://prisma.io) - ORM
 - [ShadCN](https://ui.shadcn.com) - Componentes UI
 - [Tailwind CSS](https://tailwindcss.com) - Estilização
@@ -188,7 +177,6 @@ MIT License - veja [LICENSE](LICENSE) para detalhes.
 ## 📞 Suporte
 
 - 📚 Documentação: [INIT-BASE.md](./INIT-BASE.md)
-- 💳 Stripe: [STRIPE.md](./STRIPE.md)
 - 🤖 IA: [AI.md](./AI.md)
 - 🤖 Agentes: [AGENTS.md](./AGENTS.md)
 - 🐛 Issues: [GitHub Issues](https://github.com/exaltius-org/base-2025/issues)

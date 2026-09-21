@@ -87,18 +87,10 @@ export default function NotFound() {
             </li>
             <li>
               <Link 
-                href="/dashboard/billing" 
+                href="/pacotes" 
                 className="text-sm text-primary hover:underline flex items-center gap-2"
               >
-                <span>→</span> Faturamento
-              </Link>
-            </li>
-            <li>
-              <Link 
-                href="/#pricing" 
-                className="text-sm text-primary hover:underline flex items-center gap-2"
-              >
-                <span>→</span> Planos e preços
+                <span>→</span> Pacotes de viagem
               </Link>
             </li>
           </ul>

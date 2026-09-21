@@ -7,9 +7,9 @@
   "scripts": {
     "dev": "next dev",
     "dev:turbo": "next dev --turbo",
-    "build": "next build",
-    "deploy": "vercel --prod --yes",
-    "deploy:preview": "vercel --yes",
+    "build": "next build --webpack",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "node scripts/deploy-cloudflare.mjs",
     "start": "next start",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
@@ -22,11 +22,7 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset",
-    "db:seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@ai-sdk/deepinfra": "^1.0.28",
@@ -39,7 +35,7 @@
     "@clerk/localizations": "^3.28.1",
     "@clerk/nextjs": "^6.35.2",
     "@neondatabase/serverless": "^1.0.2",
-    "@prisma/adapter-neon": "^7.5.0",
+    "@prisma/adapter-neon": "^6.19.0",
     "@prisma/client": "^6.19.0",
     "@react-email/components": "^0.5.7",
     "@supabase/supabase-js": "^2.86.0",
@@ -59,7 +55,6 @@
     "react-dom": "19.2.0",
     "react-email": "^5.0.5",
     "sonner": "^2.0.7",
-    "stripe": "^19.3.1",
     "svix": "^1.81.0",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.1.13",

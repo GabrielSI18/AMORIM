@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 
-type EmailType = 'welcome' | 'payment_success' | 'payment_failed' | 'subscription_canceled' | 'trial_ending';
+type EmailType = 'welcome';
 
 interface EmailTest {
   type: EmailType;
@@ -25,36 +25,12 @@ const EMAIL_TESTS: EmailTest[] = [
     label: '👋 Welcome Email',
     description: 'Email de boas-vindas enviado ao criar conta',
   },
-  {
-    type: 'payment_success',
-    label: '✅ Payment Success',
-    description: 'Email de confirmação de pagamento',
-  },
-  {
-    type: 'payment_failed',
-    label: '❌ Payment Failed',
-    description: 'Email de falha no pagamento',
-  },
-  {
-    type: 'subscription_canceled',
-    label: '🚫 Subscription Canceled',
-    description: 'Email de cancelamento de assinatura',
-  },
-  {
-    type: 'trial_ending',
-    label: '⏰ Trial Ending',
-    description: 'Email de aviso de fim do trial (3 dias)',
-  },
 ];
 
 export default function EmailExamplesPage() {
   const [loading, setLoading] = useState<EmailType | null>(null);
   const [results, setResults] = useState<Record<EmailType, { success: boolean; message: string } | null>>({
     welcome: null,
-    payment_success: null,
-    payment_failed: null,
-    subscription_canceled: null,
-    trial_ending: null,
   });
 
   const sendTestEmail = async (type: EmailType) => {

@@ -2,7 +2,13 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "amorim",
   "compatibility_date": "2025-09-27",
+  // Evita o helper __name do esbuild em scripts inline (quebra o next-themes no browser)
+  "keep_names": false,
   "main": ".open-next/worker.js",
+  "workers_dev": false,
+  "routes": [
+    { "pattern": "amorimturismo.com.br", "custom_domain": true }
+  ],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
@@ -11,6 +17,7 @@
     "enabled": true
   },
   "compatibility_flags": [
-    "nodejs_compat"
+    "nodejs_compat",
+    "global_fetch_strictly_public"
   ]
 }

@@ -59,28 +59,6 @@ export const requiredStringSchema = z.string().min(1, 'Campo obrigatório').trim
 export const optionalStringSchema = z.string().trim().optional();
 
 // ============================================
-// Schemas de Checkout/Stripe
-// ============================================
-
-/** Checkout - criar sessão */
-export const checkoutSchema = z.object({
-  priceId: z.string()
-    .min(1, 'Price ID é obrigatório')
-    .regex(/^price_/, 'Price ID deve começar com "price_"'),
-  successUrl: z.string().url().optional(),
-  cancelUrl: z.string().url().optional(),
-});
-
-export type CheckoutInput = z.infer<typeof checkoutSchema>;
-
-/** Portal - abrir portal do cliente */
-export const portalSchema = z.object({
-  returnUrl: z.string().url('URL de retorno inválida').optional(),
-});
-
-export type PortalInput = z.infer<typeof portalSchema>;
-
-// ============================================
 // Schemas de Chat/IA
 // ============================================
 

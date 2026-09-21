@@ -38,7 +38,13 @@ yarn-error.log*
 # Allow .env.example to be committed (template)
 !.env.example
 
-# vercel
+# cloudflare / opennext
+.open-next
+.wrangler
+.dev.vars*
+!.dev.vars.example
+
+# vercel (legado)
 .vercel
 
 # typescript
@@ -50,3 +56,6 @@ next-env.d.ts
 
 # Claude Code (configurações locais do usuário)
 .claude/
+
+# producao (Cloudflare) - segredos ficam fora do git (wrangler secret)
+.secrets.production.json
