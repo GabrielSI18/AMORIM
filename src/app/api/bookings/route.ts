@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/prisma';
 import { parseDateInput } from '@/lib/date-input';
+import { activeBookingsWhere } from '@/lib/booking-status';
 import { isPackageExpired } from '@/lib/package-expiration';
 import { generalApiLimiter, rateLimitExceededResponse, enforceRateLimit } from '@/lib/rate-limit';
 import { toCamelCase } from '@/lib/case-transform';
@@ -215,7 +216,7 @@ export async function POST(req: NextRequest) {
       const existingBookings = await prisma.booking.findMany({
         where: {
           package_id: body.packageId,
-          status: { in: ['pending', 'confirmed'] },
+          ...activeBookingsWhere,
         },
         select: { selected_seats: true },
       });

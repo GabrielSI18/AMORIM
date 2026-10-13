@@ -28,6 +28,7 @@ export default async function RelatoriosPage() {
   const [
     totalBookings,
     paidBookings,
+    canceledBookings,
     recentPaidBookings,
     previousPaidBookings,
     recentBookingsList,
@@ -36,6 +37,8 @@ export default async function RelatoriosPage() {
     prisma.booking.count(),
     // Reservas pagas
     prisma.booking.count({ where: { payment_status: 'paid' } }),
+    // Reservas canceladas (não entram em "pendentes")
+    prisma.booking.count({ where: { status: { in: ['canceled', 'cancelled'] } } }),
     // Reservas pagas dos últimos 30 dias
     prisma.booking.findMany({
       where: {
@@ -86,10 +89,10 @@ export default async function RelatoriosPage() {
     growthRate = 100 // Se não tinha receita anterior mas tem agora, é 100% de crescimento
   }
 
-  // Ticket médio
-  const averageTicket = paidBookings > 0 
-    ? Math.round(recentRevenue / recentPaidBookings.length) 
-    : 0
+  // Ticket médio dos últimos 30 dias (antes dividia por zero e mostrava "R$ NaN"
+  // quando não havia venda no período, porque o teste usava o total geral)
+  const averageTicket =
+    recentPaidBookings.length > 0 ? Math.round(recentRevenue / recentPaidBookings.length) : 0
 
   // Formatar tempo relativo
   function getRelativeTime(date: Date): string {
@@ -162,7 +165,13 @@ export default async function RelatoriosPage() {
             </div>
             <div className="flex justify-between p-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg">
               <span className="text-gray-500 dark:text-[#A0A0A0]">Pendentes</span>
-              <span className="text-gray-900 dark:text-[#E0E0E0] font-medium">{totalBookings - paidBookings}</span>
+              <span className="text-gray-900 dark:text-[#E0E0E0] font-medium">
+                {Math.max(totalBookings - paidBookings - canceledBookings, 0)}
+              </span>
+            </div>
+            <div className="flex justify-between p-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg">
+              <span className="text-gray-500 dark:text-[#A0A0A0]">Canceladas</span>
+              <span className="text-gray-900 dark:text-[#E0E0E0] font-medium">{canceledBookings}</span>
             </div>
           </div>
         </div>

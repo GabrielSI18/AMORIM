@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { activeBookingsWhere } from '@/lib/booking-status';
 
 // GET /api/packages/[packageId]/seats - Busca assentos ocupados de um pacote
 export async function GET(
@@ -40,9 +41,7 @@ export async function GET(
     const bookings = await prisma.booking.findMany({
       where: {
         package_id: packageId,
-        status: {
-          in: ['pending', 'confirmed'],
-        },
+        ...activeBookingsWhere,
       },
       select: {
         id: true,

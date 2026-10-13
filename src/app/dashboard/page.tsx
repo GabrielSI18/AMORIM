@@ -70,7 +70,8 @@ async function DashboardPageContent() {
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
 
   const [
-    totalClients,
+    registeredClients,
+    guestBookingEmails,
     totalAffiliates,
     totalPackages,
     publishedPackages,
@@ -80,10 +81,16 @@ async function DashboardPageContent() {
     pendingAffiliates,
     packageStats,
   ] = await Promise.all([
-    // Contagem de clientes
+    // Clientes cadastrados (role USER)
     prisma.user.count({ where: { role: 'USER' } as any }),
-    // Contagem de afiliados
-    prisma.user.count({ where: { role: 'AFFILIATE' } as any }),
+    // Clientes que reservaram sem conta (contados como cliente na tela de Clientes)
+    prisma.booking.findMany({
+      where: { user_id: null, status: { not: 'canceled' } },
+      select: { customer_email: true },
+    }),
+    // Afiliados cadastrados — antes contava User com role AFFILIATE, que
+    // ninguém preenche, e o card mostrava 0 mesmo com afiliados ativos
+    prisma.affiliate.count(),
     // Total de pacotes ativos
     prisma.package.count({ where: { is_active: true } }),
     // Pacotes publicados e ativos
@@ -115,6 +122,12 @@ async function DashboardPageContent() {
       },
     }),
   ])
+
+  // Mesma regra da tela de Clientes: cadastrados + quem reservou sem conta
+  const guestEmails = new Set(
+    guestBookingEmails.map((b) => (b.customer_email || '').toLowerCase()).filter(Boolean)
+  )
+  const totalClients = registeredClients + guestEmails.size
 
   // Calcular receita dos últimos 30 dias
   const revenueLastMonth = recentBookings.reduce((sum, b) => sum + b.total_amount, 0)
