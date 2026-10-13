@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { computeAffiliateTotals } from '@/lib/affiliate-totals';
 import { sendAffiliateApprovedEmail } from '@/lib/email';
 
 const APP_URL = process.env.NEXT_PUBLIC_URL || 'https://amorimturismo.com.br';
@@ -55,11 +56,19 @@ export async function GET(
       userData = affiliateUser;
     }
 
-    return NextResponse.json({ 
+    const totals = computeAffiliateTotals(affiliate.referrals);
+
+    return NextResponse.json({
       affiliate: {
         ...affiliate,
         user: userData,
-      }
+        // Totais calculados das indicações (os campos total_* da tabela só
+        // contam comissão já paga e deixavam o painel zerado)
+        total_bookings: totals.totalReferrals,
+        total_sales: totals.totalSales,
+        total_earned: totals.paidCommission,
+        totals,
+      },
     });
   } catch (error) {
     console.error('Error fetching affiliate:', error);
@@ -113,7 +122,17 @@ export async function PATCH(
 
     if (typeof body.commission_rate === 'number') {
       if (body.commission_rate < 0 || body.commission_rate > 100) {
-        return NextResponse.json({ error: 'Taxa de comissão inválida' }, { status: 400 });
+        return NextResponse.json(
+          { error: 'A comissão precisa ficar entre 0% e 100%' },
+          { status: 400 }
+        );
+      }
+      // A coluna é inteira no banco: 7,5% quebraria com erro genérico
+      if (!Number.isInteger(body.commission_rate)) {
+        return NextResponse.json(
+          { error: 'Use um número inteiro de porcentagem (ex.: 7, 8, 10)' },
+          { status: 400 }
+        );
       }
       updateData.commission_rate = body.commission_rate;
     }

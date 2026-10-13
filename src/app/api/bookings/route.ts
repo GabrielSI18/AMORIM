@@ -304,6 +304,7 @@ export async function POST(req: NextRequest) {
     // status em UPPERCASE ('ACTIVE') que o lookup retornava null e a indicação
     // nunca era gravada. Agora tolera qualquer case.
     let affiliate = null;
+    let affiliateWarning: string | null = null;
     if (body.affiliateCode) {
       const affiliateRecord = await prisma.affiliate.findUnique({
         where: { code: body.affiliateCode.toUpperCase() },
@@ -311,10 +312,12 @@ export async function POST(req: NextRequest) {
       if (affiliateRecord && affiliateRecord.status?.toLowerCase() === 'active') {
         affiliate = affiliateRecord;
       } else if (affiliateRecord) {
+        affiliateWarning = 'inactive';
         console.warn(
           `[booking.affiliate] código ${body.affiliateCode} encontrado, mas status="${affiliateRecord.status}" não é "active" — ignorando atribuição`
         );
       } else {
+        affiliateWarning = 'not_found';
         console.warn(`[booking.affiliate] código ${body.affiliateCode} não encontrado — ignorando atribuição`);
       }
     }
@@ -409,9 +412,10 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       data: booking,
       affiliateApplied: affiliate ? affiliate.code : null,
+      affiliateWarning,
     }, { status: 201 });
   } catch (error) {
     console.error('[API] POST /api/bookings error:', error);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { toCamelCase, toSnakeCase } from '@/lib/case-transform';
+import { computeAffiliateTotals } from '@/lib/affiliate-totals';
 import { sendAffiliateApprovedEmail } from '@/lib/email';
 import { requireAdminApi } from '@/lib/api-auth';
 import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
@@ -143,16 +144,12 @@ export async function GET(request: NextRequest) {
           last_name: a.name.split(' ').slice(1).join(' '),
           email: a.email,
         },
-        // Add computed fields — commission_status é lowercase no banco
-        // ('pending', 'approved', 'paid', 'rejected'). Antes os filtros aqui
-        // procuravam UPPERCASE e zeravam tudo no painel admin.
-        total_referrals: a.referrals.length,
-        total_earnings: a.referrals
-          .filter(r => (r.commission_status || '').toLowerCase() === 'paid')
-          .reduce((sum, r) => sum + (r.commission_amount || 0), 0),
-        pending_earnings: a.referrals
-          .filter(r => ['pending', 'approved'].includes((r.commission_status || '').toLowerCase()))
-          .reduce((sum, r) => sum + (r.commission_amount || 0), 0),
+        // Campos calculados a partir das indicações (os total_* da tabela só
+        // contam comissão já paga)
+        total_referrals: computeAffiliateTotals(a.referrals).totalReferrals,
+        total_sales: computeAffiliateTotals(a.referrals).totalSales,
+        total_earnings: computeAffiliateTotals(a.referrals).paidCommission,
+        pending_earnings: computeAffiliateTotals(a.referrals).receivableCommission,
       })),
       total: affiliates.length,
     });

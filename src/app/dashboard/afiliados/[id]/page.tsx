@@ -32,6 +32,15 @@ interface Affiliate {
   total_sales: number;
   total_earned: number;
   total_bookings: number;
+  totals?: {
+    totalReferrals: number;
+    totalSales: number;
+    pendingCommission: number;
+    approvedCommission: number;
+    paidCommission: number;
+    receivableCommission: number;
+    totalCommission: number;
+  };
   pix_key: string | null;
   created_at: string;
   approved_at: string | null;
@@ -393,7 +402,7 @@ function AffiliateDetailsContent() {
             <div className="bg-muted/50 rounded-lg p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Package className="h-4 w-4" />
-                <span className="text-sm">Reservas</span>
+                <span className="text-sm">Indicações</span>
               </div>
               <p className="text-2xl font-bold">{affiliate.total_bookings}</p>
             </div>
@@ -401,7 +410,7 @@ function AffiliateDetailsContent() {
             <div className="bg-muted/50 rounded-lg p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <DollarSign className="h-4 w-4" />
-                <span className="text-sm">Total Vendas</span>
+                <span className="text-sm">Vendas geradas</span>
               </div>
               <p className="text-2xl font-bold text-primary">{formatCurrency(affiliate.total_sales)}</p>
             </div>
@@ -409,9 +418,19 @@ function AffiliateDetailsContent() {
             <div className="bg-muted/50 rounded-lg p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <DollarSign className="h-4 w-4" />
-                <span className="text-sm">Total Ganho</span>
+                <span className="text-sm">Comissão paga</span>
               </div>
               <p className="text-2xl font-bold text-green-600">{formatCurrency(affiliate.total_earned)}</p>
+            </div>
+
+            <div className="bg-muted/50 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <DollarSign className="h-4 w-4" />
+                <span className="text-sm">A pagar</span>
+              </div>
+              <p className="text-2xl font-bold text-yellow-600">
+                {formatCurrency(affiliate.totals?.receivableCommission ?? 0)}
+              </p>
             </div>
           </div>
 
@@ -545,6 +564,7 @@ function CommissionRateEditor({
           disabled={isProcessing}
           className="w-16 text-2xl font-bold bg-transparent border-b border-transparent focus:border-primary focus:outline-none px-1 disabled:opacity-50"
           aria-label="Taxa de comissão em porcentagem"
+          title="Somente números inteiros (ex.: 7, 8, 10)"
         />
         <span className="text-2xl font-bold ml-0.5">%</span>
       </div>

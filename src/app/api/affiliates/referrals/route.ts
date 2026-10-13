@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/prisma';
+import { computeAffiliateTotals } from '@/lib/affiliate-totals';
 import { toCamelCase } from '@/lib/case-transform';
 import { sendAffiliateCommissionPaidEmail } from '@/lib/email';
 
@@ -159,12 +160,19 @@ export async function PUT(request: NextRequest) {
 
     // Se marcou como pago, atualizar estatísticas do afiliado + notificar por email
     if (status === 'paid' && currentReferral.commission_status !== 'paid') {
+      // Recalcula a partir das indicações. Com incremento, marcar como paga,
+      // voltar para aprovada e pagar de novo somava duas vezes.
+      const referrals = await prisma.affiliateReferral.findMany({
+        where: { affiliate_id: currentReferral.affiliate_id },
+        select: { sale_amount: true, commission_amount: true, commission_status: true },
+      });
+      const totals = computeAffiliateTotals(referrals);
       await prisma.affiliate.update({
         where: { id: currentReferral.affiliate_id },
         data: {
-          total_sales: { increment: currentReferral.sale_amount },
-          total_earned: { increment: currentReferral.commission_amount },
-          total_bookings: { increment: 1 },
+          total_sales: totals.totalSales,
+          total_earned: totals.paidCommission,
+          total_bookings: totals.totalReferrals,
         },
       });
 

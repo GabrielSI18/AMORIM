@@ -3,6 +3,7 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { toCamelCase } from '@/lib/case-transform';
+import { computeAffiliateTotals } from '@/lib/affiliate-totals';
 import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
 
 const onlyDigits = (v: string) => v.replace(/\D/g, '');
@@ -99,14 +100,19 @@ export async function GET() {
     );
     const paidReferrals = affiliate.referrals.filter(r => csLower(r) === 'paid');
 
+    const totals = computeAffiliateTotals(affiliate.referrals);
     const stats = {
-      totalReferrals: affiliate.referrals.length,
+      totalReferrals: totals.totalReferrals,
       pendingReferrals: pendingReferrals.length,
       approvedReferrals: approvedReferrals.length,
       paidReferrals: paidReferrals.length,
-      pendingCommission: pendingReferrals.reduce((sum, r) => sum + r.commission_amount, 0),
-      approvedCommission: approvedReferrals.reduce((sum, r) => sum + r.commission_amount, 0),
-      paidCommission: paidReferrals.reduce((sum, r) => sum + r.commission_amount, 0),
+      totalSales: totals.totalSales,
+      pendingCommission: totals.pendingCommission,
+      // "aprovado" aqui é só o que está aprovado e ainda não foi pago
+      approvedCommission: totals.approvedCommission,
+      paidCommission: totals.paidCommission,
+      receivableCommission: totals.receivableCommission,
+      totalCommission: totals.totalCommission,
     };
 
     return NextResponse.json({

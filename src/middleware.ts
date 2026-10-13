@@ -14,7 +14,6 @@ const isProtectedRoute = createRouteMatcher([
   '/api/clients(.*)', // Dados de clientes
   '/api/user(.*)', // Dados do usuário logado
   '/api/test(.*)', // Rotas de teste (envio de email)
-  '/api/affiliates/stats(.*)', // Números consolidados de afiliados
   '/api/images/upload(.*)', // Upload de imagens
 ])
 

@@ -63,6 +63,9 @@ interface AffiliateData {
     pendingCommission: number
     approvedCommission: number
     paidCommission: number
+    totalSales: number
+    receivableCommission: number
+    totalCommission: number
   }
 }
 
@@ -296,10 +299,13 @@ export default function ParceiroPage() {
           <div className="rounded-xl bg-white dark:bg-[#1E1E1E] p-4 border border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-2">
               <DollarSign className="w-4 h-4" />
-              <span className="text-sm">Total Ganho</span>
+              <span className="text-sm">Comissão Total</span>
             </div>
             <p className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400 truncate">
-              {formatCurrency(affiliateData?.totalEarned || 0)}
+              {formatCurrency(affiliateData?.stats?.totalCommission || 0)}
+            </p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 truncate">
+              {formatCurrency(affiliateData?.stats?.receivableCommission || 0)} a receber
             </p>
           </div>
 
@@ -307,10 +313,13 @@ export default function ParceiroPage() {
           <div className="rounded-xl bg-white dark:bg-[#1E1E1E] p-4 border border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-2">
               <TrendingUp className="w-4 h-4" />
-              <span className="text-sm">Vendas Concluídas</span>
+              <span className="text-sm">Vendas Indicadas</span>
             </div>
             <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white truncate">
-              {affiliateData?.stats?.approvedReferrals || 0}
+              {affiliateData?.stats?.totalReferrals || 0}
+            </p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 truncate">
+              {formatCurrency(affiliateData?.stats?.totalSales || 0)} em vendas
             </p>
           </div>
 

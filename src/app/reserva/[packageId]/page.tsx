@@ -143,6 +143,11 @@ export default function ReservaPage({ params }: ReservaPageProps) {
   //     digitar manualmente um código que ele recebeu de boca.
   const [lockedAffiliateCode, setLockedAffiliateCode] = useState<string | null>(null);
   const [affiliateCodeInput, setAffiliateCodeInput] = useState('');
+  // Validação do código: 'idle' | 'checking' | 'valid' | 'not_found' | 'inactive'
+  const [affiliateCheck, setAffiliateCheck] = useState<{
+    state: 'idle' | 'checking' | 'valid' | 'not_found' | 'inactive';
+    firstName?: string | null;
+  }>({ state: 'idle' });
   
   // Seats state
   const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
@@ -181,6 +186,41 @@ export default function ReservaPage({ params }: ReservaPageProps) {
       setLockedAffiliateCode(cookieCode);
     }
   }, []);
+
+  // Confere o código de indicação enquanto o cliente digita (ou o que veio do
+  // link). Antes, código errado passava em silêncio: a reserva era criada e o
+  // parceiro simplesmente não recebia a comissão.
+  useEffect(() => {
+    const code = (lockedAffiliateCode || affiliateCodeInput).trim().toUpperCase();
+
+    if (code.length < 3) {
+      setAffiliateCheck({ state: 'idle' });
+      return;
+    }
+
+    let cancelled = false;
+    setAffiliateCheck({ state: 'checking' });
+
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/affiliates/validate?code=${encodeURIComponent(code)}`);
+        const data = await response.json();
+        if (cancelled) return;
+        if (data.valid) {
+          setAffiliateCheck({ state: 'valid', firstName: data.firstName });
+        } else {
+          setAffiliateCheck({ state: data.reason === 'inactive' ? 'inactive' : 'not_found' });
+        }
+      } catch {
+        if (!cancelled) setAffiliateCheck({ state: 'idle' });
+      }
+    }, 500);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [affiliateCodeInput, lockedAffiliateCode]);
 
   // Carregar assentos ocupados e dados do ônibus
   const loadOccupiedSeats = useCallback(async () => {
@@ -442,6 +482,11 @@ export default function ReservaPage({ params }: ReservaPageProps) {
       // Limpar código de afiliado após reserva bem sucedida
       if (affiliateCode) {
         clearAffiliateCode();
+        // O servidor é quem decide se a indicação valeu (código pode ter sido
+        // desativado entre a digitação e o envio)
+        if (!data.affiliateApplied) {
+          toast.warning(`Reserva criada, mas o código ${affiliateCode} não foi aplicado.`);
+        }
       }
 
       // Gerar mensagem de WhatsApp com detalhes da reserva
@@ -838,6 +883,22 @@ export default function ReservaPage({ params }: ReservaPageProps) {
                       memória (lockedAffiliateCode) e segue invisível para o
                       cliente — protege o afiliado de perder a venda caso o
                       cliente removesse/alterasse o campo. */}
+                  {lockedAffiliateCode && affiliateCheck.state === 'valid' && (
+                    <div className="md:col-span-2 rounded-lg border border-green-500/40 bg-green-500/10 px-4 py-3">
+                      <p className="text-sm text-green-700 dark:text-green-400">
+                        Indicação aplicada{affiliateCheck.firstName ? `: ${affiliateCheck.firstName}` : ''} (código {lockedAffiliateCode}).
+                      </p>
+                    </div>
+                  )}
+                  {lockedAffiliateCode && (affiliateCheck.state === 'not_found' || affiliateCheck.state === 'inactive') && (
+                    <div className="md:col-span-2 rounded-lg border border-yellow-500/40 bg-yellow-500/10 px-4 py-3">
+                      <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                        O código de indicação {lockedAffiliateCode} não está valendo
+                        {affiliateCheck.state === 'inactive' ? ' (parceiro inativo)' : ' (não encontrado)'}.
+                        Sua reserva segue normalmente, mas nenhuma comissão será creditada.
+                      </p>
+                    </div>
+                  )}
                   {!lockedAffiliateCode && (
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-[#4F4F4F] dark:text-[#adb5bd] mb-1">
@@ -855,9 +916,29 @@ export default function ReservaPage({ params }: ReservaPageProps) {
                         placeholder="Ex: GABRIEL01"
                         maxLength={12}
                       />
-                      <p className="text-xs text-[#6c757d] dark:text-[#adb5bd] mt-1">
-                        Recebeu uma indicação? Digite o código aqui pra creditar a comissão ao parceiro.
-                      </p>
+                      {affiliateCheck.state === 'checking' && (
+                        <p className="text-xs text-[#6c757d] dark:text-[#adb5bd] mt-1">Conferindo código...</p>
+                      )}
+                      {affiliateCheck.state === 'valid' && (
+                        <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                          Código válido{affiliateCheck.firstName ? ` — indicação de ${affiliateCheck.firstName}` : ''}.
+                        </p>
+                      )}
+                      {affiliateCheck.state === 'not_found' && (
+                        <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                          Código não encontrado. Confira com quem indicou — sem ele, a comissão não é creditada.
+                        </p>
+                      )}
+                      {affiliateCheck.state === 'inactive' && (
+                        <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                          Este parceiro não está ativo, então a indicação não será creditada.
+                        </p>
+                      )}
+                      {affiliateCheck.state === 'idle' && (
+                        <p className="text-xs text-[#6c757d] dark:text-[#adb5bd] mt-1">
+                          Recebeu uma indicação? Digite o código aqui pra creditar a comissão ao parceiro.
+                        </p>
+                      )}
                     </div>
                   )}
                   <div className="md:col-span-2">

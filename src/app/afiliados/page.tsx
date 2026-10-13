@@ -109,7 +109,7 @@ export default function AfiliadosPage() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-accent to-accent/80 text-white text-sm font-bold shadow-lg"
             >
               <Zap className="w-4 h-4" />
-              🔥 VAGAS LIMITADAS - Apenas 50 afiliados este mês!
+              Programa de parceiros da Amorim Turismo
             </motion.div>
 
             <motion.h1
@@ -118,12 +118,12 @@ export default function AfiliadosPage() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-4xl md:text-6xl font-bold leading-tight"
             >
-              Ganhe até{' '}
+              Indique viagens e{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent/70 text-5xl md:text-7xl">
-                R$ 5.000+/mês
+                ganhe comissão
               </span>
               <br />
-              Vendendo Pacotes de Viagem
+              em cada venda
             </motion.h1>
 
             <motion.p
@@ -173,8 +173,8 @@ export default function AfiliadosPage() {
               viewport={{ once: true }}
               className="space-y-2"
             >
-              <div className="text-4xl font-bold text-accent">R$ 127K+</div>
-              <div className="text-sm text-muted-foreground">Pagos em comissões</div>
+              <div className="text-4xl font-bold text-accent">7%</div>
+              <div className="text-sm text-muted-foreground">Comissão por venda</div>
             </motion.div>
 
             <motion.div
@@ -184,8 +184,8 @@ export default function AfiliadosPage() {
               transition={{ delay: 0.1 }}
               className="space-y-2"
             >
-              <div className="text-4xl font-bold text-primary">850+</div>
-              <div className="text-sm text-muted-foreground">Vendas de afiliados</div>
+              <div className="text-4xl font-bold text-primary">R$ 0</div>
+              <div className="text-sm text-muted-foreground">Custo para participar</div>
             </motion.div>
 
             <motion.div
@@ -195,8 +195,8 @@ export default function AfiliadosPage() {
               transition={{ delay: 0.2 }}
               className="space-y-2"
             >
-              <div className="text-4xl font-bold text-accent">R$ 2.847</div>
-              <div className="text-sm text-muted-foreground">Comissão média/mês</div>
+              <div className="text-4xl font-bold text-accent">30 dias</div>
+              <div className="text-sm text-muted-foreground">Validade do seu link</div>
             </motion.div>
 
             <motion.div
@@ -206,8 +206,8 @@ export default function AfiliadosPage() {
               transition={{ delay: 0.3 }}
               className="space-y-2"
             >
-              <div className="text-4xl font-bold text-primary">48h</div>
-              <div className="text-sm text-muted-foreground">Prazo de pagamento</div>
+              <div className="text-4xl font-bold text-primary">PIX</div>
+              <div className="text-sm text-muted-foreground">Pagamento da comissão</div>
             </motion.div>
           </div>
         </div>
@@ -317,10 +317,11 @@ export default function AfiliadosPage() {
             className="bg-gradient-to-r from-accent to-accent/80 rounded-2xl p-8 text-white text-center"
           >
             <Gift className="w-12 h-12 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold mb-2">Bônus Especial de Lançamento! 🎁</h3>
+            <h3 className="text-2xl font-bold mb-2">Como a comissão é paga</h3>
             <p className="text-lg opacity-90">
-              Os <span className="font-bold">primeiros 50 afiliados</span> que fizerem 3+ vendas nos primeiros 30 dias 
-              ganham um <span className="font-bold">bônus extra de R$ 300</span> + kit de materiais premium!
+              A comissão entra como <span className="font-bold">pendente</span> assim que a reserva é feita pelo seu link,
+              passa a <span className="font-bold">aprovada</span> quando o cliente paga a viagem e é
+              <span className="font-bold"> paga via PIX</span> pela Amorim. Você acompanha cada etapa pelo painel do parceiro.
             </p>
           </motion.div>
         </div>
@@ -570,7 +571,7 @@ export default function AfiliadosPage() {
                 href={signupUrl}
                 className="w-full px-8 py-5 bg-gradient-to-r from-accent to-accent/80 text-white text-lg rounded-lg font-bold hover:shadow-2xl hover:shadow-accent/50 hover:scale-105 transition-all flex items-center justify-center gap-2"
               >
-                🚀 Quero Ser Parceiro Agora
+                Quero Ser Parceiro Agora
                 <ArrowRight className="w-5 h-5" />
               </Link>
 
@@ -757,15 +758,15 @@ export default function AfiliadosPage() {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 rounded-full text-sm font-bold">
               <Zap className="w-4 h-4" />
-              OFERTA POR TEMPO LIMITADO
+              COMO PARTICIPAR
             </div>
             <h3 className="text-2xl md:text-3xl font-bold">
-              ⚠️ Esta oportunidade pode não estar disponível amanhã
+Cadastro simples, com aprovação da nossa equipe
             </h3>
             <p className="text-lg opacity-90">
-              Estamos limitando em <span className="font-bold">50 afiliados por mês</span> para garantir suporte premium.
+Crie sua conta, preencha os dados de pagamento e aguarde a aprovação.
               <br />
-              Não perca sua vaga!
+              Depois disso seu link fica disponível no painel.
             </p>
           </motion.div>
         </div>
@@ -789,12 +790,12 @@ export default function AfiliadosPage() {
             <div className="relative z-10 space-y-6">
               <Rocket className="w-16 h-16 mx-auto" />
               <h2 className="text-3xl md:text-5xl font-bold leading-tight">
-                Sua Nova Fonte de Renda<br />Começa AGORA! 💰
+Comece a indicar viagens<br />da Amorim Turismo
               </h2>
               <p className="text-xl opacity-90 max-w-3xl mx-auto">
-                Enquanto você está lendo isso, <span className="font-bold">nossos afiliados estão faturando</span>.
+Sem custo para participar e sem meta mínima.
                 <br />
-                Não fique de fora dessa oportunidade de ouro!
+Você indica, o cliente viaja e você recebe a comissão.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
@@ -802,7 +803,7 @@ export default function AfiliadosPage() {
                   href="#cadastro"
                   className="inline-flex items-center gap-2 px-10 py-5 bg-white text-primary rounded-lg text-lg font-bold hover:bg-white/90 hover:scale-110 transition-all shadow-2xl"
                 >
-                  SIM! QUERO SER AFILIADO AGORA
+                  QUERO SER PARCEIRO
                   <ArrowRight className="w-6 h-6" />
                 </a>
               </div>
