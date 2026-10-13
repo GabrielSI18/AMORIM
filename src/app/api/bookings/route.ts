@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/prisma';
+import { parseDateInput } from '@/lib/date-input';
 import { isPackageExpired } from '@/lib/package-expiration';
-import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
+import { generalApiLimiter, rateLimitExceededResponse, enforceRateLimit } from '@/lib/rate-limit';
 import { toCamelCase } from '@/lib/case-transform';
 import { passengersSchema, safeParse } from '@/lib/validations';
 import { sendAffiliateNewSaleEmail } from '@/lib/email';
@@ -130,12 +131,18 @@ export async function POST(req: NextRequest) {
   try {
     const { userId } = await auth();
     
-    // Rate limiting (mesmo sem userId)
-    const identifier = userId || 'anonymous';
-    const rateLimitResult = generalApiLimiter(identifier);
-    if (!rateLimitResult.success) {
-      return rateLimitExceededResponse(rateLimitResult);
-    }
+    // Rate limiting por usuário logado ou, se anônimo, por IP
+    // (antes todos os anônimos caíam na mesma chave 'anonymous')
+    const ip =
+      req.headers.get('cf-connecting-ip') ??
+      req.headers.get('x-forwarded-for')?.split(',')[0] ??
+      'anonymous';
+    const limited = await enforceRateLimit(
+      'BOOKING_LIMITER',
+      `bookings:${userId || ip}`,
+      generalApiLimiter
+    );
+    if (limited) return limited;
 
     const body: CreateBookingDto & {
       selectedSeats?: number[];
@@ -329,7 +336,7 @@ export async function POST(req: NextRequest) {
           create: passengers.map((p, idx) => ({
             full_name: p.fullName,
             cpf: p.cpf,
-            birth_date: new Date(p.birthDate),
+            birth_date: parseDateInput(p.birthDate) as Date,
             phone: p.phone,
             sex: p.sex,
             rg: p.rg || null,

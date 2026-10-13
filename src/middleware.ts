@@ -1,52 +1,43 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
-// Rotas públicas (não requerem autenticação)
-const isPublicRoute = createRouteMatcher([
-  '/',                    // Landing page
-  '/pacotes(.*)',         // Página de pacotes
-  '/reserva(.*)',         // Página de reserva/checkout
-  '/frota(.*)',           // Página da frota
-  '/afiliados(.*)',       // Página de afiliados
-  '/sobre(.*)',           // Página sobre nós
-  '/faq(.*)',             // Perguntas frequentes
-  '/politicas(.*)',       // Políticas de cancelamento
-  '/termos(.*)',          // Termos de uso
-  '/contato(.*)',         // Página de contato
-  '/sign-in(.*)',         // Páginas de login
-  '/sign-up(.*)',         // Páginas de cadastro
-  '/sso-callback(.*)',    // Callback OAuth (Google, Apple)
-  '/api/webhooks(.*)',    // Webhooks (Clerk, etc)
-  '/api/packages(.*)',    // API de pacotes (pública para listagem)
-  '/api/fleet(.*)',       // API de frota (pública para listagem)
-  '/api/bookings(.*)',    // API de reservas (público para criar e buscar por ID)
-  '/api/categories(.*)',  // API de categorias
-  '/api/destinations(.*)', // API de destinos
-  '/api/contacts(.*)',    // API de contatos
-  '/api/affiliates(.*)',  // API de afiliados
-  '/api/test-env',        // Rota de teste de env
-])
-
-// Rotas de autenticação (sign-in, sign-up)
-const isAuthRoute = createRouteMatcher([
-  '/sign-in(.*)',
-  '/sign-up(.*)',
+// Rotas que EXIGEM login. Todo o resto é público — assim uma página nova do
+// site não cai no login por esquecimento, e uma URL inexistente mostra o 404
+// em vez de mandar o visitante para a tela de entrar.
+//
+// As rotas de API abaixo são as que não têm verificação própria de permissão
+// (as demais usam requireAdmin/requireAdminApi/auth() dentro da própria rota).
+const isProtectedRoute = createRouteMatcher([
+  '/dashboard(.*)', // Painel administrativo
+  '/api/ai(.*)', // IA (custo por chamada)
+  '/api/chat(.*)', // IA (custo por chamada)
+  '/api/clients(.*)', // Dados de clientes
+  '/api/user(.*)', // Dados do usuário logado
+  '/api/test(.*)', // Rotas de teste (envio de email)
+  '/api/affiliates/stats(.*)', // Números consolidados de afiliados
+  '/api/images/upload(.*)', // Upload de imagens
 ])
 
 export default clerkMiddleware(async (auth, request) => {
-  // Rotas públicas: deixar passar sem interferência
-  if (isPublicRoute(request)) {
+  if (!isProtectedRoute(request)) {
     return
   }
 
-  // Rotas privadas: se não logado, redirecionar para sign-in customizado
   const { userId } = await auth()
-  if (!userId) {
-    const signInUrl = new URL('/sign-in', request.url)
-    signInUrl.searchParams.set('redirect_url', request.url)
-    return NextResponse.redirect(signInUrl)
+  if (userId) {
+    return
   }
+
+  // API responde 401 em JSON; página redireciona para o login
+  if (request.nextUrl.pathname.startsWith('/api/')) {
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  }
+
+  const signInUrl = new URL('/sign-in', request.url)
+  signInUrl.searchParams.set('redirect_url', request.url)
+  return NextResponse.redirect(signInUrl)
 })
+
 export const config = {
   matcher: [
     // Skip Next.js internals and all static files, unless found in search params

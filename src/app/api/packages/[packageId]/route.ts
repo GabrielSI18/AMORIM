@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { parseDateInput } from '@/lib/date-input';
 import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
 import { toCamelCase } from '@/lib/case-transform';
 import { requireAdminApi } from '@/lib/api-auth';
@@ -118,8 +119,8 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
         departure_location: body.departure_location || null,
         departure_time: body.departure_time || null,
         return_time: body.return_time || null,
-        departure_date: body.departure_date ? new Date(body.departure_date) : null,
-        return_date: body.return_date ? new Date(body.return_date) : null,
+        departure_date: parseDateInput(body.departure_date),
+        return_date: parseDateInput(body.return_date),
         total_seats: body.total_seats || null,
         includes: body.includes || [],
         not_includes: body.not_includes || [],

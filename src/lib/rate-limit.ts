@@ -226,3 +226,59 @@ export function rateLimitExceededResponse(result: ReturnType<typeof checkRateLim
     }
   );
 }
+
+// ============================================
+// Rate limit distribuído (Cloudflare Workers)
+// ============================================
+
+/**
+ * O limiter in-memory acima só conta dentro de uma instância do Worker, e a
+ * Cloudflare roda várias em paralelo — na prática ele quase não segura spam.
+ * Quando o binding nativo de rate limit existe, usamos ele (contagem é feita
+ * pela borda da Cloudflare, vale para todas as instâncias).
+ */
+interface CloudflareRateLimiter {
+  limit(options: { key: string }): Promise<{ success: boolean }>;
+}
+
+function getCloudflareLimiter(name: string): CloudflareRateLimiter | undefined {
+  const ctx = (globalThis as Record<symbol, { env?: Record<string, unknown> } | undefined>)[
+    Symbol.for('__cloudflare-context__')
+  ];
+  const binding = ctx?.env?.[name];
+  return binding && typeof (binding as CloudflareRateLimiter).limit === 'function'
+    ? (binding as CloudflareRateLimiter)
+    : undefined;
+}
+
+/**
+ * Aplica rate limit a um endpoint público.
+ * Retorna uma Response 429 quando o limite estourou, ou null quando pode seguir.
+ *
+ * @param bindingName - binding declarado no wrangler.jsonc
+ * @param key - identificador (geralmente o IP)
+ * @param fallback - limiter in-memory usado fora do Workers (ex.: next dev)
+ */
+export async function enforceRateLimit(
+  bindingName: string,
+  key: string,
+  fallback: ReturnType<typeof createRateLimiter>
+): Promise<Response | null> {
+  const limiter = getCloudflareLimiter(bindingName);
+
+  if (limiter) {
+    const { success } = await limiter.limit({ key });
+    if (success) return null;
+    return Response.json(
+      {
+        error: 'Too many requests',
+        message: 'Muitas tentativas seguidas. Aguarde um minuto e tente de novo.',
+        retryAfter: 60,
+      },
+      { status: 429, headers: { 'Retry-After': '60' } }
+    );
+  }
+
+  const result = fallback(key);
+  return result.success ? null : rateLimitExceededResponse(result);
+}

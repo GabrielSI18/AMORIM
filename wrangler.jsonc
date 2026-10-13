@@ -7,8 +7,26 @@
   "main": ".open-next/worker.js",
   "workers_dev": false,
   "routes": [
-    { "pattern": "amorimturismo.com.br", "custom_domain": true }
+    { "pattern": "amorimturismo.com.br", "custom_domain": true },
+    { "pattern": "www.amorimturismo.com.br", "custom_domain": true }
   ],
+  "unsafe": {
+    "bindings": [
+      // Rate limit na borda da Cloudflare (vale para todas as instâncias do Worker)
+      {
+        "name": "CONTACT_LIMITER",
+        "type": "ratelimit",
+        "namespace_id": "1001",
+        "simple": { "limit": 5, "period": 60 }
+      },
+      {
+        "name": "BOOKING_LIMITER",
+        "type": "ratelimit",
+        "namespace_id": "1002",
+        "simple": { "limit": 10, "period": 60 }
+      }
+    ]
+  },
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"

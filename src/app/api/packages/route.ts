@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { parseDateInput } from '@/lib/date-input';
 import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
 import { toCamelCase, toSnakeCase } from '@/lib/case-transform';
 import { requireAdminApi } from '@/lib/api-auth';
@@ -154,8 +155,8 @@ export async function POST(req: NextRequest) {
         departure_location: body.departure_location || null,
         departure_time: body.departure_time || null,
         return_time: body.return_time || null,
-        departure_date: body.departure_date ? new Date(body.departure_date) : null,
-        return_date: body.return_date ? new Date(body.return_date) : null,
+        departure_date: parseDateInput(body.departure_date),
+        return_date: parseDateInput(body.return_date),
         available_seats: body.available_seats || null,
         total_seats: body.total_seats || null,
         includes: body.includes || [],
@@ -209,8 +210,8 @@ export async function PUT(req: NextRequest) {
     }
 
     // Converter datas
-    if (data.departure_date) data.departure_date = new Date(data.departure_date);
-    if (data.return_date) data.return_date = new Date(data.return_date);
+    if (data.departure_date) data.departure_date = parseDateInput(data.departure_date);
+    if (data.return_date) data.return_date = parseDateInput(data.return_date);
 
     const package_ = await prisma.package.update({
       where: { id },

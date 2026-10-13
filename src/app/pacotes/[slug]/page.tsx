@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import { toCamelCase } from '@/lib/case-transform';
@@ -39,6 +40,43 @@ async function getPackage(slug: string) {
     ...transformed,
     destinationText: transformed.destination || null, // texto livre
     destination: transformed.destinationRel || null,  // relação
+  };
+}
+
+const BASE_URL = process.env.NEXT_PUBLIC_URL || 'https://amorimturismo.com.br';
+
+export async function generateMetadata({ params }: PackagePageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const pkg = await getPackage(slug);
+
+  if (!pkg) {
+    return { title: 'Pacote não encontrado' };
+  }
+
+  const price = (pkg.price / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const description =
+    pkg.shortDescription ||
+    `${pkg.title} a partir de ${price} por pessoa, com saída de ${pkg.departureLocation || 'Contagem/MG'}.`;
+  const url = `${BASE_URL}/pacotes/${pkg.slug}`;
+  const image = `${BASE_URL}/api/packages/${pkg.id}/cover`;
+
+  return {
+    title: pkg.title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: 'article',
+      url,
+      title: pkg.title,
+      description,
+      images: [{ url: image, alt: pkg.title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: pkg.title,
+      description,
+      images: [image],
+    },
   };
 }
 
@@ -93,7 +131,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
                 
                 <div className="flex items-center gap-2 text-white/90">
                   <MapPin className="h-5 w-5" />
-                  <span className="text-lg">{pkg.departureLocation} → {pkg.destination?.city}, {pkg.destination?.state}</span>
+                  <span className="text-lg">{[pkg.departureLocation, pkg.destination?.city ? `${pkg.destination.city}${pkg.destination.state ? `, ${pkg.destination.state}` : ''}` : pkg.destinationText].filter(Boolean).join(' → ')}</span>
                 </div>
               </div>
 

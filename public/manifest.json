@@ -9,17 +9,24 @@
   "icons": [
     {
       "src": "/favicon.ico",
-      "sizes": "64x64",
+      "sizes": "48x48",
       "type": "image/x-icon"
     },
     {
-      "src": "/amorim-logo.png",
+      "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "/amorim-logo.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
       "type": "image/png"
     }
   ]
