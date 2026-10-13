@@ -328,6 +328,7 @@ export default function Home() {
               <ul className="space-y-2 text-sm text-[#6c757d] dark:text-[#adb5bd]">
                 <li><Link href="/pacotes" className="hover:text-[#004a80] transition">Pacotes de Viagem</Link></li>
                 <li><Link href="/frota" className="hover:text-[#004a80] transition">Nossa Frota</Link></li>
+                <li><Link href="/fretamento" className="hover:text-[#004a80] transition">Fretamento</Link></li>
                 <li><Link href="/afiliados" className="hover:text-[#004a80] transition">Seja um Afiliado</Link></li>
                 <li><Link href="/sobre" className="hover:text-[#004a80] transition">Sobre Nós</Link></li>
               </ul>

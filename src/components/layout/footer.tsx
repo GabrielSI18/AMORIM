@@ -62,6 +62,11 @@ export async function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/fretamento" className="text-sm text-muted-foreground hover:text-foreground transition">
+                  Fretamento
+                </Link>
+              </li>
+              <li>
                 <Link href="/afiliados" className="text-sm text-muted-foreground hover:text-foreground transition">
                   Seja um Afiliado
                 </Link>
