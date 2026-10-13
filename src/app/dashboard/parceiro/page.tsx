@@ -611,10 +611,10 @@ function NotAffiliateView({ onSuccess }: { onSuccess: () => void }) {
 
   const benefits = [
     { icon: Zap, text: 'Comissão de 7% a 10%' },
-    { icon: DollarSign, text: 'Pagamento em 48h via PIX' },
-    { icon: Trophy, text: 'Bônus progressivos' },
-    { icon: Rocket, text: 'Material de vendas grátis' },
-    { icon: Gift, text: 'Clube VIP de afiliados' },
+    { icon: DollarSign, text: 'Pagamento via PIX' },
+    { icon: Trophy, text: 'Link e código exclusivos' },
+    { icon: Rocket, text: 'Painel com suas vendas' },
+    { icon: Gift, text: 'Sem custo para participar' },
   ]
 
   const handleSubmit = async (e: React.FormEvent) => {

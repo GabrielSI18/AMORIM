@@ -43,13 +43,13 @@ export default function AfiliadosPage() {
     },
     {
       icon: DollarSign,
-      title: 'Pagamento em 48h via PIX',
-      description: 'Dinheiro na conta em 2 dias úteis. Rápido, automático e sem burocracia.',
+      title: 'Pagamento via PIX',
+      description: 'A comissão é paga na chave PIX que você cadastra, depois que o cliente paga a viagem.',
     },
     {
       icon: Trophy,
-      title: 'Sistema de Bônus Progressivo',
-      description: 'Venda mais e ganhe bônus em dinheiro + aumento permanente na comissão.',
+      title: 'Comissão que cresce',
+      description: 'Conforme suas vendas aumentam, sua comissão por venda pode subir de 7% até 10%.',
       highlight: true,
     },
     {
@@ -64,8 +64,8 @@ export default function AfiliadosPage() {
     },
     {
       icon: Crown,
-      title: 'Clube VIP de Afiliados',
-      description: 'Top afiliados ganham viagens exclusivas, brindes e reconhecimento.',
+      title: 'Painel do parceiro',
+      description: 'Acompanhe cada indicação, o status da comissão e quanto tem a receber.',
     },
   ];
 
@@ -132,7 +132,7 @@ export default function AfiliadosPage() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-xl md:text-2xl font-medium max-w-3xl mx-auto"
             >
-              <span className="text-accent font-bold">NOVO:</span> Comissão inicial de 7% + bônus progressivos até 10%.
+              Comissão de 7% por venda, podendo chegar a 10% conforme seu volume de vendas.
               <br />
               <span className="text-muted-foreground text-lg">
                 Trabalhe de casa, no seu tempo, sem investimento inicial.
@@ -224,14 +224,14 @@ export default function AfiliadosPage() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent text-sm font-bold"
             >
               <Trophy className="w-4 h-4" />
-              EXCLUSIVO: Sistema de Bônus Progressivo
+              Faixas de comissão
             </motion.div>
             <h2 className="text-3xl md:text-5xl font-bold">
               Quanto Mais Você Vende,{' '}
               <span className="text-accent">Mais Você Ganha!</span>
             </h2>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              Nosso sistema recompensa afiliados de alta performance com bônus em dinheiro e aumento permanente de comissão
+              Quanto mais vendas você fecha, maior a sua comissão por venda. A faixa é revisada pela nossa equipe
             </p>
           </div>
 
@@ -241,7 +241,6 @@ export default function AfiliadosPage() {
                 level: 'Iniciante', 
                 sales: '1-5 vendas', 
                 commission: '7%', 
-                bonus: 'R$ 0',
                 icon: Star,
                 color: 'from-gray-500 to-gray-600'
               },
@@ -249,7 +248,6 @@ export default function AfiliadosPage() {
                 level: 'Bronze', 
                 sales: '6-15 vendas', 
                 commission: '8%', 
-                bonus: 'R$ 300',
                 icon: Trophy,
                 color: 'from-orange-500 to-orange-600'
               },
@@ -257,7 +255,6 @@ export default function AfiliadosPage() {
                 level: 'Prata', 
                 sales: '16-30 vendas', 
                 commission: '9%', 
-                bonus: 'R$ 800',
                 icon: Crown,
                 color: 'from-gray-400 to-gray-500'
               },
@@ -265,7 +262,6 @@ export default function AfiliadosPage() {
                 level: 'Ouro', 
                 sales: '31+ vendas', 
                 commission: '10%', 
-                bonus: 'R$ 1.500',
                 icon: Zap,
                 color: 'from-yellow-500 to-yellow-600'
               },
@@ -301,10 +297,6 @@ export default function AfiliadosPage() {
                     <div className="text-xs text-muted-foreground">Comissão por venda</div>
                   </div>
                   
-                  <div className="pt-2 space-y-1">
-                    <div className="text-xl font-bold text-primary">{tier.bonus}</div>
-                    <div className="text-xs text-muted-foreground">Bônus ao atingir</div>
-                  </div>
                 </div>
               </motion.div>
             ))}
@@ -619,7 +611,7 @@ export default function AfiliadosPage() {
                 },
                 {
                   q: 'Como recebo minhas comissões?',
-                  a: 'As comissões são pagas via PIX em até 48h após a confirmação da venda pelo cliente.',
+                  a: 'A comissão é confirmada quando o cliente paga a viagem e depois é enviada por PIX para a chave cadastrada no seu painel.',
                 },
                 {
                   q: 'Qual o valor da comissão?',
@@ -817,7 +809,7 @@ Você indica, o cliente viaja e você recebe a comissão.
                     <CheckCircle2 className="w-5 h-5" /> Aprovação em 24h
                   </span>
                   <span className="flex items-center gap-1">
-                    <CheckCircle2 className="w-5 h-5" /> Comissões em 48h
+                    <CheckCircle2 className="w-5 h-5" /> Comissão por PIX
                   </span>
                 </div>
                 <p className="text-xs opacity-75">

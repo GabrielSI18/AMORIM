@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { computeAffiliateTotals } from '@/lib/affiliate-totals';
+import { buildTierSuggestion } from '@/lib/affiliate-tiers';
 import { sendAffiliateApprovedEmail } from '@/lib/email';
 
 const APP_URL = process.env.NEXT_PUBLIC_URL || 'https://amorimturismo.com.br';
@@ -68,6 +69,8 @@ export async function GET(
         total_sales: totals.totalSales,
         total_earned: totals.paidCommission,
         totals,
+        // Faixa do programa: a promoção é manual, isso só mostra onde ele está
+        tier: buildTierSuggestion(affiliate.referrals, affiliate.commission_rate),
       },
     });
   } catch (error) {
