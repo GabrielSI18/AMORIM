@@ -284,6 +284,11 @@ export default function ParceiroPage() {
                 )}
               </button>
             </div>
+            <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+              Seu link não vence. Quando alguém clica nele, a sua indicação fica guardada por 30 dias:
+              se a pessoa fechar a reserva nesse prazo, a comissão é sua. Depois disso, ela precisa
+              entrar pelo seu link de novo (ou informar o código {affiliateData?.code} na reserva).
+            </p>
           </div>
         </div>
 

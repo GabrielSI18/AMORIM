@@ -196,7 +196,9 @@ export default function AfiliadosPage() {
               className="space-y-2"
             >
               <div className="text-4xl font-bold text-accent">30 dias</div>
-              <div className="text-sm text-muted-foreground">Validade do seu link</div>
+              <div className="text-sm text-muted-foreground">
+                O cliente tem esse prazo para comprar pelo seu link
+              </div>
             </motion.div>
 
             <motion.div
@@ -616,6 +618,14 @@ export default function AfiliadosPage() {
                 {
                   q: 'Qual o valor da comissão?',
                   a: 'Você começa com 7% e pode chegar a 10% conforme aumenta suas vendas. A comissão é calculada sobre o valor total de cada pacote.',
+                },
+                {
+                  q: 'Meu link de divulgação vence?',
+                  a: 'Não. Seu link e seu código são seus e valem para sempre. O prazo de 30 dias é outra coisa: quando alguém clica no seu link, o site guarda a sua indicação por 30 dias. Se essa pessoa fechar a reserva dentro desse prazo, a comissão é sua, mesmo que ela volte ao site depois por outro caminho. Passados os 30 dias sem comprar, ela precisa entrar pelo seu link de novo para a venda contar para você.',
+                },
+                {
+                  q: 'E se o mesmo cliente viajar de novo mais pra frente?',
+                  a: 'A indicação vale para a reserva que ele fechou. Em uma viagem nova, peça para ele entrar outra vez pelo seu link ou informar o seu código na reserva — assim essa venda também fica no seu nome.',
                 },
                 {
                   q: 'Posso divulgar em redes sociais?',
