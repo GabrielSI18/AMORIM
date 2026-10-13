@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { parseDateInput } from '@/lib/date-input';
+import { getPackageAvailability } from '@/lib/package-availability';
 import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
 import { toCamelCase } from '@/lib/case-transform';
 import { requireAdminApi } from '@/lib/api-auth';
@@ -35,10 +36,14 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       );
     }
 
+    const availability = await getPackageAvailability(pkg.id, pkg.total_seats);
+
     // Transforma e mapeia destination_rel para destination
     const transformed = toCamelCase(pkg);
     const result = {
       ...transformed,
+      // Vagas pela conta das reservas ativas, não pelo contador da tabela
+      availableSeats: pkg.total_seats ? availability.availableSeats : transformed.availableSeats,
       destinationText: transformed.destination || null, // texto livre
       destination: transformed.destinationRel || null,  // relação
     };

@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { PublicLayout } from '@/components/layout';
 import { useSiteConfig } from '@/hooks/use-site-config';
+import { HoneypotField } from '@/components/ui/honeypot-field';
 import {
   Send,
   MapPin,
@@ -27,6 +28,7 @@ export default function ContatoPage() {
     phone: '',
     subject: '',
     message: '',
+    website: '', // campo-isca (anti-spam)
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const siteConfig = useSiteConfig();
@@ -57,7 +59,7 @@ export default function ContatoPage() {
 
       if (res.ok) {
         toast.success('Mensagem enviada com sucesso! Responderemos em breve.');
-        setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+        setFormData({ name: '', email: '', phone: '', subject: '', message: '', website: '' });
       } else {
         toast.error(data.error || 'Erro ao enviar mensagem');
       }
@@ -182,7 +184,11 @@ export default function ContatoPage() {
             >
               <h2 className="text-2xl font-bold mb-6">Envie sua mensagem</h2>
               
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-5 relative">
+                <HoneypotField
+                  value={formData.website}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, website: value }))}
+                />
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-muted-foreground mb-2">

@@ -45,8 +45,20 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
+    // Campo-isca: fica escondido no formulário, então só robô preenche.
+    // Responde como se tivesse dado certo e não grava nada — assim o robô
+    // não fica tentando variações (chegaram 2 spams iguais em julho/2026).
+    if (typeof body?.website === 'string' && body.website.trim() !== '') {
+      console.warn('[contacts] descartado pelo campo-isca')
+      return NextResponse.json(
+        { data: null, message: 'Mensagem enviada com sucesso!' },
+        { status: 201 }
+      )
+    }
+
     // Default type para 'general' se não informado
     const payload = { ...body, type: body?.type ?? 'general' }
+    delete payload.website
 
     // Validar dados
     const validation = createContactSchema.safeParse(payload)

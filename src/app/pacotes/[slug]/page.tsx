@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import { toCamelCase } from '@/lib/case-transform';
 import { notExpiredWhere } from '@/lib/package-expiration';
+import { getPackageAvailability } from '@/lib/package-availability';
 import Image from 'next/image';
 import { MapPin, Calendar, Users, Clock } from 'lucide-react';
 import Link from 'next/link';
@@ -35,9 +36,13 @@ async function getPackage(slug: string) {
 
   if (!pkg) return null;
 
+  const availability = await getPackageAvailability(pkg.id, pkg.total_seats);
+
   const transformed = toCamelCase(pkg);
   return {
     ...transformed,
+    // Vagas pela conta das reservas ativas (o contador da tabela desanda)
+    availableSeats: pkg.total_seats ? availability.availableSeats : transformed.availableSeats,
     destinationText: transformed.destination || null, // texto livre
     destination: transformed.destinationRel || null,  // relação
   };

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { PublicLayout } from '@/components/layout';
 import { useSiteConfig } from '@/hooks/use-site-config';
 import { DatePicker } from '@/components/ui/date-picker';
+import { HoneypotField } from '@/components/ui/honeypot-field';
 import {
   Send,
   MessageCircle,
@@ -70,6 +71,7 @@ export default function FretamentoPage() {
     passengersCount: '',
     eventType: '',
     message: '',
+    website: '', // campo-isca (anti-spam)
   });
 
   const update = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -146,6 +148,7 @@ export default function FretamentoPage() {
           returnDate: form.returnDate || undefined,
           passengersCount: passengers,
           eventType: form.eventType || undefined,
+          website: form.website,
         }),
       });
 
@@ -160,6 +163,7 @@ export default function FretamentoPage() {
         name: '',
         email: '',
         phone: '',
+        website: '',
         origin: '',
         destination: '',
         departureDate: '',
@@ -250,8 +254,12 @@ export default function FretamentoPage() {
               onSubmit={handleSubmit}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="lg:col-span-2 bg-card border border-border rounded-2xl p-6 md:p-8 space-y-5"
+              className="lg:col-span-2 bg-card border border-border rounded-2xl p-6 md:p-8 space-y-5 relative"
             >
+              <HoneypotField
+                value={form.website}
+                onChange={(value) => setForm((prev) => ({ ...prev, website: value }))}
+              />
               <div>
                 <h2 className="text-2xl font-bold">Solicite sua cotação</h2>
                 <p className="text-sm text-muted-foreground mt-1">

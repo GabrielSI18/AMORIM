@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/prisma';
 import { parseDateInput } from '@/lib/date-input';
 import { activeBookingsWhere } from '@/lib/booking-status';
+import { getPackageAvailability, syncPackageAvailability } from '@/lib/package-availability';
 import { isPackageExpired } from '@/lib/package-expiration';
 import { generalApiLimiter, rateLimitExceededResponse, enforceRateLimit } from '@/lib/rate-limit';
 import { toCamelCase } from '@/lib/case-transform';
@@ -195,9 +196,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Este pacote já foi encerrado' }, { status: 400 });
     }
 
-    if (package_.available_seats && package_.available_seats < body.numPassengers) {
+    // Vagas pela conta das reservas ativas (o contador da tabela desanda)
+    const availability = await getPackageAvailability(package_.id, package_.total_seats);
+    if (availability.totalSeats > 0 && availability.availableSeats < body.numPassengers) {
       return NextResponse.json(
-        { error: `Apenas ${package_.available_seats} vagas disponíveis` },
+        {
+          error:
+            availability.availableSeats > 0
+              ? `Apenas ${availability.availableSeats} vaga(s) disponível(is)`
+              : 'Este pacote está esgotado',
+        },
         { status: 400 }
       );
     }
@@ -404,14 +412,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Atualizar vagas disponíveis
-    await prisma.package.update({
-      where: { id: body.packageId },
-      data: {
-        available_seats: { decrement: body.numPassengers },
-        bookings_count: { increment: 1 },
-      },
-    });
+    // Recalcula vagas a partir das reservas (antes decrementava o contador,
+    // que ficava errado se algo falhasse no meio)
+    await syncPackageAvailability(body.packageId, package_.total_seats);
 
     return NextResponse.json({
       data: booking,
@@ -469,17 +472,6 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Reserva não encontrada' }, { status: 404 });
     }
 
-    // Se está sendo cancelada (e não era cancelada antes), liberar vagas
-    if (status === 'canceled' && currentBooking.status !== 'canceled') {
-      await prisma.package.update({
-        where: { id: currentBooking.package_id },
-        data: {
-          available_seats: { increment: currentBooking.num_passengers },
-          bookings_count: { decrement: 1 },
-        },
-      });
-    }
-
     const booking = await prisma.booking.update({
       where: { id },
       data,
@@ -487,6 +479,11 @@ export async function PUT(req: NextRequest) {
         package: true,
       },
     });
+
+    // Cancelou (ou reativou): recalcula as vagas do pacote pelas reservas ativas
+    if (status && status !== currentBooking.status) {
+      await syncPackageAvailability(currentBooking.package_id, booking.package?.total_seats);
+    }
 
     // Quando o admin marca a reserva como paga, aprovar a comissão do afiliado
     // (caso exista AffiliateReferral pendente vinculada a esse booking).

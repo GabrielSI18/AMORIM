@@ -5,6 +5,7 @@ import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
 import { toCamelCase, toSnakeCase } from '@/lib/case-transform';
 import { requireAdminApi } from '@/lib/api-auth';
 import { notExpiredWhere } from '@/lib/package-expiration';
+import { activeBookingsWhere } from '@/lib/booking-status';
 import type { PackageFilters } from '@/types';
 
 /**
@@ -76,11 +77,25 @@ export async function GET(req: NextRequest) {
       ],
     });
 
+    // Vagas calculadas pelas reservas ativas (a coluna available_seats é só um
+    // contador e desanda com cancelamento/falha no meio do caminho)
+    const seatsByPackage = await prisma.booking.groupBy({
+      by: ['package_id'],
+      where: { package_id: { in: packages.map((p) => p.id) }, ...activeBookingsWhere },
+      _sum: { num_passengers: true },
+    });
+    const takenByPackage = new Map(
+      seatsByPackage.map((row) => [row.package_id, row._sum.num_passengers || 0])
+    );
+
     // Transforma e mapeia destination_rel para destination
     // O campo 'destination' do banco (texto) vai para 'destinationText'
     // O campo 'destination_rel' do banco (relação) vai para 'destination'
     const transformedPackages = toCamelCase(packages).map((pkg: any) => ({
       ...pkg,
+      availableSeats: pkg.totalSeats
+        ? Math.max(pkg.totalSeats - (takenByPackage.get(pkg.id) || 0), 0)
+        : pkg.availableSeats,
       destinationText: pkg.destination || null, // texto livre
       destination: pkg.destinationRel || null,  // relação
     }));

@@ -70,7 +70,9 @@ export async function GET(
       packageTitle: pkg.title,
       totalSeats: pkg.total_seats || 0,
       occupiedSeats: uniqueOccupiedSeats,
-      availableSeats: (pkg.total_seats || 0) - uniqueOccupiedSeats.length,
+      // Vagas = total menos passageiros das reservas ativas (não dá para contar
+      // só poltronas escolhidas: reserva sem escolha de assento também ocupa)
+      availableSeats: Math.max((pkg.total_seats || 0) - totalParticipants, 0),
       totalBookings: bookings.length,
       totalParticipants,
       bus: pkg.bus,
