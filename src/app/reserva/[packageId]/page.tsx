@@ -12,6 +12,7 @@ import { useSiteConfig } from '@/hooks/use-site-config';
 import { getAffiliateCode, clearAffiliateCode } from '@/hooks/use-affiliate-tracking';
 import type { Package } from '@/types';
 import { isPackageExpired } from '@/lib/package-expiration';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface PassengerFormData {
   fullName: string;
@@ -953,13 +954,12 @@ export default function ReservaPage({ params }: ReservaPageProps) {
                           <label className="block text-sm font-medium text-[#4F4F4F] dark:text-[#adb5bd] mb-1">
                             Data de Nascimento *
                           </label>
-                          <input
-                            type="date"
+                          <DatePicker
                             value={p.birthDate}
-                            onChange={(e) => updatePassenger(idx, 'birthDate', e.target.value)}
+                            onChange={(value) => updatePassenger(idx, 'birthDate', value)}
                             max={new Date().toISOString().slice(0, 10)}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-[#1A2E40] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#004a80] focus:border-transparent"
                             required
+                            className="rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a]"
                           />
                         </div>
                         <div>

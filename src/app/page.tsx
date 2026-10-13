@@ -9,6 +9,7 @@ import type { Package } from '@/types';
 import { Bus, Shield, Clock, Star, MapPin, Phone, Mail, Search, Home as HomeIcon, Briefcase, Ticket, User, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { GlobalSearch } from '@/components/ui/global-search';
+import { toast } from 'sonner';
 
 export default function Home() {
   const [featuredPackages, setFeaturedPackages] = useState<Package[]>([]);
@@ -16,6 +17,44 @@ export default function Home() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
+
+  // Cadastro de e-mail para ofertas: cai na lista de Contatos do painel
+  const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const email = newsletterEmail.trim();
+    if (!email) {
+      toast.error('Digite seu e-mail para se cadastrar');
+      return;
+    }
+
+    setIsSubscribing(true);
+    try {
+      const response = await fetch('/api/contacts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'Cadastro de ofertas',
+          email,
+          subject: 'Cadastro para receber ofertas',
+          message: 'Quero receber as ofertas e novidades da Amorim Turismo por e-mail.',
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.error || 'Erro ao cadastrar');
+      }
+
+      toast.success('Pronto! Você vai receber nossas ofertas por e-mail.');
+      setNewsletterEmail('');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível cadastrar agora');
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -262,14 +301,23 @@ export default function Home() {
                 Cadastre-se agora e receba ofertas exclusivas direto no seu e-mail
               </p>
 
-              <form className="flex flex-col sm:flex-row gap-3">
+              <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3">
                 <input
                   type="email"
+                  name="email"
+                  required
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
                   placeholder="Seu melhor e-mail"
+                  aria-label="Seu melhor e-mail"
                   className="flex-1 px-4 py-3 rounded-xl text-[#212529] bg-white focus:outline-none focus:ring-2 focus:ring-[#d32f2f]"
                 />
-                <button className="bg-[#d32f2f] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#b71c1c] transition-colors whitespace-nowrap">
-                  Cadastrar
+                <button
+                  type="submit"
+                  disabled={isSubscribing}
+                  className="bg-[#d32f2f] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#b71c1c] transition-colors whitespace-nowrap disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {isSubscribing ? 'Enviando...' : 'Cadastrar'}
                 </button>
               </form>
             </motion.div>

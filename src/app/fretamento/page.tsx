@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { PublicLayout } from '@/components/layout';
 import { useSiteConfig } from '@/hooks/use-site-config';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Send,
   MessageCircle,
@@ -339,13 +340,11 @@ export default function FretamentoPage() {
                       <Calendar className="w-4 h-4" />
                       Data de ida *
                     </label>
-                    <input
-                      type="date"
+                    <DatePicker
                       value={form.departureDate}
-                      onChange={update('departureDate')}
+                      onChange={(value) => setForm((prev) => ({ ...prev, departureDate: value }))}
                       min={new Date().toISOString().slice(0, 10)}
                       required
-                      className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary transition"
                     />
                   </div>
                   <div>
@@ -353,12 +352,10 @@ export default function FretamentoPage() {
                       <Calendar className="w-4 h-4" />
                       Data de volta
                     </label>
-                    <input
-                      type="date"
+                    <DatePicker
                       value={form.returnDate}
-                      onChange={update('returnDate')}
+                      onChange={(value) => setForm((prev) => ({ ...prev, returnDate: value }))}
                       min={form.departureDate || new Date().toISOString().slice(0, 10)}
-                      className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary transition"
                     />
                   </div>
                   <div>
