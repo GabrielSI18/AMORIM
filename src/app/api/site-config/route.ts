@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import prisma from '@/lib/prisma'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdminApi } from '@/lib/api-auth'
 import { revalidateTag } from 'next/cache'
 import { getSiteConfig } from '@/lib/site-config'
 
@@ -55,7 +55,9 @@ const siteConfigUpdateSchema = z.object({
 
 // PUT admin — atualiza config do site
 export async function PUT(req: Request) {
-  await requireAdmin()
+  // requireAdmin() redireciona (307) — numa rota de API o certo é responder erro
+  const guard = await requireAdminApi()
+  if (!guard.ok) return guard.response
 
   const rawBody = await req.json()
   const validation = siteConfigUpdateSchema.safeParse(rawBody)
