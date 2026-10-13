@@ -11,12 +11,12 @@ const onlyDigits = (v: string) => v.replace(/\D/g, '');
 // Schema de auto-cadastro de afiliado: campos do usuário logado.
 // Email/nome NÃO vêm do body — usamos o do User Clerk para garantir vínculo.
 const selfAffiliateSchema = z.object({
+  // Obrigatório: é por WhatsApp que a equipe aprova o cadastro e avisa o parceiro
   phone: z
-    .string()
+    .string({ message: 'Informe o telefone (WhatsApp)' })
     .trim()
     .transform(onlyDigits)
-    .refine((v) => v === '' || v.length === 10 || v.length === 11, 'Telefone inválido')
-    .optional(),
+    .refine((v) => v.length === 10 || v.length === 11, 'Telefone inválido — informe DDD + número'),
   cpf: z
     .string()
     .trim()
@@ -241,7 +241,7 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         name: fullName,
         email: user.email,
-        phone: phone || null,
+        phone,
         cpf: cpf || null,
         pix_key: pixKey || null,
         city: city || null,

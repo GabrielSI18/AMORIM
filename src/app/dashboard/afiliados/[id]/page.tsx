@@ -17,9 +17,16 @@ import {
   CheckCircle2,
   XCircle,
   Package,
-  Clock
+  Clock,
+  MessageCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  whatsappLink,
+  affiliateApprovedMessage,
+  affiliateNewSaleMessage,
+  affiliateCommissionPaidMessage,
+} from '@/lib/whatsapp';
 
 interface Affiliate {
   id: string;
@@ -357,7 +364,34 @@ function AffiliateDetailsContent() {
           )}
 
           {affiliate.status.toLowerCase() === 'active' && (
-            <div className="pt-4 border-t">
+            <div className="pt-4 border-t space-y-2">
+              {/* Aprovação é manual e os e-mails estão desligados: a equipe
+                  avisa o parceiro pelo WhatsApp com a mensagem pronta */}
+              {affiliate.phone ? (
+                <a
+                  className="inline-flex w-full h-12 px-6 items-center justify-center rounded-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-md transition-all"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href={
+                      whatsappLink(
+                        affiliate.phone,
+                        affiliateApprovedMessage({
+                          affiliateName: affiliate.name,
+                          code: affiliate.code,
+                          commissionRate: affiliate.commission_rate,
+                          siteUrl: typeof window !== 'undefined' ? window.location.origin : '',
+                        }),
+                    ) || '#'
+                  }
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Avisar aprovação no WhatsApp
+                </a>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Sem telefone cadastrado — não dá para avisar pelo WhatsApp.
+                </p>
+              )}
               <Button
                 variant="outline"
                 className="w-full"
@@ -512,6 +546,33 @@ function AffiliateDetailsContent() {
                       <DollarSign className="h-4 w-4 mr-1" />
                       Pagar
                     </Button>
+                  )}
+
+                  {affiliate.phone && (
+                    <a
+                      className="inline-flex h-10 px-4 items-center justify-center rounded-lg font-bold border border-border bg-transparent hover:bg-muted transition-all"
+                      title="Avisar o parceiro pelo WhatsApp"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href={
+                          whatsappLink(
+                            affiliate.phone,
+                            referral.commission_status.toLowerCase() === 'paid'
+                              ? affiliateCommissionPaidMessage({
+                                  affiliateName: affiliate.name,
+                                  packageTitle: referral.package_title,
+                                  commissionAmount: referral.commission_amount,
+                                })
+                              : affiliateNewSaleMessage({
+                                  affiliateName: affiliate.name,
+                                  packageTitle: referral.package_title,
+                                  commissionAmount: referral.commission_amount,
+                                }),
+                        ) || '#'
+                      }
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                    </a>
                   )}
 
                   {referral.commission_status.toLowerCase() === 'paid' && referral.commission_paid_at && (

@@ -77,6 +77,7 @@ async function DashboardPageContent() {
     totalBookings,
     paidBookings,
     recentBookings,
+    pendingAffiliates,
     packageStats,
   ] = await Promise.all([
     // Contagem de clientes
@@ -102,6 +103,8 @@ async function DashboardPageContent() {
         created_at: true,
       },
     }),
+    // Afiliados aguardando aprovação (fila de aprovação manual)
+    prisma.affiliate.count({ where: { status: 'pending' } }),
     // Estatísticas de ocupação dos pacotes publicados e ativos
     prisma.package.aggregate({
       where: { status: 'published', is_active: true },
@@ -186,6 +189,25 @@ async function DashboardPageContent() {
       userName={dbUser?.first_name || user.firstName || undefined}
       userEmail={user.emailAddresses[0]?.emailAddress}
     >
+      {pendingAffiliates > 0 && (
+        <Link
+          href="/dashboard/afiliados"
+          className="flex items-center gap-3 rounded-xl border border-yellow-500/40 bg-yellow-500/10 p-4 hover:bg-yellow-500/20 transition-colors"
+        >
+          <div className="flex items-center justify-center size-10 rounded-full bg-yellow-500/20 shrink-0">
+            <Handshake className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+          </div>
+          <div className="min-w-0">
+            <p className="font-bold text-gray-900 dark:text-[#E0E0E0]">
+              {pendingAffiliates} {pendingAffiliates === 1 ? 'cadastro de afiliado aguardando' : 'cadastros de afiliado aguardando'} aprovação
+            </p>
+            <p className="text-sm text-gray-500 dark:text-[#A0A0A0]">
+              Toque para revisar e aprovar
+            </p>
+          </div>
+        </Link>
+      )}
+
       {/* Section: Gerenciamento de Pacotes */}
       <section className="flex flex-col gap-4">
         <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0] tracking-tight">

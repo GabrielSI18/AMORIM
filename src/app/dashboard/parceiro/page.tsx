@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { toast } from 'sonner'
+import { useSiteConfig } from '@/hooks/use-site-config'
+import { whatsappLink, affiliateRegistrationMessage } from '@/lib/whatsapp'
 import { DashboardShell } from '@/components/dashboard'
 import { Skeleton, SkeletonCard } from '@/components/ui/skeleton'
 import { 
@@ -30,7 +32,8 @@ import {
   Wallet,
   MapPin,
   Calendar,
-  Eye
+  Eye,
+  MessageCircle
 } from 'lucide-react'
 
 interface AffiliateData {
@@ -43,6 +46,8 @@ interface AffiliateData {
   totalEarned: number
   totalBookings: number
   status: string
+  city?: string | null
+  state?: string | null
   approvedAt: string | null
   createdAt: string
   pixKey: string | null
@@ -873,6 +878,17 @@ function NotAffiliateView({ onSuccess }: { onSuccess: () => void }) {
 
 // Componente para afiliado pendente
 function PendingApprovalView({ affiliateData }: { affiliateData: AffiliateData }) {
+  const siteConfig = useSiteConfig()
+  const teamLink = whatsappLink(
+    siteConfig.whatsapp_number,
+    affiliateRegistrationMessage({
+      affiliateName: affiliateData.name,
+      email: affiliateData.email,
+      city: (affiliateData as { city?: string | null }).city,
+      state: (affiliateData as { state?: string | null }).state,
+    }),
+  )
+
   return (
     <div className="flex flex-col items-center justify-center gap-6 p-4 pb-24 min-h-[60vh]">
       <div className="w-20 h-20 rounded-full bg-yellow-500/10 flex items-center justify-center">
@@ -884,9 +900,21 @@ function PendingApprovalView({ affiliateData }: { affiliateData: AffiliateData }
           Cadastro em Análise
         </h1>
         <p className="text-gray-500 dark:text-gray-400 max-w-md">
-          Seu cadastro como afiliado está sendo analisado pela nossa equipe. 
-          Você receberá uma notificação assim que for aprovado.
+          Seu cadastro como afiliado está sendo analisado pela nossa equipe.
+          Assim que for aprovado, falamos com você pelo WhatsApp.
         </p>
+
+        {teamLink && (
+          <a
+            href={teamLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-[#D93636] hover:bg-[#c42f2f] text-white font-semibold transition-colors"
+          >
+            <MessageCircle className="w-5 h-5" />
+            Avisar a equipe no WhatsApp
+          </a>
+        )}
       </div>
 
       <div className="rounded-xl bg-white dark:bg-[#1E1E1E] p-4 border border-gray-200 dark:border-gray-700 w-full max-w-md">
