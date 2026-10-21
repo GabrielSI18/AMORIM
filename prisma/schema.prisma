@@ -259,6 +259,9 @@ model Package {
   includes            String[]     // ["Transporte", "Hospedagem", "Café da manhã"]
   not_includes        String[]     @default([]) @map("not_includes") // ["Almoço", "Jantar"]
   itinerary           Json?        // JSON com roteiro dia a dia
+  // Passeios opcionais: atrações que NÃO entram no preço (ingresso à parte).
+  // [{ "title", "description", "image", "note" }]
+  optional_tours      Json?        @map("optional_tours")
   
   // Imagens
   cover_image         String?      @map("cover_image") // Imagem principal

@@ -12,6 +12,7 @@ import { HotelGallery } from '@/components/packages/hotel-gallery';
 import { PriceTable } from '@/components/packages/price-table';
 import { AttractionsList } from '@/components/packages/attractions-list';
 import { PackageGallery } from '@/components/packages/package-gallery';
+import { OptionalTours, type OptionalTour } from '@/components/packages/optional-tours';
 import { ShareButton } from '@/components/ui/share-button';
 
 interface PackagePageProps {
@@ -299,6 +300,9 @@ export default async function PackagePage({ params }: PackagePageProps) {
                 </section>
               )
             )}
+
+            {/* Passeios opcionais (ingresso à parte) */}
+            <OptionalTours tours={(pkg.optionalTours as OptionalTour[] | null) || []} />
 
             {/* Atrações Incluídas */}
             {pkg.attractions && pkg.attractions.length > 0 && (
