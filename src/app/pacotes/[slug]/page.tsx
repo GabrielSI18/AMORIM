@@ -284,15 +284,20 @@ export default async function PackagePage({ params }: PackagePageProps) {
               </section>
             )}
 
-            {/* Hospedagem */}
+            {/* Hospedagem — sem fotos, mostra ao menos o nome do hotel
+                (antes a caixa aparecia vazia porque a galeria some sem fotos) */}
             {pkg.hotelName && (
-              <section className="bg-card rounded-xl p-6 shadow-card">
-                <h2 className="text-2xl font-bold mb-4">Hospedagem</h2>
-                <HotelGallery 
-                  hotelName={pkg.hotelName}
-                  photos={pkg.hotelPhotos || []}
-                />
-              </section>
+              pkg.hotelPhotos?.length ? (
+                <section className="bg-card rounded-xl p-6 shadow-card">
+                  <h2 className="text-2xl font-bold mb-4">Hospedagem</h2>
+                  <HotelGallery hotelName={pkg.hotelName} photos={pkg.hotelPhotos} />
+                </section>
+              ) : (
+                <section className="bg-card rounded-xl p-6 shadow-card">
+                  <h2 className="text-2xl font-bold mb-2">Hospedagem</h2>
+                  <p className="text-lg font-medium">{pkg.hotelName}</p>
+                </section>
+              )
             )}
 
             {/* Atrações Incluídas */}

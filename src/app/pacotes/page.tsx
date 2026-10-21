@@ -382,6 +382,9 @@ function PackagesContent() {
                       src={pkg.coverImage || pkg.galleryImages?.[0]}
                       alt={pkg.title}
                       fill
+                      // as fotos vêm do R2 por rota de API: o otimizador do Next
+                      // não consegue buscá-las e devolve 404 (imagem quebrada)
+                      unoptimized
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
