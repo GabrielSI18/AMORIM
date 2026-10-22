@@ -47,7 +47,17 @@ export async function GET(req: NextRequest) {
       ...(isAdmin ? {} : { select: publicBusSelect }),
     });
 
-    return NextResponse.json({ data: toCamelCase(buses) });
+    // `thumbs` = versões reduzidas (-sm) para os cards; `photos` segue em
+    // tamanho cheio para a galeria. A rota de imagem cai para a original
+    // quando a miniatura não existe.
+    const comMiniaturas = toCamelCase(buses).map((bus: { photos?: string[] }) => ({
+      ...bus,
+      thumbs: (bus.photos || []).map((foto) =>
+        foto.startsWith('/api/images/') ? foto.replace(/(\.[a-z]+)$/, '-sm$1') : foto
+      ),
+    }));
+
+    return NextResponse.json({ data: comMiniaturas });
   } catch (error) {
     console.error('[API] GET /api/fleet error:', error);
     return NextResponse.json(

@@ -40,6 +40,11 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
+    // O otimizador (/_next/image) não funciona neste deploy (Workers): ele
+    // devolve 404 para imagens servidas por rota de API, que é o caso das
+    // fotos no R2. Como os arquivos já são gerados no tamanho certo, servimos
+    // direto — assim nenhuma página depende dele.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',

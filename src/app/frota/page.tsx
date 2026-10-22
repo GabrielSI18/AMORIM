@@ -17,6 +17,8 @@ interface BusData {
   seats: number
   floors: number
   photos: string[]
+  // miniaturas usadas no card (a galeria usa `photos` em tamanho cheio)
+  thumbs?: string[]
   isActive: boolean
 }
 
@@ -195,7 +197,7 @@ export default function FrotaPage() {
                     {bus.photos.length > 0 ? (
                       <>
                         <Image
-                          src={bus.photos[0]}
+                          src={bus.thumbs?.[0] || bus.photos[0]}
                           alt={bus.model}
                           fill
                           className="object-cover group-hover:scale-105 transition-transform duration-500"
