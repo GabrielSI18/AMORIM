@@ -64,12 +64,38 @@ export async function GET(req: NextRequest) {
       ];
     }
 
+    // Listagem = só o que o card precisa. Antes vinha o pacote inteiro com
+    // `bus: true`, e as fotos do ônibus (base64) faziam esta resposta passar
+    // de 23 MB — a página demorava uma eternidade no celular.
     const packages = await prisma.package.findMany({
       where,
-      include: {
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        short_description: true,
+        destination: true,
+        price: true,
+        original_price: true,
+        price_child_6_10: true,
+        price_child_11_13: true,
+        duration_days: true,
+        departure_location: true,
+        departure_date: true,
+        return_date: true,
+        hotel_name: true,
+        total_seats: true,
+        available_seats: true,
+        max_installments: true,
+        status: true,
+        is_featured: true,
+        is_active: true,
+        created_at: true,
+        cover_image: true,
         category: true,
         destination_rel: true,
-        bus: true,
+        // ônibus sem as fotos
+        bus: { select: { id: true, model: true, seats: true, floors: true } },
       },
       orderBy: [
         { is_featured: 'desc' },
@@ -91,8 +117,14 @@ export async function GET(req: NextRequest) {
     // Transforma e mapeia destination_rel para destination
     // O campo 'destination' do banco (texto) vai para 'destinationText'
     // O campo 'destination_rel' do banco (relação) vai para 'destination'
+    // Card usa a versão reduzida da capa (a rota de imagem cai para a original
+    // se a miniatura ainda não existir)
+    const miniatura = (url?: string | null) =>
+      url && url.startsWith('/api/images/') ? url.replace(/(\.[a-z]+)$/, '-sm$1') : url;
+
     const transformedPackages = toCamelCase(packages).map((pkg: any) => ({
       ...pkg,
+      coverImage: miniatura(pkg.coverImage),
       availableSeats: pkg.totalSeats
         ? Math.max(pkg.totalSeats - (takenByPackage.get(pkg.id) || 0), 0)
         : pkg.availableSeats,

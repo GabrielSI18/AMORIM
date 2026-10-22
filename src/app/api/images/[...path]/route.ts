@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 /**
  * GET /api/images/<caminho-no-bucket>
@@ -65,26 +66,45 @@ export async function GET(
       return new NextResponse('Not found', { status: 404 });
     }
 
-    const result = await getClient().send(
-      new GetObjectCommand({
-        Bucket: process.env.R2_BUCKET_NAME || 'amorim-storage',
-        Key: key,
-      })
-    );
+    // Cache na borda: sem isso toda visita ia até o R2 (~350 ms por foto)
+    const cache = (globalThis as unknown as { caches?: { default?: Cache } }).caches?.default;
+    const cacheKey = new Request(_req.url);
+    const cached = await cache?.match(cacheKey);
+    if (cached) return cached as unknown as NextResponse;
+
+    const bucket = process.env.R2_BUCKET_NAME || 'amorim-storage';
+    let result;
+    try {
+      result = await getClient().send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+    } catch (error) {
+      // Miniatura ainda não gerada: cai para a imagem original
+      const semSufixo = key.replace(/-sm(\.[a-z]+)$/, '$1');
+      if (semSufixo === key) throw error;
+      result = await getClient().send(new GetObjectCommand({ Bucket: bucket, Key: semSufixo }));
+    }
 
     const bytes = await result.Body?.transformToByteArray();
     if (!bytes) {
       return new NextResponse('Not found', { status: 404 });
     }
 
-    return new NextResponse(new Uint8Array(bytes), {
+    const response = new NextResponse(new Uint8Array(bytes), {
       headers: {
         'Content-Type': result.ContentType || contentType,
         'Content-Length': String(bytes.length),
-        // Nome do arquivo tem hash: pode cachear por muito tempo
+        // Nome do arquivo não muda de conteúdo: pode cachear por muito tempo
         'Cache-Control': 'public, max-age=31536000, immutable',
       },
     });
+
+    if (cache) {
+      const ctx = getCloudflareContext().ctx;
+      const guardar = cache.put(cacheKey, response.clone() as unknown as Response);
+      if (ctx?.waitUntil) ctx.waitUntil(guardar);
+      else await guardar;
+    }
+
+    return response;
   } catch (error) {
     const code = (error as { name?: string })?.name;
     if (code === 'NoSuchKey' || code === 'NotFound') {
