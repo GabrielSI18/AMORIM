@@ -6,6 +6,13 @@ import { toCamelCase, toSnakeCase } from '@/lib/case-transform';
 import { requireAdminApi } from '@/lib/api-auth';
 import { notExpiredWhere } from '@/lib/package-expiration';
 import { activeBookingsWhere } from '@/lib/booking-status';
+import {
+  podeCachear,
+  respostaDoCache,
+  guardarNoCache,
+  marcarCacheavel,
+  limparCacheDaListagem,
+} from '@/lib/package-list-cache';
 import type { PackageFilters } from '@/types';
 
 /**
@@ -14,7 +21,15 @@ import type { PackageFilters } from '@/types';
  */
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
+    const url = new URL(req.url);
+    const { searchParams } = url;
+
+    // Listagem pública sai do cache da borda (limpo ao salvar um pacote)
+    const cacheavel = podeCachear(url);
+    if (cacheavel) {
+      const cacheado = await respostaDoCache(req);
+      if (cacheado) return cacheado as unknown as NextResponse;
+    }
     
     // Filtros
     const filters: PackageFilters = {
@@ -132,7 +147,12 @@ export async function GET(req: NextRequest) {
       destination: pkg.destinationRel || null,  // relação
     }));
 
-    return NextResponse.json({ data: transformedPackages });
+    const resposta = NextResponse.json({ data: transformedPackages });
+    if (cacheavel) {
+      marcarCacheavel(resposta as unknown as Response);
+      await guardarNoCache(req, resposta as unknown as Response);
+    }
+    return resposta;
   } catch (error) {
     console.error('[API] GET /api/packages error:', error);
     return NextResponse.json(
@@ -220,6 +240,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    await limparCacheDaListagem(req);
     return NextResponse.json({ data: toCamelCase(package_) }, { status: 201 });
   } catch (error) {
     console.error('[API] POST /api/packages error:', error);
@@ -277,6 +298,7 @@ export async function PUT(req: NextRequest) {
       destination: transformed.destinationRel || null,  // relação
     };
 
+    await limparCacheDaListagem(req);
     return NextResponse.json({ data: result });
   } catch (error) {
     console.error('[API] PUT /api/packages error:', error);
@@ -309,6 +331,7 @@ export async function DELETE(req: NextRequest) {
       data: { is_active: false },
     });
 
+    await limparCacheDaListagem(req);
     return NextResponse.json({ message: 'Pacote removido com sucesso' });
   } catch (error) {
     console.error('[API] DELETE /api/packages error:', error);

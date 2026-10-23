@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { parseDateInput } from '@/lib/date-input';
 import { getPackageAvailability } from '@/lib/package-availability';
+import { limparCacheDaListagem } from '@/lib/package-list-cache';
 import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
 import { toCamelCase } from '@/lib/case-transform';
 import { requireAdminApi } from '@/lib/api-auth';
@@ -153,6 +154,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       destination: transformed.destinationRel || null,  // relação
     };
 
+    await limparCacheDaListagem(req);
     return NextResponse.json({ data: result });
   } catch (error) {
     console.error('[API] PUT /api/packages/[packageId] error:', error);
@@ -180,6 +182,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       data: { is_active: false },
     });
 
+    await limparCacheDaListagem(req);
     return NextResponse.json({ message: 'Pacote removido com sucesso' });
   } catch (error) {
     console.error('[API] DELETE /api/packages/[packageId] error:', error);
