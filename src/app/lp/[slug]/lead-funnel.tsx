@@ -35,6 +35,20 @@ const PAGAMENTO_LABEL: Record<Pagamento, string> = {
   indeciso: 'Ainda vou decidir',
 }
 
+// (31) 98254-4924 no celular, (31) 3333-4444 no fixo; quem cola com +55 tem o
+// código do país tirado antes.
+function formatarTelefone(valor: string) {
+  let d = valor.replace(/\D/g, '')
+  if (d.length > 11 && d.startsWith('55')) d = d.slice(2)
+  d = d.slice(0, 11)
+  if (d.length <= 2) return d.length ? `(${d}` : ''
+  const ddd = d.slice(0, 2)
+  const resto = d.slice(2)
+  const corte = d.length === 11 ? 5 : 4
+  if (resto.length <= corte) return `(${ddd}) ${resto}`
+  return `(${ddd}) ${resto.slice(0, corte)}-${resto.slice(corte)}`
+}
+
 const brl = (cents: number) =>
   (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
@@ -220,11 +234,17 @@ export function LeadFunnel({ pkg, whatsappNumber }: { pkg: FunnelPackage; whatsa
       // sem rede para salvar: o WhatsApp é o que importa, segue mesmo assim
     }
 
-    window.fbq?.('track', 'Lead', { content_name: pkg.title, value: total / 100, currency: 'BRL' })
     setLinkFinal(destino)
     irPara('enviado')
     setEnviando(false)
-    window.location.href = destino
+    if (window.fbq) {
+      // o Lead precisa sair antes de a página trocar para o WhatsApp, senão o
+      // navegador cancela o envio e a conversão some do Meta Ads
+      window.fbq('track', 'Lead', { content_name: pkg.title, value: total / 100, currency: 'BRL' })
+      setTimeout(() => { window.location.href = destino }, 600)
+    } else {
+      window.location.href = destino
+    }
   }
 
   return (
@@ -393,7 +413,7 @@ export function LeadFunnel({ pkg, whatsappNumber }: { pkg: FunnelPackage; whatsa
               autoComplete="tel-national"
               placeholder="(31) 99999-9999"
               value={telefone}
-              onChange={(e) => setTelefone(e.target.value)}
+              onChange={(e) => setTelefone(formatarTelefone(e.target.value))}
               className="mt-1 w-full rounded-xl border-2 border-[var(--lp-linha)] bg-[var(--lp-cartao)] px-4 py-3 text-base hover:border-[var(--lp-tinta-suave)] focus:border-[var(--lp-azul)] focus:outline-none"
             />
           </div>
