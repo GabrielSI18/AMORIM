@@ -5,9 +5,10 @@ import { useAuth } from '@clerk/nextjs'
 import { toast } from 'sonner'
 import { useSiteConfig } from '@/hooks/use-site-config'
 import { whatsappLink, affiliateRegistrationMessage } from '@/lib/whatsapp'
+import { formatReleaseDate, type PayoutState } from '@/lib/affiliate-retention'
 import { DashboardShell } from '@/components/dashboard'
 import { Skeleton, SkeletonCard } from '@/components/ui/skeleton'
-import { 
+import {
   Handshake,
   Link as LinkIcon,
   Copy,
@@ -33,7 +34,8 @@ import {
   MapPin,
   Calendar,
   Eye,
-  MessageCircle
+  MessageCircle,
+  Lock
 } from 'lucide-react'
 
 interface AffiliateData {
@@ -58,6 +60,10 @@ interface AffiliateData {
     saleAmount: number
     commissionAmount: number
     commissionStatus: string
+    /** retida até a viagem / liberada — calculado no servidor */
+    payoutState?: PayoutState
+    departureDate?: string | null
+    releaseDate?: string | null
     createdAt: string
   }[]
   stats: {
@@ -71,6 +77,8 @@ interface AffiliateData {
     totalSales: number
     receivableCommission: number
     totalCommission: number
+    retainedCommission?: number
+    releasableCommission?: number
   }
 }
 
@@ -128,7 +136,7 @@ export default function ParceiroPage() {
     try {
       const res = await fetch('/api/affiliates/me')
       const data = await res.json()
-      
+
       setIsAffiliate(data.isAffiliate)
       setAffiliateData(data.data)
     } catch (error) {
@@ -350,22 +358,31 @@ export default function ParceiroPage() {
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
             Resumo Financeiro
           </h2>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="flex items-center gap-3 p-3 rounded-lg bg-yellow-500/10 min-w-0">
               <Clock className="w-8 h-8 text-yellow-600 flex-shrink-0" />
               <div className="min-w-0 flex-1">
-                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Aguardando Aprovação</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Cliente ainda não pagou</p>
                 <p className="text-lg sm:text-xl font-bold text-yellow-600 truncate">
                   {formatCurrency(affiliateData?.stats?.pendingCommission || 0)}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-orange-500/10 min-w-0">
+              <Lock className="w-8 h-8 text-orange-600 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Retido até a viagem</p>
+                <p className="text-lg sm:text-xl font-bold text-orange-600 truncate">
+                  {formatCurrency(affiliateData?.stats?.retainedCommission || 0)}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-500/10 min-w-0">
               <CheckCircle2 className="w-8 h-8 text-blue-600 flex-shrink-0" />
               <div className="min-w-0 flex-1">
-                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Aprovado (a pagar)</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Liberado para pagamento</p>
                 <p className="text-lg sm:text-xl font-bold text-blue-600 truncate">
-                  {formatCurrency((affiliateData?.stats?.approvedCommission || 0) - (affiliateData?.stats?.paidCommission || 0))}
+                  {formatCurrency(affiliateData?.stats?.releasableCommission || 0)}
                 </p>
               </div>
             </div>
@@ -379,6 +396,11 @@ export default function ParceiroPage() {
               </div>
             </div>
           </div>
+          <p className="mt-3 text-xs text-gray-500 dark:text-gray-400 flex items-start gap-2">
+            <Lock className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+            Quando o cliente paga, a comissão fica retida até a viagem acontecer e é liberada no dia seguinte à
+            saída do ônibus. Se o cliente cancelar antes, a comissão é cancelada junto com a reserva.
+          </p>
         </div>
 
         {/* Últimas Indicações */}
@@ -386,7 +408,7 @@ export default function ParceiroPage() {
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
             Últimas Indicações
           </h2>
-          
+
           {affiliateData?.referrals && affiliateData.referrals.length > 0 ? (
             <div className="space-y-3">
               {affiliateData.referrals.slice(0, 5).map((referral) => (
@@ -406,20 +428,7 @@ export default function ParceiroPage() {
                     <p className="font-bold text-green-600 whitespace-nowrap">
                       +{formatCurrency(referral.commissionAmount)}
                     </p>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      referral.commissionStatus === 'paid' 
-                        ? 'bg-green-500/20 text-green-600'
-                        : referral.commissionStatus === 'approved'
-                        ? 'bg-blue-500/20 text-blue-600'
-                        : 'bg-yellow-500/20 text-yellow-600'
-                    }`}>
-                      {referral.commissionStatus === 'paid' 
-                        ? 'Pago'
-                        : referral.commissionStatus === 'approved'
-                        ? 'Aprovado'
-                        : 'Pendente'
-                      }
-                    </span>
+                    <PayoutBadge referral={referral} />
                   </div>
                 </div>
               ))}
@@ -448,7 +457,7 @@ export default function ParceiroPage() {
               Copie o link de cada pacote com seu código de afiliado
             </p>
           </div>
-          
+
           {loadingPackages ? (
             <div className="p-4 space-y-4">
               {[1, 2, 3].map((i) => (
@@ -469,8 +478,8 @@ export default function ParceiroPage() {
                     {/* Imagem do pacote */}
                     <div className="w-24 h-16 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
                       {pkg.coverImage ? (
-                        <img 
-                          src={pkg.coverImage} 
+                        <img
+                          src={pkg.coverImage}
                           alt={pkg.title}
                           className="w-full h-full object-cover"
                         />
@@ -480,7 +489,7 @@ export default function ParceiroPage() {
                         </div>
                       )}
                     </div>
-                    
+
                     {/* Info do pacote */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
@@ -513,7 +522,7 @@ export default function ParceiroPage() {
                           </p>
                         </div>
                       </div>
-                      
+
                       {/* Botões de ação */}
                       <div className="flex items-center gap-2 mt-2">
                         <button
@@ -559,7 +568,7 @@ export default function ParceiroPage() {
               </p>
             </div>
           )}
-          
+
           {/* Link para ver todos */}
           {packages.length > 0 && (
             <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
@@ -881,6 +890,41 @@ function NotAffiliateView({ onSuccess }: { onSuccess: () => void }) {
   )
 }
 
+// Selo da indicação pela situação do pagamento da comissão
+function PayoutBadge({ referral }: { referral: AffiliateData['referrals'][number] }) {
+  const state: PayoutState =
+    referral.payoutState ??
+    (referral.commissionStatus === 'paid'
+      ? 'paid'
+      : referral.commissionStatus === 'approved'
+        ? 'retained'
+        : referral.commissionStatus === 'rejected'
+          ? 'rejected'
+          : 'awaiting_payment')
+  const libera = formatReleaseDate(referral.releaseDate)
+
+  const estilos: Record<PayoutState, string> = {
+    paid: 'bg-green-500/20 text-green-600',
+    releasable: 'bg-blue-500/20 text-blue-600',
+    retained: 'bg-orange-500/20 text-orange-600',
+    rejected: 'bg-red-500/20 text-red-600',
+    awaiting_payment: 'bg-yellow-500/20 text-yellow-600',
+  }
+  const rotulos: Record<PayoutState, string> = {
+    paid: 'Pago',
+    releasable: 'Liberado',
+    retained: libera ? `Libera em ${libera}` : 'Retido até a viagem',
+    rejected: 'Cancelado',
+    awaiting_payment: 'Aguardando cliente',
+  }
+
+  return (
+    <span className={`text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${estilos[state]}`}>
+      {rotulos[state]}
+    </span>
+  )
+}
+
 // Componente para afiliado pendente
 function PendingApprovalView({ affiliateData }: { affiliateData: AffiliateData }) {
   const siteConfig = useSiteConfig()
@@ -899,7 +943,7 @@ function PendingApprovalView({ affiliateData }: { affiliateData: AffiliateData }
       <div className="w-20 h-20 rounded-full bg-yellow-500/10 flex items-center justify-center">
         <Clock className="w-10 h-10 text-yellow-600" />
       </div>
-      
+
       <div className="text-center">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
           Cadastro em Análise

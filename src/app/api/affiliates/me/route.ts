@@ -4,6 +4,8 @@ import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { toCamelCase } from '@/lib/case-transform';
 import { computeAffiliateTotals } from '@/lib/affiliate-totals';
+import { withReleaseInfo } from '@/lib/affiliate-retention-db';
+import { computeRetentionTotals } from '@/lib/affiliate-retention';
 import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
 
 const onlyDigits = (v: string) => v.replace(/\D/g, '');
@@ -101,6 +103,9 @@ export async function GET() {
     const paidReferrals = affiliate.referrals.filter(r => csLower(r) === 'paid');
 
     const totals = computeAffiliateTotals(affiliate.referrals);
+    // Comissão aprovada fica retida até a viagem sair (ver affiliate-retention)
+    const referrals = await withReleaseInfo(affiliate.referrals);
+    const retention = computeRetentionTotals(referrals);
     const stats = {
       totalReferrals: totals.totalReferrals,
       pendingReferrals: pendingReferrals.length,
@@ -113,12 +118,16 @@ export async function GET() {
       paidCommission: totals.paidCommission,
       receivableCommission: totals.receivableCommission,
       totalCommission: totals.totalCommission,
+      retainedCommission: retention.retainedCommission,
+      retainedReferrals: retention.retainedCount,
+      releasableCommission: retention.releasableCommission,
+      releasableReferrals: retention.releasableCount,
     };
 
     return NextResponse.json({
       isAffiliate: true,
       data: {
-        ...toCamelCase(affiliate),
+        ...toCamelCase({ ...affiliate, referrals }),
         stats,
       },
     });
@@ -218,7 +227,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Caso 3: cadastro novo
+    // Caso 3: cadastro novo.
+    // CPF é único na tabela: sem esta checagem o cadastro estourava a
+    // constraint e o parceiro via só "Erro ao criar afiliado" (HTTP 500),
+    // sem saber que o problema era o CPF já usado.
+    if (cpf) {
+      const cpfEmUso = await prisma.affiliate.findFirst({
+        where: { cpf },
+        select: { id: true },
+      });
+      if (cpfEmUso) {
+        return NextResponse.json(
+          { error: 'Este CPF/CNPJ já está cadastrado em outra conta de afiliado. Fale com a equipe.' },
+          { status: 409 },
+        );
+      }
+    }
+
     const generateCode = (name: string): string => {
       const firstPart = name
         .split(' ')[0]
@@ -262,6 +287,16 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
+    // Corrida entre dois cadastros simultâneos (email, CPF ou código):
+    // vale responder conflito em vez de 500 genérico.
+    if ((error as { code?: string })?.code === 'P2002') {
+      const campo = ((error as { meta?: { target?: string[] } })?.meta?.target || []).join(', ');
+      console.warn('[affiliates/me] conflito de cadastro:', campo);
+      return NextResponse.json(
+        { error: 'Já existe um cadastro de afiliado com esses dados. Fale com a equipe.' },
+        { status: 409 },
+      );
+    }
     console.error('Erro ao criar afiliado:', error);
     return NextResponse.json(
       { error: 'Erro ao criar afiliado' },

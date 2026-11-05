@@ -41,13 +41,13 @@ function formatRelativeDate(dateString: string): string {
   if (diffDays === 1) return 'ontem'
   if (diffDays < 7) return `há ${diffDays} dias`
   if (diffDays < 30) return `há ${Math.floor(diffDays / 7)} semanas`
-  
+
   return date.toLocaleDateString('pt-BR')
 }
 
 interface Contact {
   id: string
-  type: 'general' | 'charter'
+  type: 'general' | 'charter' | 'lead'
   name: string
   email: string
   phone: string | null
@@ -71,6 +71,8 @@ interface Contact {
 const typeConfig: Record<Contact['type'], { label: string; color: string }> = {
   general: { label: 'Geral', color: 'bg-gray-500/10 text-gray-500 border-gray-500/30' },
   charter: { label: 'Fretamento', color: 'bg-primary/10 text-primary border-primary/30' },
+  // veio do formulário-filtro da página de anúncio (/lp/...)
+  lead: { label: 'Anúncio', color: 'bg-green-500/10 text-green-600 border-green-500/30' },
 }
 
 function formatDateBr(dateString: string | null) {
@@ -117,7 +119,7 @@ function ContatosContent() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [priorityFilter, setPriorityFilter] = useState('all')
-  const [typeFilter, setTypeFilter] = useState<'all' | 'general' | 'charter'>('all')
+  const [typeFilter, setTypeFilter] = useState<'all' | 'general' | 'charter' | 'lead'>('all')
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
   const [isUpdating, setIsUpdating] = useState(false)
 
@@ -130,7 +132,7 @@ function ContatosContent() {
       if (typeFilter !== 'all') params.append('type', typeFilter)
 
       const res = await fetch(`/api/contacts?${params.toString()}`)
-      
+
       if (res.status === 403) {
         toast.error('Você não tem permissão para acessar esta página')
         router.push('/dashboard')
@@ -171,7 +173,7 @@ function ContatosContent() {
 
       toast.success('Contato atualizado!')
       loadContacts()
-      
+
       if (selectedContact?.id === id) {
         setSelectedContact(prev => prev ? { ...prev, ...updates } : null)
       }
@@ -222,8 +224,8 @@ function ContatosContent() {
           <button
             onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}
             className={`p-4 rounded-xl border transition ${
-              statusFilter === 'pending' 
-                ? 'bg-yellow-500/20 border-yellow-500/50' 
+              statusFilter === 'pending'
+                ? 'bg-yellow-500/20 border-yellow-500/50'
                 : 'bg-white dark:bg-[#1E1E1E] border-gray-200 dark:border-[#333] hover:border-yellow-500/30'
             }`}
           >
@@ -241,8 +243,8 @@ function ContatosContent() {
           <button
             onClick={() => setStatusFilter(statusFilter === 'in_progress' ? 'all' : 'in_progress')}
             className={`p-4 rounded-xl border transition ${
-              statusFilter === 'in_progress' 
-                ? 'bg-blue-500/20 border-blue-500/50' 
+              statusFilter === 'in_progress'
+                ? 'bg-blue-500/20 border-blue-500/50'
                 : 'bg-white dark:bg-[#1E1E1E] border-gray-200 dark:border-[#333] hover:border-blue-500/30'
             }`}
           >
@@ -260,8 +262,8 @@ function ContatosContent() {
           <button
             onClick={() => setStatusFilter(statusFilter === 'resolved' ? 'all' : 'resolved')}
             className={`p-4 rounded-xl border transition ${
-              statusFilter === 'resolved' 
-                ? 'bg-green-500/20 border-green-500/50' 
+              statusFilter === 'resolved'
+                ? 'bg-green-500/20 border-green-500/50'
                 : 'bg-white dark:bg-[#1E1E1E] border-gray-200 dark:border-[#333] hover:border-green-500/30'
             }`}
           >
@@ -279,8 +281,8 @@ function ContatosContent() {
           <button
             onClick={() => setStatusFilter(statusFilter === 'archived' ? 'all' : 'archived')}
             className={`p-4 rounded-xl border transition ${
-              statusFilter === 'archived' 
-                ? 'bg-gray-500/20 border-gray-500/50' 
+              statusFilter === 'archived'
+                ? 'bg-gray-500/20 border-gray-500/50'
                 : 'bg-white dark:bg-[#1E1E1E] border-gray-200 dark:border-[#333] hover:border-gray-500/30'
             }`}
           >
@@ -308,7 +310,7 @@ function ContatosContent() {
               className="w-full pl-10 pr-4 py-3 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-lg text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 dark:placeholder-[#666] focus:outline-none focus:border-[#D93636] transition"
             />
           </div>
-          
+
           <div className="flex flex-wrap gap-2">
             <div className="relative">
               <select
@@ -319,6 +321,7 @@ function ContatosContent() {
                 <option value="all">Todos os tipos</option>
                 <option value="general">Geral</option>
                 <option value="charter">Fretamento</option>
+                <option value="lead">Anúncio</option>
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-[#666] pointer-events-none" />
             </div>
@@ -385,12 +388,14 @@ function ContatosContent() {
                             {priorityConfig[contact.priority].label}
                           </span>
                         </div>
-                        
+
                         <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-[#A0A0A0] mb-2">
-                          <span className="flex items-center gap-1">
-                            <Mail className="w-3 h-3" />
-                            {contact.email}
-                          </span>
+                          {contact.email && (
+                            <span className="flex items-center gap-1">
+                              <Mail className="w-3 h-3" />
+                              {contact.email}
+                            </span>
+                          )}
                           {contact.phone && (
                             <span className="flex items-center gap-1">
                               <Phone className="w-3 h-3" />
@@ -452,16 +457,18 @@ function ContatosContent() {
                               <Phone className="w-4 h-4 text-green-500" />
                             </button>
                           )}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              openEmail(contact.email, contact.subject)
-                            }}
-                            className="p-2 hover:bg-blue-500/10 rounded-lg transition"
-                            title="Enviar E-mail"
-                          >
-                            <Mail className="w-4 h-4 text-blue-500" />
-                          </button>
+                          {contact.email && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                openEmail(contact.email, contact.subject)
+                              }}
+                              className="p-2 hover:bg-blue-500/10 rounded-lg transition"
+                              title="Enviar E-mail"
+                            >
+                              <Mail className="w-4 h-4 text-blue-500" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -495,19 +502,21 @@ function ContatosContent() {
             <div className="p-6 space-y-6">
               {/* Informações de Contato */}
               <div className="grid sm:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg">
-                  <Mail className="w-5 h-5 text-blue-500" />
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">E-mail</p>
-                    <p className="text-gray-900 dark:text-[#E0E0E0]">{selectedContact.email}</p>
+                {selectedContact.email && (
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg">
+                    <Mail className="w-5 h-5 text-blue-500" />
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">E-mail</p>
+                      <p className="text-gray-900 dark:text-[#E0E0E0]">{selectedContact.email}</p>
+                    </div>
+                    <button
+                      onClick={() => openEmail(selectedContact.email, selectedContact.subject)}
+                      className="ml-auto p-2 hover:bg-gray-200 dark:hover:bg-[#333] rounded-lg transition"
+                    >
+                      <ExternalLink className="w-4 h-4 text-gray-500 dark:text-[#A0A0A0]" />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => openEmail(selectedContact.email, selectedContact.subject)}
-                    className="ml-auto p-2 hover:bg-gray-200 dark:hover:bg-[#333] rounded-lg transition"
-                  >
-                    <ExternalLink className="w-4 h-4 text-gray-500 dark:text-[#A0A0A0]" />
-                  </button>
-                </div>
+                )}
 
                 {selectedContact.phone && (
                   <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-[#2A2A2A] rounded-lg">
@@ -667,13 +676,15 @@ function ContatosContent() {
                     WhatsApp
                   </button>
                 )}
-                <button
-                  onClick={() => openEmail(selectedContact.email, selectedContact.subject)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
-                >
-                  <Mail className="w-4 h-4" />
-                  E-mail
-                </button>
+                {selectedContact.email && (
+                  <button
+                    onClick={() => openEmail(selectedContact.email, selectedContact.subject)}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+                  >
+                    <Mail className="w-4 h-4" />
+                    E-mail
+                  </button>
+                )}
               </div>
             </div>
           </div>

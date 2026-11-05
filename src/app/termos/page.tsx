@@ -24,7 +24,7 @@ export default function TermosPage() {
       {/* Content */}
       <section className="py-12">
         <div className="container-custom max-w-4xl space-y-8">
-          
+
           {/* 1. Aceitação dos Termos */}
           <div className="bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
             <div className="flex items-start gap-4 mb-4">
@@ -35,14 +35,14 @@ export default function TermosPage() {
                 <h2 className="text-xl font-bold text-[#212529] dark:text-[#f8f9fa] mb-3">1. Aceitação dos Termos</h2>
                 <div className="space-y-3 text-[#6c757d] dark:text-[#adb5bd] text-sm leading-relaxed">
                   <p>
-                    Ao acessar e utilizar o site da Amorim Turismo (www.amorimturismo.com.br), 
-                    você concorda em cumprir e estar vinculado a estes Termos de Uso. Se você 
-                    não concordar com qualquer parte destes termos, não deverá utilizar nossos 
+                    Ao acessar e utilizar o site da Amorim Turismo (www.amorimturismo.com.br),
+                    você concorda em cumprir e estar vinculado a estes Termos de Uso. Se você
+                    não concordar com qualquer parte destes termos, não deverá utilizar nossos
                     serviços.
                   </p>
                   <p>
-                    A Amorim Turismo reserva-se o direito de modificar estes termos a qualquer 
-                    momento, sendo as alterações publicadas nesta página. O uso continuado do 
+                    A Amorim Turismo reserva-se o direito de modificar estes termos a qualquer
+                    momento, sendo as alterações publicadas nesta página. O uso continuado do
                     site após as alterações constitui aceitação dos novos termos.
                   </p>
                 </div>
@@ -60,8 +60,8 @@ export default function TermosPage() {
                 <h2 className="text-xl font-bold text-[#212529] dark:text-[#f8f9fa] mb-3">2. Serviços Oferecidos</h2>
                 <div className="space-y-3 text-[#6c757d] dark:text-[#adb5bd] text-sm leading-relaxed">
                   <p>
-                    A Amorim Turismo atua como intermediária entre o cliente e os prestadores 
-                    de serviços turísticos (hotéis, companhias aéreas, locadoras de veículos, 
+                    A Amorim Turismo atua como intermediária entre o cliente e os prestadores
+                    de serviços turísticos (hotéis, companhias aéreas, locadoras de veículos,
                     etc.), oferecendo:
                   </p>
                   <ul className="list-disc list-inside space-y-1 ml-2">
@@ -88,8 +88,8 @@ export default function TermosPage() {
                 <h2 className="text-xl font-bold text-[#212529] dark:text-[#f8f9fa] mb-3">3. Cadastro e Conta</h2>
                 <div className="space-y-3 text-[#6c757d] dark:text-[#adb5bd] text-sm leading-relaxed">
                   <p>
-                    Para utilizar determinados serviços, você deverá criar uma conta 
-                    fornecendo informações verdadeiras, completas e atualizadas. Você é 
+                    Para utilizar determinados serviços, você deverá criar uma conta
+                    fornecendo informações verdadeiras, completas e atualizadas. Você é
                     responsável por:
                   </p>
                   <ul className="list-disc list-inside space-y-1 ml-2">
@@ -99,8 +99,8 @@ export default function TermosPage() {
                     <li>Garantir que suas informações estejam sempre atualizadas</li>
                   </ul>
                   <p>
-                    A Amorim Turismo não se responsabiliza por perdas decorrentes de 
-                    uso não autorizado de sua conta, quando o vazamento de credenciais 
+                    A Amorim Turismo não se responsabiliza por perdas decorrentes de
+                    uso não autorizado de sua conta, quando o vazamento de credenciais
                     não for de responsabilidade da empresa.
                   </p>
                 </div>
@@ -118,23 +118,23 @@ export default function TermosPage() {
                 <h2 className="text-xl font-bold text-[#212529] dark:text-[#f8f9fa] mb-3">4. Reservas e Pagamentos</h2>
                 <div className="space-y-3 text-[#6c757d] dark:text-[#adb5bd] text-sm leading-relaxed">
                   <p>
-                    <strong className="text-[#212529] dark:text-[#f8f9fa]">4.1 Confirmação:</strong> A reserva 
-                    só será considerada confirmada após a aprovação do pagamento e envio 
+                    <strong className="text-[#212529] dark:text-[#f8f9fa]">4.1 Confirmação:</strong> A reserva
+                    só será considerada confirmada após a aprovação do pagamento e envio
                     do e-mail de confirmação pela Amorim Turismo.
                   </p>
                   <p>
-                    <strong className="text-[#212529] dark:text-[#f8f9fa]">4.2 Preços:</strong> Os preços 
-                    exibidos estão sujeitos a alterações sem aviso prévio até o momento 
+                    <strong className="text-[#212529] dark:text-[#f8f9fa]">4.2 Preços:</strong> Os preços
+                    exibidos estão sujeitos a alterações sem aviso prévio até o momento
                     da confirmação da reserva. Após a confirmação, o preço é garantido.
                   </p>
                   <p>
-                    <strong className="text-[#212529] dark:text-[#f8f9fa]">4.3 Pagamento:</strong> Aceitamos 
-                    cartões de crédito, PIX e boleto bancário. Parcelamento em até 12x 
+                    <strong className="text-[#212529] dark:text-[#f8f9fa]">4.3 Pagamento:</strong> Aceitamos
+                    cartões de crédito, PIX e boleto bancário. Parcelamento em até 12x
                     sem juros no cartão, sujeito à análise de crédito.
                   </p>
                   <p>
-                    <strong className="text-[#212529] dark:text-[#f8f9fa]">4.4 Documentação:</strong> É de 
-                    responsabilidade do cliente verificar a documentação necessária para 
+                    <strong className="text-[#212529] dark:text-[#f8f9fa]">4.4 Documentação:</strong> É de
+                    responsabilidade do cliente verificar a documentação necessária para
                     a viagem (passaporte, vistos, vacinas) antes de efetuar a reserva.
                   </p>
                 </div>
@@ -152,22 +152,22 @@ export default function TermosPage() {
                 <h2 className="text-xl font-bold text-[#212529] dark:text-[#f8f9fa] mb-3">5. Limitação de Responsabilidade</h2>
                 <div className="space-y-3 text-[#6c757d] dark:text-[#adb5bd] text-sm leading-relaxed">
                   <p>
-                    <strong className="text-[#212529] dark:text-[#f8f9fa]">5.1</strong> A Amorim Turismo atua 
-                    como intermediária e não se responsabiliza por atos de terceiros 
-                    (companhias aéreas, hotéis, etc.), incluindo cancelamentos, atrasos 
+                    <strong className="text-[#212529] dark:text-[#f8f9fa]">5.1</strong> A Amorim Turismo atua
+                    como intermediária e não se responsabiliza por atos de terceiros
+                    (companhias aéreas, hotéis, etc.), incluindo cancelamentos, atrasos
                     ou alterações de serviços.
                   </p>
                   <p>
-                    <strong className="text-[#212529] dark:text-[#f8f9fa]">5.2</strong> Não nos responsabilizamos 
-                    por eventos de força maior (desastres naturais, pandemias, greves, 
+                    <strong className="text-[#212529] dark:text-[#f8f9fa]">5.2</strong> Não nos responsabilizamos
+                    por eventos de força maior (desastres naturais, pandemias, greves,
                     conflitos, etc.) que possam afetar a viagem.
                   </p>
                   <p>
-                    <strong className="text-[#212529] dark:text-[#f8f9fa]">5.3</strong> O cliente é responsável 
+                    <strong className="text-[#212529] dark:text-[#f8f9fa]">5.3</strong> O cliente é responsável
                     por seus pertences pessoais durante toda a viagem.
                   </p>
                   <p>
-                    <strong className="text-[#212529] dark:text-[#f8f9fa]">5.4</strong> Recomendamos fortemente 
+                    <strong className="text-[#212529] dark:text-[#f8f9fa]">5.4</strong> Recomendamos fortemente
                     a contratação de seguro viagem para todas as viagens.
                   </p>
                 </div>
@@ -180,8 +180,8 @@ export default function TermosPage() {
             <h2 className="text-xl font-bold text-[#212529] dark:text-[#f8f9fa] mb-3">6. Propriedade Intelectual</h2>
             <div className="space-y-3 text-[#6c757d] dark:text-[#adb5bd] text-sm leading-relaxed">
               <p>
-                Todo o conteúdo do site (textos, imagens, logos, design, código) é 
-                propriedade da Amorim Turismo ou de seus parceiros, protegido por 
+                Todo o conteúdo do site (textos, imagens, logos, design, código) é
+                propriedade da Amorim Turismo ou de seus parceiros, protegido por
                 leis de direitos autorais. É proibido:
               </p>
               <ul className="list-disc list-inside space-y-1 ml-2">
@@ -198,8 +198,8 @@ export default function TermosPage() {
             <h2 className="text-xl font-bold text-[#212529] dark:text-[#f8f9fa] mb-3">7. Privacidade e Dados Pessoais</h2>
             <div className="space-y-3 text-[#6c757d] dark:text-[#adb5bd] text-sm leading-relaxed">
               <p>
-                A coleta e tratamento de dados pessoais é realizada em conformidade 
-                com a Lei Geral de Proteção de Dados (LGPD). Os dados são utilizados 
+                A coleta e tratamento de dados pessoais é realizada em conformidade
+                com a Lei Geral de Proteção de Dados (LGPD). Os dados são utilizados
                 exclusivamente para:
               </p>
               <ul className="list-disc list-inside space-y-1 ml-2">
@@ -209,7 +209,7 @@ export default function TermosPage() {
                 <li>Cumprimento de obrigações legais</li>
               </ul>
               <p>
-                Você pode solicitar acesso, correção ou exclusão de seus dados a 
+                Você pode solicitar acesso, correção ou exclusão de seus dados a
                 qualquer momento através do e-mail amorimturismo@ymai.com.
               </p>
             </div>
@@ -220,13 +220,19 @@ export default function TermosPage() {
             <h2 className="text-xl font-bold text-[#212529] dark:text-[#f8f9fa] mb-3">8. Programa de Afiliados</h2>
             <div className="space-y-3 text-[#6c757d] dark:text-[#adb5bd] text-sm leading-relaxed">
               <p>
-                Os participantes do programa de afiliados estão sujeitos a termos 
+                Os participantes do programa de afiliados estão sujeitos a termos
                 específicos, incluindo:
               </p>
               <ul className="list-disc list-inside space-y-1 ml-2">
                 <li>Proibição de publicidade enganosa ou spam</li>
                 <li>Respeito às diretrizes de uso da marca</li>
                 <li>Comissões pagas apenas sobre vendas efetivadas</li>
+                <li>
+                  A comissão de uma venda fica retida até a realização da viagem e é liberada para pagamento a partir
+                  do dia seguinte à data de saída do pacote
+                </li>
+                <li>Reservas canceladas antes da viagem, com ou sem reembolso ao cliente, não geram comissão</li>
+                <li>Não há comissão sobre compras feitas pelo próprio afiliado ou com o seu código em benefício próprio</li>
                 <li>Direito da empresa de encerrar parceria a qualquer momento</li>
               </ul>
             </div>
@@ -237,17 +243,17 @@ export default function TermosPage() {
             <h2 className="text-xl font-bold text-[#212529] dark:text-[#f8f9fa] mb-3">9. Disposições Finais</h2>
             <div className="space-y-3 text-[#6c757d] dark:text-[#adb5bd] text-sm leading-relaxed">
               <p>
-                <strong className="text-[#212529] dark:text-[#f8f9fa]">9.1 Foro:</strong> Fica eleito o 
-                foro da Comarca de Belo Horizonte/MG para dirimir quaisquer controvérsias 
+                <strong className="text-[#212529] dark:text-[#f8f9fa]">9.1 Foro:</strong> Fica eleito o
+                foro da Comarca de Belo Horizonte/MG para dirimir quaisquer controvérsias
                 decorrentes destes termos.
               </p>
               <p>
-                <strong className="text-[#212529] dark:text-[#f8f9fa]">9.2 Integralidade:</strong> Caso 
-                qualquer disposição destes termos seja considerada inválida, as demais 
+                <strong className="text-[#212529] dark:text-[#f8f9fa]">9.2 Integralidade:</strong> Caso
+                qualquer disposição destes termos seja considerada inválida, as demais
                 permanecerão em pleno vigor.
               </p>
               <p>
-                <strong className="text-[#212529] dark:text-[#f8f9fa]">9.3 Contato:</strong> Para dúvidas 
+                <strong className="text-[#212529] dark:text-[#f8f9fa]">9.3 Contato:</strong> Para dúvidas
                 sobre estes termos, entre em contato pelo e-mail amorimturismo@ymai.com.
               </p>
             </div>
@@ -256,7 +262,7 @@ export default function TermosPage() {
           {/* Aviso */}
           <div className="bg-[#d32f2f]/10 border border-[#d32f2f]/30 rounded-xl p-6">
             <p className="text-[#212529] dark:text-[#f8f9fa] text-sm">
-              <strong>Ao utilizar nossos serviços, você declara ter lido, compreendido 
+              <strong>Ao utilizar nossos serviços, você declara ter lido, compreendido
               e aceito integralmente estes Termos de Uso.</strong>
             </p>
           </div>

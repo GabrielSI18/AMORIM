@@ -76,11 +76,11 @@ const faqs = [
     questions: [
       {
         question: 'Como me tornar um afiliado?',
-        answer: 'Para se tornar um afiliado, acesse nossa página de Afiliados e preencha o formulário de cadastro. Após aprovação, você receberá um link exclusivo para divulgar nossos pacotes e ganhar comissões por cada venda realizada.',
+        answer: 'Acesse a página de Afiliados, crie sua conta e complete o cadastro de parceiro. A equipe analisa em até 24 horas úteis e avisa você pelo WhatsApp; depois disso seu link exclusivo aparece no painel do parceiro.',
       },
       {
         question: 'Qual a comissão para afiliados?',
-        answer: 'Nossos afiliados recebem comissões de 5% a 15% sobre o valor de cada venda, dependendo do volume de vendas mensal. Quanto mais você vende, maior sua porcentagem de comissão.',
+        answer: 'A comissão começa em 7% sobre o valor de cada pacote vendido e sobe conforme o seu volume de vendas (a faixa é revisada pela equipe). Ela é paga por PIX depois que a viagem do cliente acontece.',
       },
     ],
   },
@@ -92,7 +92,7 @@ export default function FAQPage() {
   const config = useSiteConfig()
 
   const toggleItem = (id: string) => {
-    setOpenItems(prev => 
+    setOpenItems(prev =>
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     )
   }
@@ -100,7 +100,7 @@ export default function FAQPage() {
   const filteredFaqs = faqs.map(category => ({
     ...category,
     questions: category.questions.filter(
-      q => 
+      q =>
         q.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
         q.answer.toLowerCase().includes(searchTerm.toLowerCase())
     ),
@@ -120,7 +120,7 @@ export default function FAQPage() {
           <p className="text-xl text-white/80 mb-8">
             Encontre respostas para as dúvidas mais comuns
           </p>
-          
+
           {/* Search */}
           <div className="relative max-w-xl mx-auto">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6c757d]" />
@@ -153,7 +153,7 @@ export default function FAQPage() {
                     {category.questions.map((item, index) => {
                       const itemId = `${category.category}-${index}`
                       const isOpen = openItems.includes(itemId)
-                      
+
                       return (
                         <div key={index}>
                           <button

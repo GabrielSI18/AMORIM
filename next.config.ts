@@ -17,6 +17,14 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        // www na raiz: regra própria, porque no OpenNext o '/:path*' com caminho
+        // vazio redireciona para o literal "/:path*" (404)
+        source: '/',
+        has: [{ type: 'host', value: 'www.amorimturismo.com.br' }],
+        destination: 'https://amorimturismo.com.br/',
+        permanent: true,
+      },
+      {
         // www -> domínio sem www
         source: '/:path*',
         has: [{ type: 'host', value: 'www.amorimturismo.com.br' }],

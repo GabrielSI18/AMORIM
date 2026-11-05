@@ -3,7 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { computeAffiliateTotals } from '@/lib/affiliate-totals';
 import { buildTierSuggestion } from '@/lib/affiliate-tiers';
+import { withReleaseInfo } from '@/lib/affiliate-retention-db';
+import { computeRetentionTotals } from '@/lib/affiliate-retention';
 import { sendAffiliateApprovedEmail } from '@/lib/email';
+import { AFFILIATE_STATUSES } from '@/lib/affiliate-status';
 
 const APP_URL = process.env.NEXT_PUBLIC_URL || 'https://amorimturismo.com.br';
 
@@ -58,17 +61,20 @@ export async function GET(
     }
 
     const totals = computeAffiliateTotals(affiliate.referrals);
+    // Data da viagem e situação do pagamento de cada comissão (retida/liberada)
+    const referrals = await withReleaseInfo(affiliate.referrals);
 
     return NextResponse.json({
       affiliate: {
         ...affiliate,
+        referrals,
         user: userData,
         // Totais calculados das indicações (os campos total_* da tabela só
         // contam comissão já paga e deixavam o painel zerado)
         total_bookings: totals.totalReferrals,
         total_sales: totals.totalSales,
         total_earned: totals.paidCommission,
-        totals,
+        totals: { ...totals, ...computeRetentionTotals(referrals) },
         // Faixa do programa: a promoção é manual, isso só mostra onde ele está
         tier: buildTierSuggestion(affiliate.referrals, affiliate.commission_rate),
       },
@@ -107,7 +113,7 @@ export async function PATCH(
     // de bookings) usa lowercase, então centralizar a normalização aqui evita o
     // bug em que o admin aprovava com 'ACTIVE' mas a busca do bookings filtrava
     // por 'active' e nunca dava match.
-    const validStatuses = ['pending', 'active', 'rejected', 'suspended'];
+    const validStatuses: readonly string[] = AFFILIATE_STATUSES;
     const normalizedStatus = body.status ? String(body.status).toLowerCase() : null;
     if (normalizedStatus && !validStatuses.includes(normalizedStatus)) {
       return NextResponse.json({ error: 'Status inválido' }, { status: 400 });

@@ -30,9 +30,33 @@ const charterFieldsSchema = z.object({
   eventType: z.string().optional(),
 })
 
+// Lead da página de anúncio (/lp/[slug]): a pessoa já respondeu o filtro
+// (datas, embarque, quantas pessoas, pagamento) e vai cair no WhatsApp.
+// O registro fica aqui para a equipe correr atrás de quem não chegou a mandar
+// a mensagem. E-mail é opcional: pedir e-mail num anúncio só derruba conversão.
+const leadSchema = z.object({
+  type: z.literal('lead'),
+  name: z.string().trim().min(2, 'Informe seu nome').max(120, 'Nome muito longo'),
+  email: z.string().trim().email('E-mail inválido').optional().or(z.literal('')),
+  phone: z
+    .string({ message: 'Informe seu WhatsApp' })
+    .trim()
+    .transform((v) => v.replace(/\D/g, ''))
+    .refine((v) => v.length === 10 || v.length === 11, 'WhatsApp inválido — informe DDD + número'),
+  subject: z.string().trim().max(200).optional(),
+  message: z.string().trim().min(10).max(3000),
+  destination: z.string().trim().max(200).optional(),
+  departureDate: z
+    .string()
+    .optional()
+    .refine((v) => !v || !Number.isNaN(Date.parse(v)), 'Data inválida'),
+  passengersCount: z.coerce.number().int().min(1).max(60).optional(),
+})
+
 const createContactSchema = z.discriminatedUnion('type', [
   baseContactSchema.extend({ type: z.literal('general').optional().default('general') }),
   baseContactSchema.merge(charterFieldsSchema),
+  leadSchema,
 ])
 
 // POST /api/contacts - Criar novo contato (público)
@@ -72,6 +96,26 @@ export async function POST(request: NextRequest) {
 
     const data = validation.data
     const isCharter = data.type === 'charter'
+
+    if (data.type === 'lead') {
+      const lead = await prisma.contact.create({
+        data: {
+          type: 'lead',
+          name: data.name,
+          email: data.email || '',
+          phone: data.phone,
+          subject: data.subject ?? 'Anúncio',
+          message: data.message,
+          destination: data.destination ?? null,
+          departure_date: data.departureDate ? new Date(data.departureDate) : null,
+          passengers_count: data.passengersCount ?? null,
+          status: 'pending',
+          // quem passou pelo filtro do anúncio quer comprar: atende primeiro
+          priority: 'high',
+        },
+      })
+      return NextResponse.json({ success: true, data: { id: lead.id } }, { status: 201 })
+    }
 
     // Criar contato no banco
     const contact = await prisma.contact.create({

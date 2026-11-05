@@ -1,0 +1,67 @@
+/* Hallmark · v2.0.0 · shape: Stage (panfleto + filtro) · theme: marca Amorim (sistema do projeto, by request) · job: conversar no WhatsApp, a ação no hero e no fim do filtro · signature: o panfleto da viagem, o mesmo do anúncio */
+/* critique: a página é a continuação do anúncio — quem clicou vê o mesmo panfleto e responde o que o vendedor perguntaria antes de abrir o WhatsApp */
+
+/* Página de anúncio (/lp/[slug]). Cores e fontes só por estes tokens; o resto
+   herda o sistema do site (globals.css: --primary, --accent, Plus Jakarta Sans). */
+:root {
+  --lp-tinta: #10243b;
+  --lp-tinta-suave: #4a5b70;
+  --lp-fundo: #f4f6f9;
+  --lp-cartao: #ffffff;
+  --lp-linha: #dfe5ec;
+  --lp-azul: #003c71;
+  --lp-azul-escuro: #00284d;
+  --lp-sol: #ffd21f;
+  --lp-sol-escuro: #e0b400;
+  --lp-verde: #128c4a;
+  --lp-verde-escuro: #0d7139;
+  --lp-alerta: #b3261e;
+  --lp-foco: #ffb400;
+  --lp-fonte: var(--font-plus-jakarta), system-ui, sans-serif;
+}
+
+.lp {
+  font-family: var(--lp-fonte);
+  color: var(--lp-tinta);
+  background: var(--lp-fundo);
+  min-height: 100dvh;
+}
+
+html,
+body {
+  overflow-x: clip;
+}
+
+.lp-titulo {
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+.lp :where(a, button, input, select):focus-visible {
+  outline: 3px solid var(--lp-foco);
+  outline-offset: 2px;
+  transition: none;
+}
+
+/* Etapa nova entra suave; quem pediu menos movimento vê direto. O conteúdo é
+   visível sem script (o formulário só ganha comportamento depois). */
+@keyframes lp-entra {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lp-etapa {
+  animation: lp-entra 220ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-etapa {
+    animation: none;
+  }
+}

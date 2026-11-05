@@ -1,21 +1,97 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
+import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { parseDateInput } from '@/lib/date-input';
-import { activeBookingsWhere } from '@/lib/booking-status';
-import { getPackageAvailability, syncPackageAvailability } from '@/lib/package-availability';
+import { activeBookingsWhere, RELEASED_BOOKING_STATUSES } from '@/lib/booking-status';
+import { syncPackageAvailability } from '@/lib/package-availability';
 import { isPackageExpired } from '@/lib/package-expiration';
-import { generalApiLimiter, rateLimitExceededResponse, enforceRateLimit } from '@/lib/rate-limit';
+import { generalApiLimiter, enforceRateLimit } from '@/lib/rate-limit';
 import { toCamelCase } from '@/lib/case-transform';
-import { passengersSchema, safeParse } from '@/lib/validations';
+import { passengersSchema, safeParse, emailSchema, phoneSchema } from '@/lib/validations';
 import { sendAffiliateNewSaleEmail } from '@/lib/email';
 import { requireAdminApi } from '@/lib/api-auth';
+import type { Prisma } from '@prisma/client';
 import type { CreateBookingDto } from '@/types';
 
 const APP_URL = process.env.NEXT_PUBLIC_URL || 'https://amorimturismo.com.br';
 
+/**
+ * Teto de reservas em aberto (não pagas) do mesmo email no mesmo pacote.
+ * Sem isso, um script com o mesmo email reserva o ônibus inteiro sem pagar
+ * nada e tira o pacote do ar para quem ia comprar de verdade.
+ */
+const MAX_RESERVAS_ABERTAS_POR_EMAIL = 3;
+
+/** Dados do titular da reserva — o resto do corpo é validado adiante. */
+const customerSchema = z.object({
+  customerName: z.string().trim().min(2, 'Informe o nome do responsável').max(120, 'Nome muito longo'),
+  customerEmail: emailSchema.max(254, 'Email muito longo'),
+  customerPhone: phoneSchema,
+  customerCpf: z
+    .string()
+    .trim()
+    .transform((v) => v.replace(/\D/g, ''))
+    .refine((v) => v === '' || v.length === 11, 'CPF deve ter 11 dígitos')
+    .optional()
+    .nullable(),
+  customerNotes: z.string().trim().max(1000, 'Observação muito longa').optional().nullable(),
+  numPassengers: z
+    .number({ message: 'Número de passageiros inválido' })
+    .int('Número de passageiros inválido')
+    .min(1, 'Informe ao menos um passageiro')
+    .max(100, 'Número de passageiros acima do permitido'),
+  packageId: z.string().trim().min(1, 'Pacote obrigatório').max(64),
+  affiliateCode: z
+    .string()
+    .trim()
+    .max(32)
+    .optional()
+    .nullable()
+    .transform((v) => (v ? v.toUpperCase() : null)),
+  selectedSeats: z.array(z.number().int('Assento inválido').positive('Assento inválido')).max(100).optional(),
+});
+
 function formatBRL(cents: number): string {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
+}
+
+/** Erro de serialização do Postgres (duas reservas disputando o mesmo assento) */
+function isSerializationError(error: unknown): boolean {
+  const code = (error as { code?: string })?.code;
+  return code === 'P2034' || code === '40001';
+}
+
+/** Recusa decidida dentro da transação (vaga acabou, assento ocupado) */
+class BookingConflict extends Error {
+  status: number;
+  constructor(message: string, status = 409) {
+    super(message);
+    this.name = 'BookingConflict';
+    this.status = status;
+  }
+}
+
+/**
+ * Indicação de si mesmo: o afiliado comprando com o próprio código.
+ * Confere email, CPF e a conta logada — é o jeito mais simples de o parceiro
+ * virar "desconto de 7%" para si, para a família e para quem ele quiser.
+ */
+function isSelfReferral(
+  affiliate: { email: string | null; cpf: string | null; user_id: string | null },
+  buyer: { customerEmail: string; customerCpf?: string | null; dbUserId: string | null },
+): boolean {
+  const affiliateEmail = (affiliate.email || '').trim().toLowerCase();
+  const buyerEmail = (buyer.customerEmail || '').trim().toLowerCase();
+  if (affiliateEmail && affiliateEmail === buyerEmail) return true;
+
+  const affiliateCpf = (affiliate.cpf || '').replace(/\D/g, '');
+  const buyerCpf = (buyer.customerCpf || '').replace(/\D/g, '');
+  if (affiliateCpf && affiliateCpf === buyerCpf) return true;
+
+  if (affiliate.user_id && buyer.dbUserId && affiliate.user_id === buyer.dbUserId) return true;
+
+  return false;
 }
 
 /**
@@ -158,13 +234,27 @@ export async function POST(req: NextRequest) {
       passengers?: unknown;
     } = await req.json();
 
-    // Validação
-    if (!body.packageId || !body.customerName || !body.customerEmail || !body.customerPhone || !body.numPassengers) {
+    // Validação dos dados do titular. Antes só checava "campo existe", então
+    // entrava email sem @, telefone com letra e nome de 5 mil caracteres —
+    // e aí a confirmação da reserva nunca chegava em ninguém.
+    const customer = customerSchema.safeParse(body);
+    if (!customer.success) {
       return NextResponse.json(
-        { error: 'Campos obrigatórios faltando' },
+        { error: customer.error.issues[0]?.message || 'Dados do responsável inválidos' },
         { status: 400 }
       );
     }
+    const {
+      customerName,
+      customerEmail,
+      customerPhone,
+      customerCpf,
+      customerNotes,
+      numPassengers,
+      packageId,
+      affiliateCode,
+      selectedSeats,
+    } = customer.data;
 
     // Validação de passageiros (obrigatório)
     const passengersResult = safeParse(passengersSchema, body.passengers);
@@ -176,16 +266,16 @@ export async function POST(req: NextRequest) {
     }
     const passengers = passengersResult.data;
 
-    if (passengers.length !== body.numPassengers) {
+    if (passengers.length !== numPassengers) {
       return NextResponse.json(
-        { error: `Cadastre exatamente ${body.numPassengers} passageiro(s)` },
+        { error: `Cadastre exatamente ${numPassengers} passageiro(s)` },
         { status: 400 }
       );
     }
 
-    // Verificar se pacote existe e tem vagas
+    // Verificar se pacote existe e está aberto
     const package_ = await prisma.package.findUnique({
-      where: { id: body.packageId },
+      where: { id: packageId },
     });
 
     if (!package_) {
@@ -196,58 +286,52 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Este pacote já foi encerrado' }, { status: 400 });
     }
 
-    // Vagas pela conta das reservas ativas (o contador da tabela desanda)
-    const availability = await getPackageAvailability(package_.id, package_.total_seats);
-    if (availability.totalSeats > 0 && availability.availableSeats < body.numPassengers) {
+    // Quem está logado é identificado pelo id INTERNO do User. O `userId` do
+    // Clerk não existe na tabela de usuários: gravá-lo aqui estourava a chave
+    // estrangeira e derrubava com erro 500 toda reserva de cliente logado.
+    let dbUserId: string | null = null;
+    if (userId) {
+      const dbUser = await prisma.user.findUnique({
+        where: { clerk_id: userId },
+        select: { id: true },
+      });
+      dbUserId = dbUser?.id ?? null;
+    }
+
+    // Freio contra reserva-fantasma: o mesmo email não pode acumular reservas
+    // não pagas no mesmo pacote. Sem isso dá para travar o ônibus inteiro de
+    // graça — e derrubar a venda de quem ia pagar.
+    const reservasEmAberto = await prisma.booking.count({
+      where: {
+        package_id: packageId,
+        customer_email: customerEmail,
+        payment_status: { not: 'paid' },
+        ...activeBookingsWhere,
+      },
+    });
+    if (reservasEmAberto >= MAX_RESERVAS_ABERTAS_POR_EMAIL) {
       return NextResponse.json(
         {
           error:
-            availability.availableSeats > 0
-              ? `Apenas ${availability.availableSeats} vaga(s) disponível(is)`
-              : 'Este pacote está esgotado',
+            'Você já tem reservas em aberto para este pacote. Finalize o pagamento ou fale com a equipe.',
         },
-        { status: 400 }
+        { status: 429 }
       );
     }
 
-    // Validar assentos selecionados (se fornecidos)
-    if (body.selectedSeats && body.selectedSeats.length > 0) {
-      // Verificar se a quantidade de assentos bate com numPassengers
-      if (body.selectedSeats.length !== body.numPassengers) {
+    // Assentos: quantidade e numeração são conferidas antes da transação
+    // (não dependem de concorrência). A disputa por assento ocupado é
+    // resolvida dentro dela, mais abaixo.
+    if (selectedSeats && selectedSeats.length > 0) {
+      if (selectedSeats.length !== numPassengers) {
         return NextResponse.json(
-          { error: `Número de assentos (${body.selectedSeats.length}) deve ser igual ao número de passageiros (${body.numPassengers})` },
+          { error: `Número de assentos (${selectedSeats.length}) deve ser igual ao número de passageiros (${numPassengers})` },
           { status: 400 }
         );
       }
 
-      // Buscar assentos já ocupados
-      const existingBookings = await prisma.booking.findMany({
-        where: {
-          package_id: body.packageId,
-          ...activeBookingsWhere,
-        },
-        select: { selected_seats: true },
-      });
-
-      const occupiedSeats = new Set<number>();
-      for (const booking of existingBookings) {
-        if (booking.selected_seats && Array.isArray(booking.selected_seats)) {
-          (booking.selected_seats as number[]).forEach(seat => occupiedSeats.add(seat));
-        }
-      }
-
-      // Verificar se algum assento selecionado já está ocupado
-      const conflictingSeats = body.selectedSeats.filter(seat => occupiedSeats.has(seat));
-      if (conflictingSeats.length > 0) {
-        return NextResponse.json(
-          { error: `Assento(s) ${conflictingSeats.join(', ')} já está(ão) ocupado(s). Por favor, escolha outro(s).` },
-          { status: 409 }
-        );
-      }
-
-      // Verificar se assentos estão dentro do range válido
       const totalSeats = package_.total_seats || 0;
-      const invalidSeats = body.selectedSeats.filter(seat => seat < 1 || seat > totalSeats);
+      const invalidSeats = selectedSeats.filter((seat) => seat < 1 || seat > totalSeats);
       if (invalidSeats.length > 0) {
         return NextResponse.json(
           { error: `Assento(s) inválido(s): ${invalidSeats.join(', ')}` },
@@ -283,10 +367,10 @@ export async function POST(req: NextRequest) {
 
       // Sanity check: total pagantes precisa bater com numPassengers.
       const payingTotal = adults + children1113 + children610;
-      if (payingTotal !== body.numPassengers) {
+      if (payingTotal !== numPassengers) {
         return NextResponse.json(
           {
-            error: `Quantidade de passageiros pagantes (${payingTotal}) não bate com numPassengers (${body.numPassengers})`,
+            error: `Quantidade de passageiros pagantes (${payingTotal}) não bate com numPassengers (${numPassengers})`,
           },
           { status: 400 },
         );
@@ -297,89 +381,143 @@ export async function POST(req: NextRequest) {
         (package_.price_child_11_13 || package_.price) * children1113 +
         (package_.price_child_6_10 || package_.price) * children610;
     } else {
-      computedAmount = package_.price * body.numPassengers;
+      computedAmount = package_.price * numPassengers;
     }
 
     if (typeof body.totalPrice === 'number' && body.totalPrice !== computedAmount) {
       console.warn(
-        `[booking.price] cliente enviou totalPrice=${body.totalPrice} mas servidor calculou ${computedAmount} (pkg=${package_.id}, n=${body.numPassengers}) — usando valor calculado`,
+        `[booking.price] cliente enviou totalPrice=${body.totalPrice} mas servidor calculou ${computedAmount} (pkg=${package_.id}, n=${numPassengers}) — usando valor calculado`,
       );
     }
     const totalAmount = computedAmount;
 
-    // Verificar se há código de afiliado
-    // Buscamos só pelo código (que é unique). O filtro de status feito antes
-    // dentro do findUnique era frágil — bastava o admin aprovar o afiliado com
-    // status em UPPERCASE ('ACTIVE') que o lookup retornava null e a indicação
-    // nunca era gravada. Agora tolera qualquer case.
+    // Verificar se há código de afiliado.
+    // Buscamos só pelo código (que é unique) e toleramos status em qualquer
+    // caixa — basta o admin ter aprovado com 'ACTIVE' para o lookup estrito
+    // devolver null e a indicação nunca ser gravada.
     let affiliate = null;
     let affiliateWarning: string | null = null;
-    if (body.affiliateCode) {
+    if (affiliateCode) {
       const affiliateRecord = await prisma.affiliate.findUnique({
-        where: { code: body.affiliateCode.toUpperCase() },
+        where: { code: affiliateCode },
       });
-      if (affiliateRecord && affiliateRecord.status?.toLowerCase() === 'active') {
-        affiliate = affiliateRecord;
-      } else if (affiliateRecord) {
+
+      if (!affiliateRecord) {
+        affiliateWarning = 'not_found';
+        console.warn(`[booking.affiliate] código ${affiliateCode} não encontrado — ignorando atribuição`);
+      } else if (affiliateRecord.status?.toLowerCase() !== 'active') {
         affiliateWarning = 'inactive';
         console.warn(
-          `[booking.affiliate] código ${body.affiliateCode} encontrado, mas status="${affiliateRecord.status}" não é "active" — ignorando atribuição`
+          `[booking.affiliate] código ${affiliateCode} encontrado, mas status="${affiliateRecord.status}" não é "active" — ignorando atribuição`
+        );
+      } else if (isSelfReferral(affiliateRecord, { customerEmail, customerCpf, dbUserId })) {
+        // Comissão por indicar a si mesmo não é indicação, é desconto
+        // disfarçado — e bancado pela operação. A reserva continua valendo.
+        affiliateWarning = 'self_referral';
+        console.warn(
+          `[booking.affiliate] código ${affiliateCode} usado pelo próprio afiliado (${affiliateRecord.email}) — ignorando atribuição`
         );
       } else {
-        affiliateWarning = 'not_found';
-        console.warn(`[booking.affiliate] código ${body.affiliateCode} não encontrado — ignorando atribuição`);
+        affiliate = affiliateRecord;
       }
     }
 
-    // Criar reserva + passageiros em transação
-    const booking = await prisma.booking.create({
-      data: {
-        package_id: body.packageId,
-        user_id: userId || undefined,
-        customer_name: body.customerName,
-        customer_email: body.customerEmail,
-        customer_phone: body.customerPhone,
-        customer_cpf: body.customerCpf,
-        num_passengers: body.numPassengers,
-        total_amount: totalAmount,
-        customer_notes: body.customerNotes,
-        selected_seats: body.selectedSeats ?? undefined,
-        passengers: {
-          create: passengers.map((p, idx) => ({
-            full_name: p.fullName,
-            cpf: p.cpf,
-            birth_date: parseDateInput(p.birthDate) as Date,
-            phone: p.phone,
-            sex: p.sex,
-            rg: p.rg || null,
-            emergency_contact_name: p.emergencyContactName || null,
-            emergency_contact_phone: p.emergencyContactPhone || null,
-            is_responsible: p.isResponsible ?? false,
-            seat_number: p.seatNumber ?? body.selectedSeats?.[idx] ?? null,
-          })),
-        },
-      },
-      include: {
-        package: {
-          include: {
-            destination_rel: true,
-          },
-        },
-        passengers: {
-          orderBy: { created_at: 'asc' },
-        },
-      },
-    });
+    // Criar reserva + passageiros em transação serializável: a conferência de
+    // vagas e de assento ocupado acontece DENTRO dela. Antes era ler-e-depois-
+    // gravar sem trava, então dois cliques simultâneos levavam o mesmo assento
+    // (foi assim que os assentos 1 e 2 de Caldas Novas foram vendidos duas vezes).
+    let booking;
+    try {
+      booking = await prisma.$transaction(
+        async (tx: Prisma.TransactionClient) => {
+          const ativos = await tx.booking.findMany({
+            where: { package_id: packageId, ...activeBookingsWhere },
+            select: { num_passengers: true, selected_seats: true },
+          });
 
-    // Transforma e mapeia destination_rel para destination
-    const transformedBooking = toCamelCase(booking);
-    const bookingResult = {
-      ...transformedBooking,
-      package: transformedBooking.package ? {
-        ...transformedBooking.package,
-        destination: transformedBooking.package.destinationRel || null,
-      } : null,
-    };
+          const totalSeats = package_.total_seats || 0;
+          const ocupadas = ativos.reduce(
+            (soma: number, b: { num_passengers: number | null }) => soma + (b.num_passengers || 0),
+            0,
+          );
+          const disponiveis = Math.max(totalSeats - ocupadas, 0);
+
+          if (totalSeats > 0 && disponiveis < numPassengers) {
+            throw new BookingConflict(
+              disponiveis > 0 ? `Apenas ${disponiveis} vaga(s) disponível(is)` : 'Este pacote está esgotado',
+              400,
+            );
+          }
+
+          if (selectedSeats && selectedSeats.length > 0) {
+            const occupiedSeats = new Set<number>();
+            for (const b of ativos) {
+              if (Array.isArray(b.selected_seats)) {
+                for (const seat of b.selected_seats as number[]) occupiedSeats.add(seat);
+              }
+            }
+            const conflitantes = selectedSeats.filter((seat) => occupiedSeats.has(seat));
+            if (conflitantes.length > 0) {
+              throw new BookingConflict(
+                `Assento(s) ${conflitantes.join(', ')} já está(ão) ocupado(s). Por favor, escolha outro(s).`,
+                409,
+              );
+            }
+          }
+
+          return tx.booking.create({
+            data: {
+              package_id: packageId,
+              user_id: dbUserId ?? undefined,
+              customer_name: customerName,
+              customer_email: customerEmail,
+              customer_phone: customerPhone,
+              customer_cpf: customerCpf || null,
+              num_passengers: numPassengers,
+              total_amount: totalAmount,
+              customer_notes: customerNotes || null,
+              selected_seats: selectedSeats ?? undefined,
+              passengers: {
+                create: passengers.map((p, idx) => ({
+                  full_name: p.fullName,
+                  cpf: p.cpf,
+                  birth_date: parseDateInput(p.birthDate) as Date,
+                  phone: p.phone,
+                  sex: p.sex,
+                  rg: p.rg || null,
+                  emergency_contact_name: p.emergencyContactName || null,
+                  emergency_contact_phone: p.emergencyContactPhone || null,
+                  is_responsible: p.isResponsible ?? false,
+                  seat_number: p.seatNumber ?? selectedSeats?.[idx] ?? null,
+                })),
+              },
+            },
+            include: {
+              package: {
+                include: {
+                  destination_rel: true,
+                },
+              },
+              passengers: {
+                orderBy: { created_at: 'asc' },
+              },
+            },
+          });
+        },
+        { isolationLevel: 'Serializable', timeout: 15000 },
+      );
+    } catch (error) {
+      if (error instanceof BookingConflict) {
+        return NextResponse.json({ error: error.message }, { status: error.status });
+      }
+      if (isSerializationError(error)) {
+        return NextResponse.json(
+          { error: 'Alguém reservou esse lugar agora mesmo. Atualize a página e escolha outro assento.' },
+          { status: 409 },
+        );
+      }
+      throw error;
+    }
 
     // Se há afiliado válido, criar registro de indicação + notificar afiliado
     if (affiliate) {
@@ -390,7 +528,7 @@ export async function POST(req: NextRequest) {
           affiliate_id: affiliate.id,
           booking_id: booking.id,
           package_title: package_.title,
-          customer_email: body.customerEmail,
+          customer_email: customerEmail,
           sale_amount: totalAmount,
           commission_amount: commissionAmount,
           commission_status: 'pending', // Aguarda aprovação manual
@@ -414,7 +552,7 @@ export async function POST(req: NextRequest) {
 
     // Recalcula vagas a partir das reservas (antes decrementava o contador,
     // que ficava errado se algo falhasse no meio)
-    await syncPackageAvailability(body.packageId, package_.total_seats);
+    await syncPackageAvailability(packageId, package_.total_seats);
 
     return NextResponse.json({
       data: booking,
@@ -508,9 +646,40 @@ export async function PUT(req: NextRequest) {
       }
     }
 
-    // Obs: cancelamento de reserva NÃO altera automaticamente a comissão.
-    // Mantemos a indicação no histórico do afiliado e o admin decide manualmente
-    // se quer reverter (UI em /dashboard/afiliados/[id]).
+    // Reserva cancelada não gera comissão. Antes a indicação continuava
+    // "aprovada para pagamento" depois do cancelamento, e a equipe só
+    // descobria na hora de pagar o PIX. Comissão já PAGA não é mexida aqui —
+    // essa é decisão de caixa, e fica registrada no log.
+    const cancelou =
+      !!status &&
+      status !== currentBooking.status &&
+      (RELEASED_BOOKING_STATUSES as readonly string[]).includes(String(status).toLowerCase());
+
+    if (cancelou) {
+      try {
+        const jaPagas = await prisma.affiliateReferral.count({
+          where: { booking_id: id, commission_status: 'paid' },
+        });
+        if (jaPagas > 0) {
+          console.warn(
+            `[booking.PUT] reserva ${id} cancelada, mas ${jaPagas} comissão(ões) já paga(s) — reverter manualmente se for o caso`,
+          );
+        }
+
+        const revertidas = await prisma.affiliateReferral.updateMany({
+          where: {
+            booking_id: id,
+            commission_status: { in: ['pending', 'approved'] },
+          },
+          data: { commission_status: 'rejected', updated_at: new Date() },
+        });
+        if (revertidas.count > 0) {
+          console.info(`[booking.PUT] reserva ${id} cancelada — ${revertidas.count} comissão(ões) rejeitada(s)`);
+        }
+      } catch (err) {
+        console.error('[booking.PUT] erro ao reverter comissão do afiliado:', err);
+      }
+    }
 
     return NextResponse.json({ data: booking });
   } catch (error) {

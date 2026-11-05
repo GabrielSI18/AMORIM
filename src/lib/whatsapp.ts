@@ -57,6 +57,8 @@ interface SaleParams {
   affiliateName: string
   packageTitle: string
   commissionAmount: number
+  /** Data em que a comissão é liberada para pagamento (dia seguinte à saída) */
+  releaseDate?: string | null
 }
 
 /** Equipe -> afiliado: entrou uma venda pelo código dele */
@@ -64,15 +66,21 @@ export function affiliateNewSaleMessage({
   affiliateName,
   packageTitle,
   commissionAmount,
+  releaseDate,
 }: SaleParams): string {
   const firstName = affiliateName.split(' ')[0]
+  // A comissão fica retida até a viagem acontecer (ver lib/affiliate-retention):
+  // se o cliente desistir antes, ela é cancelada junto com a reserva.
+  const quando = releaseDate
+    ? `Ela fica retida até a viagem e é liberada para pagamento em ${releaseDate}.`
+    : 'Ela fica retida até a viagem acontecer e é liberada para pagamento logo depois da saída.'
   return [
     `Olá, ${firstName}! Entrou uma reserva pelo seu código de indicação.`,
     '',
     `Pacote: ${packageTitle}`,
     `Sua comissão: ${formatBRL(commissionAmount)}`,
     '',
-    'A comissão é confirmada assim que o cliente paga a viagem.',
+    `${quando} Se o cliente cancelar antes da viagem, a comissão é cancelada junto.`,
   ].join('\n')
 }
 

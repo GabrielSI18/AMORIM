@@ -4,6 +4,9 @@ import prisma from '@/lib/prisma';
 import { computeAffiliateTotals } from '@/lib/affiliate-totals';
 import { toCamelCase } from '@/lib/case-transform';
 import { sendAffiliateCommissionPaidEmail } from '@/lib/email';
+import { withReleaseInfo } from '@/lib/affiliate-retention-db';
+import { formatReleaseDate, RELEASE_DAYS_AFTER_DEPARTURE } from '@/lib/affiliate-retention';
+import { RELEASED_BOOKING_STATUSES } from '@/lib/booking-status';
 
 const APP_URL = process.env.NEXT_PUBLIC_URL || 'https://amorimturismo.com.br';
 
@@ -33,14 +36,18 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const status = searchParams.get('status'); // pending, approved, paid
+    // pending, approved, paid, rejected — ou a situação do pagamento:
+    // retained (cliente pagou, viagem não saiu) e releasable (pode pagar)
+    const status = searchParams.get('status')?.toLowerCase() || null;
     const affiliateId = searchParams.get('affiliateId');
+    const filtroPorSituacao = status === 'retained' || status === 'releasable';
 
     const where: Record<string, unknown> = {};
-    if (status) where.commission_status = status.toLowerCase();
+    if (status && !filtroPorSituacao) where.commission_status = status;
+    if (filtroPorSituacao) where.commission_status = 'approved';
     if (affiliateId) where.affiliate_id = affiliateId;
 
-    const referrals = await prisma.affiliateReferral.findMany({
+    const rawReferrals = await prisma.affiliateReferral.findMany({
       where,
       include: {
         affiliate: {
@@ -49,6 +56,9 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { created_at: 'desc' },
     });
+
+    const enriched = await withReleaseInfo(rawReferrals);
+    const referrals = filtroPorSituacao ? enriched.filter((r) => r.payout_state === status) : enriched;
 
     // Padronização do projeto: TODOS os valores monetários trafegam em
     // CENTAVOS no JSON. O front é responsável por dividir por 100 ao
@@ -61,6 +71,11 @@ export async function GET(request: NextRequest) {
       booking_id: r.booking_id,
       commission_amount: r.commission_amount, // centavos
       commission_status: r.commission_status.toUpperCase(),
+      // Retenção até a viagem: o admin só paga quando `payout_state` é releasable
+      payout_state: r.payout_state,
+      departure_date: r.departure_date ? r.departure_date.toISOString() : null,
+      release_date: r.release_date ? r.release_date.toISOString() : null,
+      booking_status: r.booking_status,
       created_at: r.created_at.toISOString(),
       affiliate: {
         id: r.affiliate.id,
@@ -74,8 +89,8 @@ export async function GET(request: NextRequest) {
       booking: {
         id: r.booking_id || '',
         total_price: r.sale_amount, // centavos
-        status: 'confirmed',
-        travel_date: r.created_at.toISOString(),
+        status: r.booking_status || 'confirmed',
+        travel_date: (r.departure_date ?? r.created_at).toISOString(),
         package: {
           title: r.package_title,
         },
@@ -115,6 +130,8 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
     const { referralId, status: rawStatus } = body;
+    // Pagar antes da viagem só com confirmação explícita da equipe
+    const forceRelease = body.forceRelease === true;
     const status = rawStatus?.toLowerCase(); // Normalize to lowercase
 
     if (!referralId || !status) {
@@ -124,7 +141,10 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    if (!['pending', 'approved', 'paid'].includes(status)) {
+    // 'rejected' existe para indicação de reserva cancelada (o PUT de
+    // /api/bookings marca assim) e para o admin recusar na mão. Sem ele na
+    // lista, uma comissão rejeitada ficava presa, sem como voltar atrás.
+    if (!['pending', 'approved', 'paid', 'rejected'].includes(status)) {
       return NextResponse.json(
         { error: 'Status inválido' },
         { status: 400 }
@@ -142,6 +162,54 @@ export async function PUT(request: NextRequest) {
         { error: 'Indicação não encontrada' },
         { status: 404 }
       );
+    }
+
+    // Retenção: comissão só é paga depois que a viagem acontece. Se o cliente
+    // desistir antes e receber o dinheiro de volta, a comissão já paga seria
+    // prejuízo — e vender para conhecidos que cancelam depois viraria golpe.
+    if (status === 'paid' && currentReferral.commission_status !== 'paid') {
+      const [comViagem] = await withReleaseInfo([currentReferral]);
+      const bookingStatus = (comViagem.booking_status || '').toLowerCase();
+
+      if ((RELEASED_BOOKING_STATUSES as readonly string[]).includes(bookingStatus)) {
+        return NextResponse.json(
+          { error: 'A reserva desta indicação foi cancelada — a comissão não é paga.', code: 'booking_canceled' },
+          { status: 409 }
+        );
+      }
+
+      if (comViagem.payout_state === 'awaiting_payment') {
+        return NextResponse.json(
+          {
+            error: 'O cliente ainda não pagou a reserva. Marque a reserva como paga antes de pagar a comissão.',
+            code: 'awaiting_payment',
+          },
+          { status: 409 }
+        );
+      }
+
+      if (comViagem.payout_state === 'retained' && !forceRelease) {
+        const libera = formatReleaseDate(comViagem.release_date);
+        const sai = formatReleaseDate(comViagem.departure_date);
+        return NextResponse.json(
+          {
+            error: libera
+              ? `Comissão retida até a viagem: o pacote sai em ${sai} e a comissão é liberada em ${libera}.`
+              : 'Comissão retida: o pacote não tem data de saída cadastrada.',
+            code: 'retained',
+            departureDate: comViagem.departure_date,
+            releaseDate: comViagem.release_date,
+            releaseDaysAfterDeparture: RELEASE_DAYS_AFTER_DEPARTURE,
+          },
+          { status: 409 }
+        );
+      }
+
+      if (comViagem.payout_state === 'retained' && forceRelease) {
+        console.warn(
+          `[referral.paid] liberação antecipada da comissão ${referralId} por ${user.email} (viagem em ${comViagem.departure_date?.toISOString() ?? 'sem data'})`,
+        );
+      }
     }
 
     // Atualizar indicação

@@ -4,12 +4,12 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Header } from '@/components/ui/header';
 import { useSiteConfig } from '@/hooks/use-site-config';
-import { 
-  DollarSign, 
-  Users, 
-  TrendingUp, 
-  Share2, 
-  CheckCircle2, 
+import {
+  DollarSign,
+  Users,
+  TrendingUp,
+  Share2,
+  CheckCircle2,
   Sparkles,
   ArrowRight,
   Percent,
@@ -22,7 +22,8 @@ import {
   Crown,
   Star,
   Gift,
-  Clock
+  Clock,
+  Lock
 } from 'lucide-react';
 
 export default function AfiliadosPage() {
@@ -44,7 +45,7 @@ export default function AfiliadosPage() {
     {
       icon: DollarSign,
       title: 'Pagamento via PIX',
-      description: 'A comissão é paga na chave PIX que você cadastra, depois que o cliente paga a viagem.',
+      description: 'A comissão é paga na chave PIX que você cadastra, depois que a viagem do cliente acontece.',
     },
     {
       icon: Trophy,
@@ -54,13 +55,16 @@ export default function AfiliadosPage() {
     },
     {
       icon: Rocket,
-      title: 'Material de Vendas GRÁTIS',
-      description: 'Receba artes, vídeos e scripts prontos para turbinar suas vendas.',
+      title: 'Material de divulgação',
+      description: 'A equipe envia fotos e vídeos dos pacotes para você usar nas suas redes.',
     },
     {
+      // Não existe comissão vitalícia no sistema: o que vale é a janela de 30
+      // dias do link (ver AFFILIATE_COOKIE_DAYS). O texto antigo prometia
+      // comissão em "todas as compras futuras" e geraria cobrança do parceiro.
       icon: Target,
-      title: 'Vendas Recorrentes',
-      description: 'Clientes satisfeitos voltam! Ganhe comissão em TODAS as compras futuras deles.',
+      title: 'Indicação vale por 30 dias',
+      description: 'Quem abrir o seu link tem 30 dias para fechar a viagem — e a venda continua sendo sua.',
     },
     {
       icon: Crown,
@@ -73,12 +77,12 @@ export default function AfiliadosPage() {
     {
       step: '1',
       title: 'Cadastre-se',
-      description: 'Preencha o formulário abaixo e aguarde aprovação da nossa equipe.',
+      description: 'Crie sua conta, complete os dados e aguarde a aprovação da equipe (até 24h úteis).',
     },
     {
       step: '2',
       title: 'Receba seu Link',
-      description: 'Após aprovado, você receberá seu código exclusivo de afiliado.',
+      description: 'Assim que a equipe aprovar, avisamos você pelo WhatsApp e seu código já aparece no painel.',
     },
     {
       step: '3',
@@ -95,11 +99,11 @@ export default function AfiliadosPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-accent/5 to-background" />
-        
+
         <div className="container-custom relative z-10">
           <div className="max-w-4xl mx-auto text-center space-y-6">
             <motion.div
@@ -239,31 +243,31 @@ export default function AfiliadosPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {[
-              { 
-                level: 'Iniciante', 
-                sales: '1-5 vendas', 
-                commission: '7%', 
+              {
+                level: 'Iniciante',
+                sales: '1-5 vendas',
+                commission: '7%',
                 icon: Star,
                 color: 'from-gray-500 to-gray-600'
               },
-              { 
-                level: 'Bronze', 
-                sales: '6-15 vendas', 
-                commission: '8%', 
+              {
+                level: 'Bronze',
+                sales: '6-15 vendas',
+                commission: '8%',
                 icon: Trophy,
                 color: 'from-orange-500 to-orange-600'
               },
-              { 
-                level: 'Prata', 
-                sales: '16-30 vendas', 
-                commission: '9%', 
+              {
+                level: 'Prata',
+                sales: '16-30 vendas',
+                commission: '9%',
                 icon: Crown,
                 color: 'from-gray-400 to-gray-500'
               },
-              { 
-                level: 'Ouro', 
-                sales: '31+ vendas', 
-                commission: '10%', 
+              {
+                level: 'Ouro',
+                sales: '31+ vendas',
+                commission: '10%',
                 icon: Zap,
                 color: 'from-yellow-500 to-yellow-600'
               },
@@ -281,24 +285,24 @@ export default function AfiliadosPage() {
                 {index === 3 && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                     <span className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white text-xs font-bold px-4 py-1 rounded-full">
-                      MAIS POPULAR
+                      FAIXA MÁXIMA
                     </span>
                   </div>
                 )}
-                
+
                 <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${tier.color} text-white flex items-center justify-center mx-auto`}>
                   <tier.icon className="w-7 h-7" />
                 </div>
-                
+
                 <div className="text-center space-y-2">
                   <h3 className="text-xl font-bold">{tier.level}</h3>
                   <p className="text-sm text-muted-foreground">{tier.sales}</p>
-                  
+
                   <div className="pt-3 border-t border-border space-y-1">
                     <div className="text-2xl font-bold text-accent">{tier.commission}</div>
                     <div className="text-xs text-muted-foreground">Comissão por venda</div>
                   </div>
-                  
+
                 </div>
               </motion.div>
             ))}
@@ -313,9 +317,10 @@ export default function AfiliadosPage() {
             <Gift className="w-12 h-12 mx-auto mb-4" />
             <h3 className="text-2xl font-bold mb-2">Como a comissão é paga</h3>
             <p className="text-lg opacity-90">
-              A comissão entra como <span className="font-bold">pendente</span> assim que a reserva é feita pelo seu link,
-              passa a <span className="font-bold">aprovada</span> quando o cliente paga a viagem e é
-              <span className="font-bold"> paga via PIX</span> pela Amorim. Você acompanha cada etapa pelo painel do parceiro.
+              A comissão entra como <span className="font-bold">pendente</span> assim que a reserva é feita pelo seu link.
+              Quando o cliente paga, ela fica <span className="font-bold">retida até a viagem</span> e é
+              <span className="font-bold"> liberada para pagamento via PIX</span> no dia seguinte à saída do ônibus.
+              Se o cliente cancelar antes, a comissão é cancelada junto. Você acompanha cada etapa pelo painel do parceiro.
             </p>
           </motion.div>
         </div>
@@ -326,10 +331,10 @@ export default function AfiliadosPage() {
         <div className="container-custom">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl md:text-4xl font-bold">
-              Por que a Amorim é a Melhor Escolha?
+              Por que vale a pena indicar a Amorim
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Comparamos com TODAS as outras agências. Nós pagamos mais, pagamos mais rápido.
+              Comissão em dinheiro, paga por PIX, com acompanhamento no painel.
             </p>
           </div>
 
@@ -405,48 +410,44 @@ export default function AfiliadosPage() {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Quanto rende
+          Esta seção já teve "depoimentos" de afiliados inventados (nomes,
+          fotos e ganhos que não existiam e que não fechavam com a própria
+          tabela de comissão). Além de propaganda enganosa, é o tipo de
+          promessa de renda que faz o Meta e o Google reprovarem o anúncio.
+          No lugar entrou a conta real, que qualquer pessoa confere. */}
       <section className="py-20 bg-gradient-to-br from-primary/10 via-accent/10 to-background">
         <div className="container-custom">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl md:text-4xl font-bold">
-              Afiliados Reais, Resultados Reais
+              Quanto rende, na conta
             </h2>
             <p className="text-lg text-muted-foreground">
-              Veja o que nossos afiliados estão ganhando agora
+              Sem promessa de renda: a comissão é um percentual do valor do pacote vendido.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                name: 'Maria Silva',
-                role: 'Influencer Digital',
-                avatar: '👩‍💼',
-                earnings: 'R$ 4.200',
-                period: 'último mês',
-                sales: 12,
-                quote: 'Nunca pensei que seria tão fácil! Só compartilho nas minhas redes e o dinheiro cai na conta.'
+                icon: Percent,
+                destaque: 'R$ 104,30',
+                titulo: 'por pacote de R$ 1.490',
+                texto: 'É o que rende uma venda na comissão inicial de 7%. Pacote mais caro, comissão maior.',
               },
               {
-                name: 'João Santos',
-                role: 'Criador de Conteúdo',
-                avatar: '👨‍💻',
-                earnings: 'R$ 7.850',
-                period: 'último mês',
-                sales: 23,
-                quote: 'Comecei há 3 meses e já está pagando meu aluguel. Melhor decisão que tomei!'
+                icon: Wallet,
+                destaque: 'PIX',
+                titulo: 'depois que a viagem acontece',
+                texto: 'A comissão fica retida até o cliente viajar e é liberada no dia seguinte à saída do ônibus.',
               },
               {
-                name: 'Ana Costa',
-                role: 'Vendedora Autônoma',
-                avatar: '👩‍🦱',
-                earnings: 'R$ 11.300',
-                period: 'último mês',
-                sales: 38,
-                quote: 'Saí do meu emprego CLT. Ganho mais, trabalho menos e no meu horário. Liberdade total!'
+                icon: Clock,
+                destaque: '30 dias',
+                titulo: 'de validade do seu link',
+                texto: 'Quem clica no seu link tem 30 dias para fechar a viagem e a venda continua sendo sua.',
               },
-            ].map((testimonial, index) => (
+            ].map((item, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
@@ -455,29 +456,14 @@ export default function AfiliadosPage() {
                 transition={{ delay: index * 0.1 }}
                 className="bg-card border border-border rounded-xl p-6 space-y-4 hover:shadow-xl transition-smooth"
               >
-                <div className="flex items-start gap-4">
-                  <div className="text-4xl">{testimonial.avatar}</div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold">{testimonial.name}</h4>
-                    <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                  </div>
-                  <div className="text-yellow-500 flex gap-0.5">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-current" />
-                    ))}
-                  </div>
+                <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center">
+                  <item.icon className="w-6 h-6 text-accent" />
                 </div>
-
-                <div className="bg-accent/5 border border-accent/20 rounded-lg p-4 text-center space-y-1">
-                  <div className="text-3xl font-bold text-accent">{testimonial.earnings}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {testimonial.sales} vendas no {testimonial.period}
-                  </div>
+                <div>
+                  <div className="text-3xl font-bold text-accent">{item.destaque}</div>
+                  <div className="text-sm font-medium">{item.titulo}</div>
                 </div>
-
-                <p className="text-muted-foreground italic">
-                  "{testimonial.quote}"
-                </p>
+                <p className="text-muted-foreground">{item.texto}</p>
               </motion.div>
             ))}
           </div>
@@ -486,15 +472,30 @@ export default function AfiliadosPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-12 text-center"
+            className="mt-12 max-w-3xl mx-auto"
           >
-            <p className="text-lg font-medium mb-4">
-              <span className="text-accent font-bold">+ 127 afiliados</span> já estão ganhando com a gente
-            </p>
-            <div className="flex justify-center gap-2">
-              {[...Array(20)].map((_, i) => (
-                <div key={i} className="w-2 h-2 rounded-full bg-accent/50 animate-pulse" style={{ animationDelay: `${i * 0.1}s` }} />
-              ))}
+            <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="w-5 h-5 text-accent" />
+                <h3 className="font-semibold">A comissão sobe conforme você vende</h3>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { faixa: '7%', regra: 'ao começar' },
+                  { faixa: '8%', regra: 'a partir de 6 vendas' },
+                  { faixa: '9%', regra: 'a partir de 16 vendas' },
+                  { faixa: '10%', regra: 'a partir de 31 vendas' },
+                ].map((nivel) => (
+                  <div key={nivel.faixa} className="rounded-lg border border-border p-4 text-center">
+                    <div className="text-2xl font-bold text-accent">{nivel.faixa}</div>
+                    <div className="text-xs text-muted-foreground mt-1">{nivel.regra}</div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                A mudança de faixa é revisada pela equipe na sua ficha de parceiro — não é automática.
+                Você acompanha vendas, comissões e pagamentos no painel.
+              </p>
             </div>
           </motion.div>
         </div>
@@ -518,7 +519,7 @@ export default function AfiliadosPage() {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent text-white text-sm font-bold"
               >
                 <Sparkles className="w-4 h-4" />
-                Cadastro 100% gratuito • Aprovação em até 24h
+                Cadastro gratuito • Aprovação em até 24h úteis
               </motion.div>
 
               <h2 className="text-3xl md:text-5xl font-bold">
@@ -613,7 +614,7 @@ export default function AfiliadosPage() {
                 },
                 {
                   q: 'Como recebo minhas comissões?',
-                  a: 'A comissão é confirmada quando o cliente paga a viagem e depois é enviada por PIX para a chave cadastrada no seu painel.',
+                  a: 'Quando o cliente paga a reserva, a comissão fica retida até a viagem acontecer. No dia seguinte à saída do ônibus ela é liberada e enviada por PIX para a chave cadastrada no seu painel. Se o cliente cancelar antes da viagem, a comissão é cancelada junto com a reserva.',
                 },
                 {
                   q: 'Qual o valor da comissão?',
@@ -633,7 +634,7 @@ export default function AfiliadosPage() {
                 },
                 {
                   q: 'Quanto tempo leva para aprovação?',
-                  a: 'Analisamos todos os cadastros em até 24 horas úteis.',
+                  a: 'Analisamos todos os cadastros em até 24 horas úteis e avisamos você pelo WhatsApp assim que aprovar. Seu código também aparece no painel do parceiro.',
                 },
               ].map((faq, index) => (
                 <motion.details
@@ -816,14 +817,15 @@ Você indica, o cliente viaja e você recebe a comissão.
                     <CheckCircle2 className="w-5 h-5" /> Cadastro em 2 minutos
                   </span>
                   <span className="flex items-center gap-1">
-                    <CheckCircle2 className="w-5 h-5" /> Aprovação em 24h
+                    <CheckCircle2 className="w-5 h-5" /> Aprovação em 24h úteis
                   </span>
                   <span className="flex items-center gap-1">
                     <CheckCircle2 className="w-5 h-5" /> Comissão por PIX
                   </span>
                 </div>
-                <p className="text-xs opacity-75">
-                  🔒 Seus dados estão 100% protegidos pela LGPD
+                <p className="text-xs opacity-75 flex items-center justify-center gap-2">
+                  <Lock className="w-3.5 h-3.5" />
+                  Seus dados são tratados conforme a LGPD
                 </p>
               </div>
             </div>

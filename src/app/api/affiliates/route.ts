@@ -7,6 +7,7 @@ import { sendAffiliateApprovedEmail } from '@/lib/email';
 import { requireAdminApi } from '@/lib/api-auth';
 import { generalApiLimiter, rateLimitExceededResponse } from '@/lib/rate-limit';
 import { emailSchema, optionalPhoneSchema } from '@/lib/validations';
+import { AFFILIATE_STATUSES } from '@/lib/affiliate-status';
 
 const APP_URL = process.env.NEXT_PUBLIC_URL || 'https://amorimturismo.com.br';
 
@@ -41,16 +42,18 @@ export async function GET(request: NextRequest) {
     const id = searchParams.get('id');
     const status = searchParams.get('status');
 
-    // Buscar afiliado específico
+    // Buscar afiliado específico.
+    // Um `{}` dentro do OR do Prisma casa com TODOS os registros: buscar por
+    // id devolvia o primeiro afiliado da tabela quando code/email vinham
+    // vazios, e código inexistente devolvia alguém no lugar de 404.
     if (code || email || id) {
+      const filtros: Record<string, string>[] = [];
+      if (code) filtros.push({ code: code.toUpperCase() });
+      if (email) filtros.push({ email: email.trim().toLowerCase() });
+      if (id) filtros.push({ id });
+
       const affiliate = await prisma.affiliate.findFirst({
-        where: {
-          OR: [
-            code ? { code: code.toUpperCase() } : {},
-            email ? { email } : {},
-            id ? { id } : {},
-          ],
-        },
+        where: { OR: filtros },
         include: {
           referrals: {
             orderBy: { created_at: 'desc' },
@@ -244,7 +247,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         data: toCamelCase(affiliate),
-        message: 'Cadastro enviado! Você receberá um email em até 24h.',
+        // A aprovação é manual: a equipe avisa o parceiro pelo WhatsApp
+        // (os emails do programa estão desligados em produção).
+        message: 'Cadastro criado. A equipe avisa o parceiro pelo WhatsApp quando aprovar.',
       },
       { status: 201 }
     );
@@ -283,10 +288,44 @@ export async function PATCH(request: NextRequest) {
     // Normaliza status para lowercase — fonte única de verdade no banco.
     const normalizedStatus = status ? String(status).toLowerCase() : null;
 
+    // Antes esta rota gravava qualquer coisa: status "superadmin" (que deixava
+    // o parceiro fora de toda consulta) e comissão 9999% ou em texto. A rota
+    // irmã (PATCH /api/affiliates/[id]) já validava; agora as duas validam igual.
+    if (normalizedStatus && !(AFFILIATE_STATUSES as readonly string[]).includes(normalizedStatus)) {
+      return NextResponse.json(
+        { error: `Status inválido. Use um destes: ${AFFILIATE_STATUSES.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    if (commissionRate !== undefined) {
+      if (typeof commissionRate !== 'number' || !Number.isFinite(commissionRate)) {
+        return NextResponse.json({ error: 'A comissão precisa ser um número' }, { status: 400 });
+      }
+      if (!Number.isInteger(commissionRate)) {
+        return NextResponse.json(
+          { error: 'Use um número inteiro de porcentagem (ex.: 7, 8, 10)' },
+          { status: 400 }
+        );
+      }
+      if (commissionRate < 0 || commissionRate > 100) {
+        return NextResponse.json(
+          { error: 'A comissão precisa ficar entre 0% e 100%' },
+          { status: 400 }
+        );
+      }
+      updateData.commission_rate = commissionRate;
+    }
+
+    if (pixKey !== undefined) {
+      if (pixKey !== null && (typeof pixKey !== 'string' || pixKey.length > 100)) {
+        return NextResponse.json({ error: 'Chave PIX inválida' }, { status: 400 });
+      }
+      updateData.pix_key = pixKey;
+    }
+
     if (normalizedStatus) updateData.status = normalizedStatus;
-    if (pixKey !== undefined) updateData.pix_key = pixKey;
     if (bankAccount !== undefined) updateData.bank_account = bankAccount;
-    if (commissionRate !== undefined) updateData.commission_rate = commissionRate;
 
     // Buscar status anterior para detectar transição → active
     const previous = await prisma.affiliate.findUnique({
@@ -351,6 +390,29 @@ export async function DELETE(request: NextRequest) {
     if (!id) {
       return NextResponse.json(
         { error: 'ID do afiliado é obrigatório' },
+        { status: 400 }
+      );
+    }
+
+    // Afiliado com indicação não é apagado: o delete é em cascata e levaria
+    // junto o histórico de comissões (inclusive as já pagas), que é documento
+    // de pagamento. A rota PATCH .../[id] com status "blocked" é o caminho
+    // para tirar um parceiro de circulação.
+    const alvo = await prisma.affiliate.findUnique({
+      where: { id },
+      include: { _count: { select: { referrals: true } } },
+    });
+
+    if (!alvo) {
+      return NextResponse.json({ error: 'Afiliado não encontrado' }, { status: 404 });
+    }
+
+    if (alvo._count.referrals > 0) {
+      return NextResponse.json(
+        {
+          error:
+            'Não é possível excluir afiliado com indicações. Use o status "bloqueado" para encerrar a parceria sem perder o histórico.',
+        },
         { status: 400 }
       );
     }

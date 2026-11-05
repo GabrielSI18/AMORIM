@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { AdminGuard } from '@/components/dashboard/admin-guard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { 
+import {
   ArrowLeft,
   Copy,
   DollarSign,
@@ -18,7 +18,9 @@ import {
   XCircle,
   Package,
   Clock,
-  MessageCircle
+  MessageCircle,
+  Lock,
+  Unlock
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -27,6 +29,7 @@ import {
   affiliateNewSaleMessage,
   affiliateCommissionPaidMessage,
 } from '@/lib/whatsapp';
+import { formatReleaseDate, type PayoutState } from '@/lib/affiliate-retention';
 
 interface Affiliate {
   id: string;
@@ -54,6 +57,10 @@ interface Affiliate {
     paidCommission: number;
     receivableCommission: number;
     totalCommission: number;
+    /** cliente pagou, viagem não saiu */
+    retainedCommission?: number;
+    /** viagem já saiu: pode pagar */
+    releasableCommission?: number;
   };
   pix_key: string | null;
   created_at: string;
@@ -75,6 +82,9 @@ interface Referral {
   commission_amount: number;
   commission_status: string;
   commission_paid_at: string | null;
+  payout_state: PayoutState;
+  departure_date: string | null;
+  release_date: string | null;
   created_at: string;
 }
 
@@ -88,9 +98,9 @@ function formatDate(dateString: string): string {
 
 function formatCurrency(value: number): string {
   // Value is in cents
-  return new Intl.NumberFormat('pt-BR', { 
-    style: 'currency', 
-    currency: 'BRL' 
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
   }).format(value / 100);
 }
 
@@ -174,17 +184,21 @@ function AffiliateDetailsContent() {
     }
   };
 
-  const handleUpdateReferralStatus = async (referralId: string, status: string) => {
+  const handleUpdateReferralStatus = async (referralId: string, status: string, forceRelease = false) => {
     try {
       setProcessingId(referralId);
       const response = await fetch('/api/affiliates/referrals', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ referralId, status }),
+        body: JSON.stringify({ referralId, status, forceRelease }),
       });
-      
-      if (!response.ok) throw new Error('Falha ao atualizar');
-      
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        toast.error(data?.error || 'Erro ao atualizar comissão');
+        return;
+      }
+
       const statusLabel = status === 'APPROVED' ? 'aprovada' : status === 'PAID' ? 'marcada como paga' : 'atualizada';
       toast.success(`Comissão ${statusLabel}!`);
       fetchAffiliate();
@@ -194,6 +208,18 @@ function AffiliateDetailsContent() {
     } finally {
       setProcessingId(null);
     }
+  };
+
+  /** Pagar antes da viagem: só com confirmação, porque o cliente ainda pode desistir */
+  const handleEarlyRelease = (referral: Referral) => {
+    const sai = formatReleaseDate(referral.departure_date);
+    const ok = window.confirm(
+      `Pagar a comissão ANTES da viagem?\n\n` +
+        (sai ? `O pacote sai em ${sai}. ` : 'O pacote não tem data de saída cadastrada. ') +
+        'Se o cliente cancelar e receber o dinheiro de volta, essa comissão não volta.\n\n' +
+        'Confirma o pagamento antecipado?',
+    );
+    if (ok) handleUpdateReferralStatus(referral.id, 'PAID', true);
   };
 
   const copyCode = (code: string) => {
@@ -220,6 +246,34 @@ function AffiliateDetailsContent() {
         return <span className="px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400">Suspenso</span>;
       default:
         return <span className="px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-800">{status}</span>;
+    }
+  };
+
+  const getPayoutBadge = (referral: Referral) => {
+    const base = 'inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full';
+    switch (referral.payout_state) {
+      case 'retained': {
+        const libera = formatReleaseDate(referral.release_date);
+        return (
+          <span className={`${base} bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400`}>
+            <Lock className="h-3 w-3" />
+            {libera ? `Retida até ${libera}` : 'Retida (sem data)'}
+          </span>
+        );
+      }
+      case 'releasable':
+        return (
+          <span className={`${base} bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400`}>
+            <Unlock className="h-3 w-3" />
+            Liberada
+          </span>
+        );
+      case 'awaiting_payment':
+        return <span className={`${base} bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400`}>Cliente não pagou</span>;
+      case 'rejected':
+        return <span className={`${base} bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400`}>Cancelada</span>;
+      default:
+        return getCommissionStatusBadge(referral.commission_status);
     }
   };
 
@@ -280,7 +334,7 @@ function AffiliateDetailsContent() {
         {/* Profile Card */}
         <div className="bg-card rounded-xl border p-6 space-y-4">
           <h2 className="text-lg font-semibold">Informações do Afiliado</h2>
-          
+
           {/* Lista de info: ícones com flex-shrink-0 e textos com break-all
               para emails longos (sem espaço, truncate cortaria parte importante;
               break-all permite que quebre em qualquer caractere). */}
@@ -426,7 +480,7 @@ function AffiliateDetailsContent() {
         {/* Stats Card */}
         <div className="bg-card rounded-xl border p-6 space-y-4">
           <h2 className="text-lg font-semibold">Estatísticas</h2>
-          
+
           {affiliate.tier && (
             <div
               className={`rounded-lg p-4 border ${
@@ -498,13 +552,23 @@ function AffiliateDetailsContent() {
               <p className="text-2xl font-bold text-green-600">{formatCurrency(affiliate.total_earned)}</p>
             </div>
 
-            <div className="bg-muted/50 rounded-lg p-4">
+            <div className="bg-muted/50 rounded-lg p-4" title="Cliente já pagou; a viagem ainda não aconteceu">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <DollarSign className="h-4 w-4" />
-                <span className="text-sm">A pagar</span>
+                <Lock className="h-4 w-4" />
+                <span className="text-sm">Retido até a viagem</span>
               </div>
-              <p className="text-2xl font-bold text-yellow-600">
-                {formatCurrency(affiliate.totals?.receivableCommission ?? 0)}
+              <p className="text-2xl font-bold text-orange-600">
+                {formatCurrency(affiliate.totals?.retainedCommission ?? 0)}
+              </p>
+            </div>
+
+            <div className="bg-muted/50 rounded-lg p-4" title="A viagem já saiu: pode pagar o PIX">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <Unlock className="h-4 w-4" />
+                <span className="text-sm">A pagar agora</span>
+              </div>
+              <p className="text-2xl font-bold text-blue-600">
+                {formatCurrency(affiliate.totals?.releasableCommission ?? 0)}
               </p>
             </div>
           </div>
@@ -546,14 +610,15 @@ function AffiliateDetailsContent() {
                 <div className="space-y-1 min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold break-words">{referral.package_title}</span>
-                    {getCommissionStatusBadge(referral.commission_status)}
+                    {getPayoutBadge(referral)}
                   </div>
                   <p className="text-sm text-muted-foreground break-all">
                     Cliente: {referral.customer_email}
                   </p>
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
                     <Clock className="h-3 w-3 flex-shrink-0" />
-                    {formatDate(referral.created_at)}
+                    Venda em {formatDate(referral.created_at)}
+                    {referral.departure_date && ` · viagem em ${formatReleaseDate(referral.departure_date)}`}
                   </p>
                 </div>
 
@@ -567,20 +632,38 @@ function AffiliateDetailsContent() {
                     <p className="font-bold text-green-600 whitespace-nowrap">{formatCurrency(referral.commission_amount)}</p>
                   </div>
 
-                  {referral.commission_status.toLowerCase() === 'pending' && (
-                    <Button
-                      size="sm"
-                      onClick={() => handleUpdateReferralStatus(referral.id, 'APPROVED')}
-                      disabled={processingId === referral.id}
-                    >
-                      Aprovar
-                    </Button>
-                  )}
-
-                  {referral.commission_status.toLowerCase() === 'approved' && (
+                  {referral.payout_state === 'awaiting_payment' && (
                     <Button
                       size="sm"
                       variant="outline"
+                      onClick={() => handleUpdateReferralStatus(referral.id, 'APPROVED')}
+                      disabled={processingId === referral.id}
+                      title="Use quando o cliente pagou por fora e a reserva não foi marcada como paga"
+                    >
+                      Confirmar pagamento
+                    </Button>
+                  )}
+
+                  {referral.payout_state === 'retained' && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleEarlyRelease(referral)}
+                      disabled={processingId === referral.id}
+                      title={
+                        referral.release_date
+                          ? `Libera em ${formatReleaseDate(referral.release_date)}`
+                          : 'Pacote sem data de saída'
+                      }
+                    >
+                      <Unlock className="h-4 w-4 mr-1" />
+                      Pagar antes
+                    </Button>
+                  )}
+
+                  {referral.payout_state === 'releasable' && (
+                    <Button
+                      size="sm"
                       onClick={() => handleUpdateReferralStatus(referral.id, 'PAID')}
                       disabled={processingId === referral.id}
                     >
@@ -608,6 +691,7 @@ function AffiliateDetailsContent() {
                                   affiliateName: affiliate.name,
                                   packageTitle: referral.package_title,
                                   commissionAmount: referral.commission_amount,
+                                  releaseDate: formatReleaseDate(referral.release_date),
                                 }),
                         ) || '#'
                       }
