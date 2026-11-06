@@ -8,7 +8,6 @@ import { notExpiredWhere } from '@/lib/package-expiration'
 import { getPackageAvailability } from '@/lib/package-availability'
 import { getSiteConfig } from '@/lib/site-config'
 import { LeadFunnel, type FunnelPackage } from './lead-funnel'
-import { MetaPixel } from './meta-pixel'
 import './lp.css'
 
 /**
@@ -126,7 +125,6 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
 
   return (
     <main className="lp">
-      <MetaPixel />
       <header className="bg-[var(--lp-azul)]">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <Link href="/" aria-label="Amorim Turismo, página inicial">

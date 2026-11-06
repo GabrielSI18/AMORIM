@@ -8,6 +8,11 @@ import { useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, ArrowLeft, Moon, Sun, Mail } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
+// Google e Apple estão desligados no Clerk de produção (06/11): os botões
+// ficam escondidos até as credenciais próprias serem cadastradas lá.
+const LOGIN_SOCIAL_ATIVO = false
+
+
 // Força um navigate "duro" para uma rota.
 // O `window.location.replace` causa full reload e remove /sign-in do histórico.
 function hardRedirectTo(target: string) {
@@ -22,6 +27,19 @@ function sanitizeRedirect(value: string | null | undefined): string {
   if (!value) return '/dashboard'
   if (!value.startsWith('/') || value.startsWith('//')) return '/dashboard'
   return value
+}
+
+// Mensagens do Clerk que chegam em inglês viram texto claro para o cliente
+function traduzErroClerk(err: any, padrao: string): string {
+  const e = err?.errors?.[0]
+  if (err?.status === 429 || e?.code === 'too_many_requests') {
+    return 'Muitas tentativas seguidas. Espere um minuto e tente de novo.'
+  }
+  if (e?.code === 'form_param_value_invalid' && e?.meta?.paramName === 'strategy') return padrao
+  if (e?.code === 'form_param_value_invalid' && e?.meta?.param_name === 'strategy') return padrao
+  if (e?.code === 'form_password_incorrect') return 'Senha incorreta.'
+  if (e?.code === 'form_identifier_not_found') return 'Não encontramos uma conta com esse e-mail.'
+  return e?.longMessage || e?.message || padrao
 }
 
 export default function SignInPage() {
@@ -146,7 +164,7 @@ export default function SignInPage() {
       }
     } catch (err: any) {
       console.error('Sign-in error:', err)
-      setError(err.errors?.[0]?.message || 'Erro ao fazer login')
+      setError(traduzErroClerk(err, 'Erro ao fazer login'))
       setIsLoading(false)
     }
   }
@@ -174,7 +192,7 @@ export default function SignInPage() {
       }
     } catch (err: any) {
       console.error('Verification error:', err)
-      setError(err.errors?.[0]?.message || 'Código inválido')
+      setError(traduzErroClerk(err, 'Código inválido'))
       setIsLoading(false)
     }
   }
@@ -193,23 +211,26 @@ export default function SignInPage() {
     }
   }
 
-  const handleGoogleSignIn = async () => {
+  // Antes a falha do login social era engolida: o botão não fazia nada e a
+  // pessoa ficava clicando até o Clerk responder "too many requests".
+  const handleOAuthSignIn = async (strategy: 'oauth_google' | 'oauth_apple') => {
     if (!signIn) return
-    await signIn.authenticateWithRedirect({
-      strategy: 'oauth_google',
-      redirectUrl: '/sso-callback',
-      redirectUrlComplete: '/dashboard',
-    })
+    setError('')
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy,
+        redirectUrl: '/sso-callback',
+        redirectUrlComplete: redirectUrl,
+      })
+    } catch (err: any) {
+      console.error('OAuth error:', err)
+      const nome = strategy === 'oauth_google' ? 'Google' : 'Apple'
+      setError(traduzErroClerk(err, `Entrar com ${nome} está indisponível no momento. Use seu e-mail e senha.`))
+    }
   }
 
-  const handleAppleSignIn = async () => {
-    if (!signIn) return
-    await signIn.authenticateWithRedirect({
-      strategy: 'oauth_apple',
-      redirectUrl: '/sso-callback',
-      redirectUrlComplete: '/dashboard',
-    })
-  }
+  const handleGoogleSignIn = () => handleOAuthSignIn('oauth_google')
+  const handleAppleSignIn = () => handleOAuthSignIn('oauth_apple')
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F5F5F7] dark:bg-[#101622]">
@@ -338,7 +359,9 @@ export default function SignInPage() {
           </form>
         ) : (
           <>
-        {/* Social Buttons */}
+        {/* Login social desligado ate o Google/Apple serem configurados no Clerk de producao */}
+{LOGIN_SOCIAL_ATIVO && (<>
+{/* Social Buttons */}
         <div className="w-full grid grid-cols-2 gap-3">
           <button
             type="button"
@@ -372,6 +395,7 @@ export default function SignInPage() {
           <span className="text-[#969696] dark:text-[#92a4c9] text-sm">ou</span>
           <div className="flex-1 h-px bg-[#e0e0e0] dark:bg-[#324467]"></div>
         </div>
+</>)}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">

@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from 'sonner';
 import { baseMetadata, getOrganizationSchema, getWebsiteSchema, JsonLd } from '@/lib/seo';
 import { AffiliateTracker } from '@/components/affiliates/affiliate-tracker';
+import { MetaPixel } from '@/components/meta-pixel';
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -46,6 +47,7 @@ export default function RootLayout({
           >
             <QueryProvider>
               <AffiliateTracker />
+              <MetaPixel />
               {children}
             </QueryProvider>
             <Toaster 
@@ -86,6 +88,7 @@ export default function RootLayout({
           >
             <QueryProvider>
               <AffiliateTracker />
+              <MetaPixel />
               {children}
             </QueryProvider>
             <Toaster 

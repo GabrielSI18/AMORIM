@@ -76,7 +76,11 @@ export default function Home() {
     fetch('/api/packages?featured=true&status=published')
       .then(res => res.json())
       .then(data => {
-        setFeaturedPackages(data.data || []);
+        // Próxima saída primeiro: a viagem mais perto da data é a que mais
+        // precisa de venda (e é a que os anúncios estão empurrando)
+        const lista: Package[] = data.data || [];
+        const quando = (p: Package) => (p.departureDate ? new Date(p.departureDate).getTime() : Infinity);
+        setFeaturedPackages([...lista].sort((a, b) => quando(a) - quando(b)));
         setIsLoading(false);
       })
       .catch(err => {

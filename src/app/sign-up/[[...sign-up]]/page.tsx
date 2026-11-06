@@ -8,6 +8,11 @@ import { useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, ArrowLeft, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
+// Google e Apple estão desligados no Clerk de produção (06/11): os botões
+// ficam escondidos até as credenciais próprias serem cadastradas lá.
+const LOGIN_SOCIAL_ATIVO = false
+
+
 function hardRedirectTo(target: string) {
   if (typeof window !== 'undefined') {
     window.location.replace(target)
@@ -291,7 +296,9 @@ export default function SignUpPage() {
             </p>
           </div>
 
-          {/* Botões de login social */}
+          {/* Login social desligado ate o Google/Apple serem configurados no Clerk de producao */}
+{LOGIN_SOCIAL_ATIVO && (<>
+{/* Botões de login social */}
           <div className="w-full grid grid-cols-2 gap-3">
             <button
               type="button"
@@ -325,6 +332,7 @@ export default function SignUpPage() {
             <span className="text-[#969696] dark:text-[#92a4c9] text-sm">ou</span>
             <div className="flex-1 h-px bg-[#e0e0e0] dark:bg-[#324467]"></div>
           </div>
+</>)}
 
           {/* Formulário */}
           <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
