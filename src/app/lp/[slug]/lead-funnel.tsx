@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Check, MessageCircle, Minus, Plus } from 'lucide-react'
 import { HoneypotField } from '@/components/ui/honeypot-field'
@@ -56,6 +56,16 @@ declare global {
   interface Window {
     fbq?: (...args: unknown[]) => void
   }
+}
+
+// Cada etapa vira um evento próprio no pixel para ver, no Gerenciador de
+// Eventos, onde as pessoas param de responder. O conjunto de dados é dividido
+// com outros sites, por isso o prefixo Amorim_LP_.
+const EVENTO_DA_ETAPA: Partial<Record<Etapa, string>> = {
+  embarque: 'Amorim_LP_2_Embarque',
+  pessoas: 'Amorim_LP_3_Pessoas',
+  pagamento: 'Amorim_LP_4_Pagamento',
+  contato: 'Amorim_LP_5_Contato',
 }
 
 /** Parâmetros do anúncio (utm_*, fbclid) para saber de onde veio cada lead */
@@ -140,9 +150,18 @@ export function LeadFunnel({ pkg, whatsappNumber }: { pkg: FunnelPackage; whatsa
   const [etapa, setEtapa] = useState<Etapa>('datas')
   // a primeira pergunta aparece parada; só as seguintes entram com animação
   const [interagiu, setInteragiu] = useState(false)
+  // cada evento sai uma vez por visita, mesmo indo e voltando entre etapas
+  const jaContou = useRef(new Set<string>())
+  const contar = (evento: string, extra: Record<string, string> = {}) => {
+    if (jaContou.current.has(evento)) return
+    jaContou.current.add(evento)
+    window.fbq?.('trackCustom', evento, { content_name: pkg.title, ...extra })
+  }
   const irPara = (proxima: Etapa) => {
     setInteragiu(true)
     setEtapa(proxima)
+    const evento = EVENTO_DA_ETAPA[proxima]
+    if (evento) contar(evento)
   }
   const anima = interagiu ? 'lp-etapa ' : ''
   const [motivoFora, setMotivoFora] = useState<'datas' | 'embarque' | null>(null)
@@ -185,6 +204,7 @@ export function LeadFunnel({ pkg, whatsappNumber }: { pkg: FunnelPackage; whatsa
   }
 
   function sair(motivo: 'datas' | 'embarque') {
+    contar(motivo === 'datas' ? 'Amorim_LP_Fora_Datas' : 'Amorim_LP_Fora_Embarque')
     setMotivoFora(motivo)
     irPara('fora')
   }
@@ -194,8 +214,14 @@ export function LeadFunnel({ pkg, whatsappNumber }: { pkg: FunnelPackage; whatsa
     setErro(null)
 
     const digitos = telefone.replace(/\D/g, '')
-    if (nome.trim().length < 2) return setErro('Escreva seu nome.')
-    if (digitos.length < 10 || digitos.length > 11) return setErro('Confira o WhatsApp, com DDD.')
+    if (nome.trim().length < 2) {
+      contar('Amorim_LP_Erro_Nome')
+      return setErro('Escreva seu nome.')
+    }
+    if (digitos.length < 10 || digitos.length > 11) {
+      contar('Amorim_LP_Erro_Telefone')
+      return setErro('Confira o WhatsApp, com DDD.')
+    }
 
     const mensagem = [
       `Olá! Vi o anúncio de ${pkg.destination}${pkg.periodLabel ? ` (${pkg.periodLabel})` : ''} e quero reservar.`,
@@ -480,5 +506,43 @@ export function LeadFunnel({ pkg, whatsappNumber }: { pkg: FunnelPackage; whatsa
         </div>
       )}
     </div>
+  )
+}
+
+/**
+ * Atalho para quem não quer responder nada: abre o WhatsApp com uma mensagem
+ * curta. Conta como Lead no pixel, para a campanha aprender com quem chama
+ * direto; o evento Amorim_LP_WhatsApp_Direto separa esses dos que preencheram
+ * o formulário (esses não ficam salvos no banco, só no WhatsApp).
+ */
+export function WhatsAppDireto({
+  pkg,
+  whatsappNumber,
+  className,
+  children,
+}: {
+  pkg: Pick<FunnelPackage, 'title' | 'destination' | 'periodLabel'>
+  whatsappNumber: string
+  className?: string
+  children: React.ReactNode
+}) {
+  const mensagem = `Olá! Vi o anúncio de ${pkg.destination}${pkg.periodLabel ? ` (${pkg.periodLabel})` : ''} e quero saber mais.`
+  const destino = whatsappLink(whatsappNumber, mensagem)
+  if (!destino) return null
+
+  function abrir(e: React.MouseEvent<HTMLAnchorElement>) {
+    if (!window.fbq) return
+    // dá tempo do evento sair antes de a página trocar para o WhatsApp
+    e.preventDefault()
+    window.fbq('track', 'Lead', { content_name: pkg.title })
+    window.fbq('trackCustom', 'Amorim_LP_WhatsApp_Direto', { content_name: pkg.title })
+    setTimeout(() => { window.location.href = destino! }, 400)
+  }
+
+  return (
+    <a href={destino} onClick={abrir} className={className}>
+      <MessageCircle className="h-4 w-4 flex-none" aria-hidden />
+      {children}
+    </a>
   )
 }

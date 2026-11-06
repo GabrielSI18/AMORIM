@@ -7,7 +7,7 @@ import prisma from '@/lib/prisma'
 import { notExpiredWhere } from '@/lib/package-expiration'
 import { getPackageAvailability } from '@/lib/package-availability'
 import { getSiteConfig } from '@/lib/site-config'
-import { LeadFunnel, type FunnelPackage } from './lead-funnel'
+import { LeadFunnel, WhatsAppDireto, type FunnelPackage } from './lead-funnel'
 import './lp.css'
 
 /**
@@ -130,12 +130,14 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
           <Link href="/" aria-label="Amorim Turismo, página inicial">
             <Image src="/amorim-logo.png" alt="Amorim Turismo" width={132} height={32} className="h-8 w-auto brightness-0 invert" priority />
           </Link>
-          <Link
-            href={`/pacotes/${pkg.slug}`}
-            className="rounded-md px-2 py-1 text-sm text-white/85 underline-offset-4 hover:text-white hover:underline"
+          {/* Para quem não quer responder o filtro e prefere chamar direto */}
+          <WhatsAppDireto
+            pkg={funnelPackage}
+            whatsappNumber={siteConfig.whatsapp_number}
+            className="flex items-center gap-2 rounded-full bg-[var(--lp-verde)] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[var(--lp-verde-escuro)] active:bg-[var(--lp-verde-escuro)]"
           >
-            Ver o pacote completo
-          </Link>
+            Chamar no WhatsApp
+          </WhatsAppDireto>
         </div>
       </header>
 
@@ -239,9 +241,14 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
       <footer className="bg-[var(--lp-azul-escuro)] text-white/80">
         <div className="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-6 text-sm md:flex-row md:items-center md:justify-between">
           <p>Amorim Turismo</p>
-          <Link href="/pacotes" className="underline-offset-4 hover:text-white hover:underline">
-            Outras viagens
-          </Link>
+          <div className="flex gap-5">
+            <Link href={`/pacotes/${pkg.slug}`} className="underline-offset-4 hover:text-white hover:underline">
+              Ver o pacote completo
+            </Link>
+            <Link href="/pacotes" className="underline-offset-4 hover:text-white hover:underline">
+              Outras viagens
+            </Link>
+          </div>
         </div>
       </footer>
     </main>
