@@ -1,10 +1,11 @@
 /**
  * Faixas de comissão do programa de afiliados.
  *
- * A página pública promete comissão de 7% a 10% conforme o volume de vendas,
- * mas quem muda a taxa é a equipe, na ficha do afiliado — não existe promoção
- * automática. Este arquivo é a tabela oficial usada para avisar o admin quando
- * um parceiro já passou de faixa e continua com a comissão antiga.
+ * Desde 07/11/2026 a página pública fala só em 7% por venda ("quanto mais
+ * você vende, mais você ganha"), sem prometer faixa. Quem muda a taxa é a
+ * equipe, na ficha do afiliado — não existe promoção automática. Esta tabela
+ * só serve de referência interna para o admin, caso queira premiar quem vende
+ * mais.
  *
  * Mudou a política comercial? Altere só a lista abaixo.
  */

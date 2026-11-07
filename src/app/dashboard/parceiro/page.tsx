@@ -624,7 +624,7 @@ function NotAffiliateView({ onSuccess }: { onSuccess: () => void }) {
   const [acceptedTerms, setAcceptedTerms] = useState(false)
 
   const benefits = [
-    { icon: Zap, text: 'Comissão de 7% a 10%' },
+    { icon: Zap, text: 'Comissão de 7% por venda' },
     { icon: DollarSign, text: 'Pagamento via PIX' },
     { icon: Trophy, text: 'Link e código exclusivos' },
     { icon: Rocket, text: 'Painel com suas vendas' },

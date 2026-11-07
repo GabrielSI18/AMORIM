@@ -7,7 +7,6 @@ import { useSiteConfig } from '@/hooks/use-site-config';
 import {
   DollarSign,
   Users,
-  TrendingUp,
   Share2,
   CheckCircle2,
   Sparkles,
@@ -20,7 +19,6 @@ import {
   Target,
   Rocket,
   Crown,
-  Star,
   Gift,
   Clock,
   Lock
@@ -38,8 +36,8 @@ export default function AfiliadosPage() {
   const benefits = [
     {
       icon: Zap,
-      title: 'Comissão de 7% + BÔNUS',
-      description: 'Comece com 7% e ganhe até 10% de comissão conforme suas vendas aumentam!',
+      title: 'Comissão de 7% por venda',
+      description: 'Você ganha 7% do valor de cada pacote vendido pelo seu link.',
       highlight: true,
     },
     {
@@ -49,8 +47,8 @@ export default function AfiliadosPage() {
     },
     {
       icon: Trophy,
-      title: 'Comissão que cresce',
-      description: 'Conforme suas vendas aumentam, sua comissão por venda pode subir de 7% até 10%.',
+      title: 'Quanto mais vende, mais ganha',
+      description: 'Não tem limite de indicações: cada venda pelo seu link é mais uma comissão no seu PIX.',
       highlight: true,
     },
     {
@@ -92,7 +90,7 @@ export default function AfiliadosPage() {
     {
       step: '4',
       title: 'Ganhe Comissão',
-      description: 'Receba de 7% a 10% de comissão sobre cada venda realizada com seu código.',
+      description: 'Receba 7% de comissão sobre cada venda realizada com o seu link.',
     },
   ];
 
@@ -136,7 +134,7 @@ export default function AfiliadosPage() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-xl md:text-2xl font-medium max-w-3xl mx-auto"
             >
-              Comissão de 7% por venda, podendo chegar a 10% conforme seu volume de vendas.
+              Comissão de 7% em cada venda. Quanto mais você vende, mais você ganha.
               <br />
               <span className="text-muted-foreground text-lg">
                 Trabalhe de casa, no seu tempo, sem investimento inicial.
@@ -230,82 +228,15 @@ export default function AfiliadosPage() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent text-sm font-bold"
             >
               <Trophy className="w-4 h-4" />
-              Faixas de comissão
+              Sua comissão
             </motion.div>
             <h2 className="text-3xl md:text-5xl font-bold">
               Quanto Mais Você Vende,{' '}
               <span className="text-accent">Mais Você Ganha!</span>
             </h2>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              Quanto mais vendas você fecha, maior a sua comissão por venda. A faixa é revisada pela nossa equipe
+              Cada pacote vendido pelo seu link rende 7% do valor para você, e não tem limite de vendas.
             </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {[
-              {
-                level: 'Iniciante',
-                sales: '1-5 vendas',
-                commission: '7%',
-                icon: Star,
-                color: 'from-gray-500 to-gray-600'
-              },
-              {
-                level: 'Bronze',
-                sales: '6-15 vendas',
-                commission: '8%',
-                icon: Trophy,
-                color: 'from-orange-500 to-orange-600'
-              },
-              {
-                level: 'Prata',
-                sales: '16-30 vendas',
-                commission: '9%',
-                icon: Crown,
-                color: 'from-gray-400 to-gray-500'
-              },
-              {
-                level: 'Ouro',
-                sales: '31+ vendas',
-                commission: '10%',
-                icon: Zap,
-                color: 'from-yellow-500 to-yellow-600'
-              },
-            ].map((tier, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className={`relative bg-card border-2 ${
-                  index === 3 ? 'border-yellow-500 shadow-2xl shadow-yellow-500/20 scale-105' : 'border-border'
-                } rounded-xl p-6 space-y-4`}
-              >
-                {index === 3 && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white text-xs font-bold px-4 py-1 rounded-full">
-                      FAIXA MÁXIMA
-                    </span>
-                  </div>
-                )}
-
-                <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${tier.color} text-white flex items-center justify-center mx-auto`}>
-                  <tier.icon className="w-7 h-7" />
-                </div>
-
-                <div className="text-center space-y-2">
-                  <h3 className="text-xl font-bold">{tier.level}</h3>
-                  <p className="text-sm text-muted-foreground">{tier.sales}</p>
-
-                  <div className="pt-3 border-t border-border space-y-1">
-                    <div className="text-2xl font-bold text-accent">{tier.commission}</div>
-                    <div className="text-xs text-muted-foreground">Comissão por venda</div>
-                  </div>
-
-                </div>
-              </motion.div>
-            ))}
           </div>
 
           <motion.div
@@ -433,7 +364,7 @@ export default function AfiliadosPage() {
                 icon: Percent,
                 destaque: 'R$ 104,30',
                 titulo: 'por pacote de R$ 1.490',
-                texto: 'É o que rende uma venda na comissão inicial de 7%. Pacote mais caro, comissão maior.',
+                texto: 'É o que rende uma venda com a comissão de 7%. Pacote mais caro, comissão maior.',
               },
               {
                 icon: Wallet,
@@ -468,36 +399,6 @@ export default function AfiliadosPage() {
             ))}
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mt-12 max-w-3xl mx-auto"
-          >
-            <div className="bg-card border border-border rounded-xl p-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <TrendingUp className="w-5 h-5 text-accent" />
-                <h3 className="font-semibold">A comissão sobe conforme você vende</h3>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[
-                  { faixa: '7%', regra: 'ao começar' },
-                  { faixa: '8%', regra: 'a partir de 6 vendas' },
-                  { faixa: '9%', regra: 'a partir de 16 vendas' },
-                  { faixa: '10%', regra: 'a partir de 31 vendas' },
-                ].map((nivel) => (
-                  <div key={nivel.faixa} className="rounded-lg border border-border p-4 text-center">
-                    <div className="text-2xl font-bold text-accent">{nivel.faixa}</div>
-                    <div className="text-xs text-muted-foreground mt-1">{nivel.regra}</div>
-                  </div>
-                ))}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                A mudança de faixa é revisada pela equipe na sua ficha de parceiro — não é automática.
-                Você acompanha vendas, comissões e pagamentos no painel.
-              </p>
-            </div>
-          </motion.div>
         </div>
       </section>
 
@@ -618,7 +519,7 @@ export default function AfiliadosPage() {
                 },
                 {
                   q: 'Qual o valor da comissão?',
-                  a: 'Você começa com 7% e pode chegar a 10% conforme aumenta suas vendas. A comissão é calculada sobre o valor total de cada pacote.',
+                  a: 'Você ganha 7% do valor total de cada pacote vendido pelo seu link. Quanto mais você vende, mais você ganha: não tem limite de vendas.',
                 },
                 {
                   q: 'Meu link de divulgação vence?',
