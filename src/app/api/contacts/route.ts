@@ -53,6 +53,21 @@ const leadSchema = z.object({
   passengersCount: z.coerce.number().int().min(1).max(60).optional(),
 })
 
+// Remetentes de propaganda que a equipe pediu para não receber mais
+// (catálogo de viagens "Tourist.com" e agência de sites Melotto Group).
+// Confere o domínio do e-mail e os endereços citados no texto, porque esses
+// robôs trocam o nome e o telefone a cada envio. Para bloquear outro
+// remetente, acrescente o domínio aqui.
+const DOMINIOS_BLOQUEADOS = ['worldtourist.info', 'tourist.com', 'melottogroup.com']
+
+function remetenteBloqueado(body: Record<string, unknown>): boolean {
+  const texto = ['email', 'message', 'subject', 'name']
+    .map((campo) => (typeof body?.[campo] === 'string' ? (body[campo] as string) : ''))
+    .join(' ')
+    .toLowerCase()
+  return DOMINIOS_BLOQUEADOS.some((dominio) => texto.includes(dominio))
+}
+
 const createContactSchema = z.discriminatedUnion('type', [
   baseContactSchema.extend({ type: z.literal('general').optional().default('general') }),
   baseContactSchema.merge(charterFieldsSchema),
@@ -72,8 +87,9 @@ export async function POST(request: NextRequest) {
     // Campo-isca: fica escondido no formulário, então só robô preenche.
     // Responde como se tivesse dado certo e não grava nada — assim o robô
     // não fica tentando variações (chegaram 2 spams iguais em julho/2026).
-    if (typeof body?.website === 'string' && body.website.trim() !== '') {
-      console.warn('[contacts] descartado pelo campo-isca')
+    const isca = typeof body?.website === 'string' && body.website.trim() !== ''
+    if (isca || remetenteBloqueado(body)) {
+      console.warn(isca ? '[contacts] descartado pelo campo-isca' : '[contacts] descartado: remetente bloqueado')
       return NextResponse.json(
         { data: null, message: 'Mensagem enviada com sucesso!' },
         { status: 201 }
