@@ -7,6 +7,7 @@ import { useSiteConfig } from '@/hooks/use-site-config'
 import { whatsappLink, affiliateRegistrationMessage } from '@/lib/whatsapp'
 import { formatReleaseDate, type PayoutState } from '@/lib/affiliate-retention'
 import { DashboardShell } from '@/components/dashboard'
+import { rastrearConversao } from '@/components/meta-pixel'
 import { Skeleton, SkeletonCard } from '@/components/ui/skeleton'
 import {
   Handshake,
@@ -665,6 +666,12 @@ function NotAffiliateView({ onSuccess }: { onSuccess: () => void }) {
       if (!res.ok) {
         throw new Error(data.error || 'Erro ao cadastrar')
       }
+
+      // Conversão da campanha de afiliados no Meta: o cadastro de parceiro
+      // foi gravado. CompleteRegistration é o evento que a campanha otimiza;
+      // o nome próprio separa esse cadastro de outros no mesmo conjunto de dados.
+      rastrearConversao('CompleteRegistration', { content_name: 'Afiliado Amorim', status: 'pendente' })
+      rastrearConversao('Amorim_Afiliado_Cadastro', { content_name: 'Afiliado Amorim' }, true)
 
       toast.success(data.message || 'Cadastro enviado com sucesso!')
       onSuccess()
